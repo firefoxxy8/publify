@@ -7,6 +7,15 @@ class ArticlesController < ApplicationController
 
   verify :only => [:nuke_comment, :nuke_trackback], :session => :user, :method => :post, :render => { :text => 'Forbidden', :status => 403 }
     
+  def frontpage
+    @frontpage = true;
+    @articles = Article.find(
+      :all, :conditions => 'published != 0',
+      :order => 'created_at DESC',
+      :limit => 3
+    )
+  end
+
   def index
     @pages = Paginator.new self, Article.count, config[:limit_article_display], page_number
     @articles = Article.find(:all, :conditions => 'published != 0', :order => 'created_at DESC', :limit => config[:limit_article_display], :offset => @pages.current.offset)
@@ -27,7 +36,13 @@ class ArticlesController < ApplicationController
   end
     
   def permalink
-    @article    = Article.find_by_permalink(params[:year], params[:month], params[:day], params[:title])
+    if params[:bryarid].nil?
+      @article    = Article.find_by_permalink(params[:year], params[:month], params[:day], params[:title])
+    else
+      re = /id_(\d+)/
+      re.match(params[:bryarid])
+      @article    = Article.find($1)
+    end
     @comment    = Comment.new
     
     if @article.nil?

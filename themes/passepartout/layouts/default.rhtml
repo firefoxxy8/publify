@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title><%= page_title %></title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="EditURI" type="application/rsd+xml" title="RSD" href="<%= server_url_for :controller => 'xml', :action => 'rsd' %>" />
+    <%= auto_discovery_link_tag :rss, :controller => 'xml', :action => 'rss' %>
+    <%= auto_discovery_link_tag :atom, :controller => 'xml', :action => 'atom' %>
+    <%= stylesheet_link_tag "/stylesheets/theme/passepartout" %>
+    <%= javascript_include_tag "prototype" %>
+    <%= javascript_include_tag "effects" %>
+    <%= javascript_include_tag "typo" %>
+    <script type="text/javascript"><%= @content_for_script %></script>
+  </head>
+  <body>
+    <div class="contents">
+      <div class="main">
+	<h1 id="sitename"><%= link_to config_value('blog_name'), { :controller => '/' } %></h1>
+
+
+	<%= @content_for_layout %>
+      </div>
+      <div class="places">
+	<p>Toxic Elephant is Matijs van Zuijlen's weblog.</p>
+	<% if @frontpage -%>
+	<%= render_partial "articles/frontbar" %>
+	<h2>Site</h2>
+	<ul class="navigation">
+	  <li>home</li>
+	  <li><a href="/software/">software</a></li>
+
+	  <li><a
+	    href="http://www.xs4all.nl/~mvz/metaphoor/">metaphoor</a></li>
+	  <li><a href="/blog/">blog</a></li>
+	</ul>
+
+	<% else -%>
+	<%= link_to image_tag("powered.gif"),  "http://typo.leetsoft.com/", {:class => "powered" } %>
+	<div id="search"> <%= render_partial "shared/search" %></div>
+
+	<div id="search-results"></div>
+	<%= observe_field "q", 
+		:frequency => 1, 
+		:url => { :controller => "live", :action => "search" }, 
+		:loading => "Element.show('search_spinner')",
+		:complete => "Element.hide('search_spinner')",
+		:update => "search-results" -%>
+
+	<%= render_component(:controller => 'sidebars/sidebar', :action => 'display_plugins') %>
+	<h3>Site</h3>
+	<ul class="navigation">
+	  <li><a href="/">home</a></li>
+
+	  <li><a href="/software/">software</a></li>
+	  <li><a
+	    href="http://www.xs4all.nl/~mvz/metaphoor/">metaphoor</a></li>
+	  <li><a href="/blog/">blog</a></li>
+	</ul>
+
+	<% end -%>
+
+	<!--
+	<ul>
+	  <li><a href="http://validator.w3.org/check?uri=referer">Valid XHTML 1.0</a></li>
+	  <li><a href="http://jigsaw.w3.org/css-validator/validator?uri=<%= server_url_for :controller => 'articles' %>">Valid CSS</a></li>
+	</ul>
+	-->
+      </div>
+      <p class="copyright">Copyright 2002&ndash;2005, Matijs van Zuijlen</p>
+    </div>
+  </body>
+</html>

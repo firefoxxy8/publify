@@ -74,7 +74,7 @@ module ApplicationHelper
   end  
   
   def article_url(article, only_path = true, anchor = nil)
-    url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month), :day => sprintf("%.2d", article.created_at.day), :title => article.stripped_title, :anchor => anchor
+    url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :bryarid => "id_#{article.id}", :anchor => anchor
   end
 
   def page_url(page, only_path = true, anchor = nil)
@@ -133,7 +133,7 @@ module ApplicationHelper
   end
   
   def date(date)
-    "<span class=\"typo_date\">#{date.utc.strftime("%d. %b")}</span>"
+    "<span class=\"typo_date\">#{date.gmtime.strftime("%a, %d %b %Y, %H:%M:%S")}</span>"
   end
   
   def render_theme(options)

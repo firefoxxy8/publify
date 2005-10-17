@@ -1,8 +1,8 @@
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
-require 'rake/gempackagetask'
-require 'rake/contrib/rubyforgepublisher'
+#require 'rake/gempackagetask'
+#require 'rake/contrib/rubyforgepublisher'
 
 PKG_VERSION = "2.5.0"
 PKG_NAME = "typo"
@@ -196,24 +196,24 @@ task :publish => [:package] do
 ##{PKG_VERSION}"`
 end
 
-spec = Gem::Specification.new do |s|
-  s.name = PKG_NAME
-  s.version = PKG_VERSION
-  s.summary = "Modern weblog engine."
-  s.has_rdoc = false
-  s.files  = Dir['**/*'].delete_if{ |f| f =~ /sqlite$/ || f =~ /\.log$/ || f =~ /^pkg/ || f =~ /\.svn/ } << "public/.htaccess"
-  s.require_path = '.'
-  s.author = "Tobias Luetke"
-  s.email = "tobi@leetsoft.com"
-  s.homepage = "http://typo.leetsoft.com"  
-  s.rubyforge_project = "typo"
-end
-
-Rake::GemPackageTask.new(spec) do |p|
-  p.gem_spec = spec
-  p.need_tar = true
-  p.need_zip = true
-end
+###spec = Gem::Specification.new do |s|
+###  s.name = PKG_NAME
+###  s.version = PKG_VERSION
+###  s.summary = "Modern weblog engine."
+###  s.has_rdoc = false
+###  s.files  = Dir['**/*'].delete_if{ |f| f =~ /sqlite$/ || f =~ /\.log$/ || f =~ /^pkg/ || f =~ /\.svn/ } << "public/.htaccess"
+###  s.require_path = '.'
+###  s.author = "Tobias Luetke"
+###  s.email = "tobi@leetsoft.com"
+###  s.homepage = "http://typo.leetsoft.com"  
+###  s.rubyforge_project = "typo"
+###end
+###
+###Rake::GemPackageTask.new(spec) do |p|
+###  p.gem_spec = spec
+###  p.need_tar = true
+###  p.need_zip = true
+###end
 
 desc "Migrate the database according to the migrate scripts in db/migrate (only supported on PG/MySQL). A specific version can be targetted with VERSION=x"
 task :migrate => :environment do

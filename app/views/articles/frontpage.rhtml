@@ -1,0 +1,11 @@
+<% for article in @articles[0..-2] -%>
+ <div class="post">
+  <%= render_partial "article", article %>
+  <%= article_link "Read more...", article if article.extended? %>  
+  <p class="meta"><%= article_links article %></p> 
+  </div>
+<% end -%>
+
+<p id="pagination">You can read
+	<%= link_to 'the rest of my blog here', { :controller => '/' } %>
+</p>

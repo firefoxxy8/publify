@@ -7,35 +7,29 @@
                     :html => {:id=>"commentform",:class=>"commentform"} %>
 
 
-<div class="comment-box">
+<div class="commentform">
   <div id="errors"></div>
 
   <a name="respond"></a>
-  <table cellpadding="4" cellspacing="0" class="frm-tbl">
-    <tr>
-      <td><p><label for="comment_author">Your name</label></p></td>
-      <td> <%= text_field "comment", "author", :size => 20 %> <small><%= link_to_function("(leave url/email &#187;)", "Element.toggle('guest_url'); Element.toggle('guest_email')") %></small></td>
-    </tr>
-    <tr id="guest_url" style="display:none;">
-      <td><p><label for="comment_url">Your blog</label></p></td>
-      <td> <%= text_field "comment", "url" %></td>
-    </tr>
-    <tr id="guest_email" style="display:none;">
-      <td><p><label for="comment_email">Your email</label></p></td>
-      <td> <%= text_field "comment", "email" %></td>
-    </tr>
-    <tr>
-      <td><p><label for="comment_body">Your message</label></p></td>
-      <td valign="top" colspan="2">
-        <%= text_area "comment", "body" %>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2" id="frm-btns">
-      <span id="comment_loading" style="display:none;"><%= image_tag "spinner.gif" %></span>&nbsp;&nbsp;
-        <input type="submit" name="submit" id="form-submit-button" value="submit" class="button" />
-      </td>
-    </tr>
-  </table>
+  <p><label for="comment_author">Your name:</label>
+  <%= text_field "comment", "author", :size => 20 %> <small><%= link_to_function("(leave url/email &#187;)", "Element.toggle('guest_url'); Element.toggle('guest_email')") %></small>
+  </p>
+  <p id="guest_url" style="display:none;">
+  <label for="comment_url">Your URL:</label>
+  <%= text_field "comment", "url" %>
+  </p>
+  <p id="guest_email" style="display:none;">
+  <label for="comment_email">Your email:</label>
+  <%= text_field "comment", "email" %>
+  </p>
+  <p><label for="comment_body">Your message</label></p>
+  <p>
+  <%= text_area "comment", "body" %>
+  </p>
+  <p>
+  <p id="frm-btns">
+  <input type="submit" name="submit" id="form-submit-button" value="submit" class="button" />&nbsp;&nbsp;
+  <span id="comment_loading" style="display:none;"><%= image_tag "spinner.gif" %></span>
+  </p>
 </div>
 <%= end_form_tag %>

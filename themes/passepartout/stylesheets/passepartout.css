@@ -1,0 +1,81 @@
+/* Import passepartout style sheet */
+@import url(/2005/01/10/passepartout_style/sheet.css);
+
+/* Stuff we forgot last time */
+.navigation {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.navigation li {
+  margin: 0px;
+}
+.places * {
+  margin-bottom: 0.4em;
+  margin-top: 0.4em;
+}
+
+.places h2, .places h3 {
+  margin-top: 1em;
+}
+
+/* Stuff that needs to be changed because typo displays headings as links */
+h1 a, h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover { color: #85ab02; /* TODO: Color */}
+
+/* Admin tools: copied from azure.css, the standart typo style sheet */
+.admintools {
+  float: right;
+  background-color: #fff;
+  font-size: smaller;
+  padding: 0 2px;
+  margin: 0 1px;
+  color: #ccc;
+  border: 1px solid #ccc;
+}
+
+.admintools:hover {
+  color: #c00;
+  border: 1px solid #c00;
+}
+
+/* Other bits from azure.css, to be adapted */
+.comment-list {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+.comment-list li {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 0em;
+  margin-right: 0em;
+  /*background-color: #ddd;*/
+  border: 1px solid black;
+  padding: 0.1px 10px;
+}
+/* Is this needed? */
+.comment-list li div {
+  margin: 0px;
+  padding: 0px;
+}
+.comment-list li p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding: 0px;
+}
+
+#comment_body { height: 220px; }
+
+.powered img {
+  border: 0px;
+}
+#search_spinner {
+  /* avoid re-layouting of other stuff */
+  position: absolute;
+}

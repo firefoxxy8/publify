@@ -13,8 +13,8 @@ test:
   password: 
 
 production:
-  adapter: mysql
+  adapter: postgresql
   database: typo
-  host: localhost
-  username: root
+  host: 
+  username: typo
   password: 
