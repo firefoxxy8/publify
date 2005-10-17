@@ -2,7 +2,7 @@
   <%= admin_tools_for comment %>
   <p>
   <a name="comment-<%= comment.id %>"></a>
-  <cite><strong><%= (comment.url.blank?) ? comment.author : link_to(comment.author, comment.url) %></strong> </cite> said <%= distance_of_time_in_words @article.created_at, comment.created_at %> later:
+  <cite><strong><%= (comment.url.blank?) ? h(comment.author) : link_to(h(comment.author), comment.url) %></strong> </cite> said <%= distance_of_time_in_words @article.created_at, comment.created_at %> later:
   </p>
   <div>
   <%= comment.body_html %>

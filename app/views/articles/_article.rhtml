@@ -1,11 +1,6 @@
 <a name="<%= article.id %>" />
 <h2><%= article_link article.title, article %></h2>
-<p class="auth"><!--Posted by 
-  <% if config['link_to_author'] and article.user and article.user.email.to_s.size>0 -%>
-    <a href="mailto:<%=h article.user.email %>"><%= article.user.name %></a>
-  <% else -%>
-    <%=h article.author %>
-  <% end -%>
+<p class="auth"><!--Posted by <%= author_link(article) %>
   -->
 <%= date article.created_at %></p>
 <%= article.body_html %>

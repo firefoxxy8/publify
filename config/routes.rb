@@ -3,7 +3,6 @@ ActionController::Routing::Routes.draw do |map|
   # default   
   map.index '', :controller  => 'articles', :action => 'frontpage'
   map.index 'blog', :controller  => 'articles', :action => 'index'
-  #map.index_page 'blog/page/:page', :controller  => 'articles', :action => 'index', :page => /\d/
   map.admin 'blog/admin', :controller  => 'admin/general', :action => 'index'
   
   # admin/comments controller needs parent article id
@@ -23,22 +22,43 @@ ActionController::Routing::Routes.draw do |map|
   #map.xml 'blog/xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
 
   # allow neat perma urls
+  map.connect 'blog',
+    :controller => 'articles', :action => 'index'
+  map.connect 'blog/page/:page',
+    :controller => 'articles', :action => 'index',
+    :page => /\d+/
+
+  map.connect 'blog/:year/:month/:day/page/:page',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/, :page => /\d+/
+  map.connect 'blog/:year/:month/page/:page',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/, :month => /\d{1,2}/, :page => /\d+/
+  map.connect 'blog/:year/page/:page',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/, :page => /\d+/
+
+  map.connect 'blog/:year/:month/:day',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/
+  map.connect 'blog/:year/:month',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/, :month => /\d{1,2}/
+  map.connect 'blog/:year',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/
+
   map.connect 'blog/:bryarid', :controller  => 'articles', :action => 'permalink', :bryarid => /id_\d*/
-  map.connect 'blog/:page',
-    :controller => 'articles', :action => 'index', :page => nil,
-    :requirements => { :page => /page\d+/ }
-  map.connect 'blog/:year/:page',
-    :controller => 'articles', :action => 'find_by_date', :page => nil,
-    :requirements => { :page => /page\d+/, :year => /\d{4}/ }
-  map.connect 'blog/:year/:month/:page',
-    :controller => 'articles', :action => 'find_by_date', :page => nil,
-    :requirements => { :page => /page\d+/, :year => /\d{4}/, :month => /\d{1,2}/ }
-  map.connect 'blog/:year/:month/:day/:page',
-    :controller => 'articles', :action => 'find_by_date', :page => nil,
-    :requirements => { :page => /page\d+/, :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/ }
+
 #  map.connect 'blog/:year/:month/:day/:title',
 #    :controller => 'articles', :action => 'permalink',
-#    :requirements => { :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/ }
+#    :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/
+
+  map.connect 'blog/category/:id',
+    :controller => 'articles', :action => 'category'
+  map.connect 'blog/category/:id/page/:page',
+    :controller => 'articles', :action => 'category',
+    :page => /\d+/
 
 #map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
 
@@ -56,6 +76,5 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'theme', :action => 'error'
      
   # Allow legacy urls to still work
-  map.connect 'blog/:controller/:action/:id/:page', :page => nil,
-    :requirements => { :page => /page\d+/ }
+  map.connect 'blog/:controller/:action/:id'
 end

@@ -528,3 +528,12 @@ div.user {
   border: 1px solid red;
 }
 
+
+#flash {
+    background: #CBE4C3;
+    color: #0C2504;
+    padding: 5px;
+    border-top: 1px solid #2E9410;
+    border-bottom: 1px solid #2E9410;
+    margin-top: 10px;
+}

@@ -194,18 +194,17 @@ end
 ###  s.version = PKG_VERSION
 ###  s.summary = "Modern weblog engine."
 ###  s.has_rdoc = false
-###  s.files  = Dir['**/*'].delete_if{ |f| f =~ /sqlite$/ || f =~ /\.log$/ || f =~ /^pkg/ || f =~ /\.svn/ } << "public/.htaccess"
+###  s.files  = Dir.glob('**/*', File::FNM_DOTMATCH).reject do |f| 
+###     [ /\.$/, /sqlite$/, /\.log$/, /^pkg/, /\.svn/, /^vendor\/rails/, 
+###     /^public\/(files|xml|articles|pages|index.html)/, 
+###     /^public\/(stylesheets|javascripts|images)\/theme/, /\~$/, 
+###     /\/\._/, /\/#/ ].any? {|regex| f =~ regex }
+###  end
 ###  s.require_path = '.'
 ###  s.author = "Tobias Luetke"
 ###  s.email = "tobi@leetsoft.com"
 ###  s.homepage = "http://typo.leetsoft.com"  
 ###  s.rubyforge_project = "typo"
-###end
-###
-###Rake::GemPackageTask.new(spec) do |p|
-###  p.gem_spec = spec
-###  p.need_tar = true
-###  p.need_zip = true
 ###end
 
 desc "Migrate the database according to the migrate scripts in db/migrate (only supported on PG/MySQL). A specific version can be targetted with VERSION=x"
@@ -344,3 +343,6 @@ task :rubyforge_upload => [:package] do
     end
   end
 end
+
+desc "Upload the package to leetsoft, rubyforge and tag the release in svn"
+task :release => [:sweep_cache, :package, :leetsoft_upload, :rubyforge_upload, :tag_svn ]
