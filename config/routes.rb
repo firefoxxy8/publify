@@ -11,6 +11,7 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'admin/comments', :action => nil, :id => nil
   map.connect 'blog/admin/trackback/article/:article_id/:action/:id',
     :controller => 'admin/trackback', :action => nil, :id => nil
+  map.connect 'admin/content/:action/:id', :controller => 'admin/content'
 
   # make rss feed urls pretty and let them end in .xml
   # this improves caches_page because now apache and webrick will send out the 
@@ -47,6 +48,12 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'theme', :action => 'javascript'
   map.connect 'images/theme/:filename',
     :controller => 'theme', :action => 'images'
+
+  # Kill attempts to connect directly to the theme controller.
+  # Ideally we'd disable these by removing the default route (below),
+  # but that breaks too many things for Typo 2.5.
+  map.connect 'theme/*stuff',
+    :controller => 'theme', :action => 'error'
      
   # Allow legacy urls to still work
   map.connect 'blog/:controller/:action/:id/:page', :page => nil,

@@ -8,7 +8,7 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def list
-    @articles = Article.find(:all, :order => "created_at DESC")
+    @articles_pages, @articles = paginate :article, :per_page => 15, :order_by => "created_at DESC", :parameter => 'id'
     @categories = Category.find(:all)
     @article = Article.new(params[:article])
     @article.text_filter = config[:text_filter]
@@ -79,7 +79,8 @@ class Admin::ContentController < Admin::BaseController
   
   def preview
     @headers["Content-Type"] = "text/html; charset=utf-8"
-    render_text HtmlEngine.transform(request.raw_post, config[:text_filter])
+    @article = params[:article]
+    render :layout => false
   end
   
 end

@@ -5,7 +5,7 @@ require 'articles_controller'
 class ArticlesController; def rescue_action(e) raise e end; end
 
 class ArticlesControllerTest < Test::Unit::TestCase
-  fixtures :articles, :categories, :settings, :users, :comments, :trackbacks
+  fixtures :articles, :categories, :settings, :users, :comments, :trackbacks, :pages, :articles_categories
 
   def setup
     @controller = ArticlesController.new
@@ -17,7 +17,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
   # Category subpages
   def test_category
-    get :category, :id => "Software"
+    get :category, :id => "software"
+
     assert_response :success
     assert_rendered_file "index"
   end
@@ -113,5 +114,14 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     # reassign so the AWS stuff doesn't barf
     $config = old_config
+  end
+
+  def test_pages_static
+    get :view_page, :name => 'page_one'
+    assert_response :success
+    assert_rendered_file "view_page"
+    
+    get :view_page, :name => 'page one'
+    assert_response 404
   end
 end

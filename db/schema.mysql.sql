@@ -26,6 +26,7 @@ CREATE TABLE `articles` (
   `created_at` datetime default NULL,
   `updated_at` datetime default NULL,
   `permalink` varchar(255) default NULL,
+  `guid` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
   KEY `articles_permalink_index` (`permalink`)
 ) TYPE=MyISAM;
@@ -53,6 +54,7 @@ CREATE TABLE `page_caches` (
 CREATE TABLE `pages` (
   `id` int(11) NOT NULL auto_increment,
   `name` varchar(255) default NULL,
+  `title` varchar(255) default NULL,
   `body` text,
   `body_html` text,
   `text_filter` varchar(20) default NULL,
@@ -116,8 +118,8 @@ CREATE TABLE `sessions` (
 
 CREATE TABLE `settings` (
   `id` int(11) NOT NULL auto_increment,
-  `name` varchar(40) default NULL,
-  `value` varchar(40) default NULL,
+  `name` varchar(255) default NULL,
+  `value` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
 ) TYPE=MyISAM;
 
@@ -158,4 +160,4 @@ CREATE TABLE `schema_info` (
   `version` int(11) default NULL
 ) TYPE=MyISAM;
 
-INSERT into `schema_info` VALUES (7);
+INSERT into `schema_info` VALUES (9);

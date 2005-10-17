@@ -29,7 +29,8 @@ CREATE TABLE articles (
   user_id int default NULL,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now(),
-  permalink varchar(255) default NULL
+  permalink varchar(255) default NULL,
+  guid varchar(255) default NULL
 );
 
 CREATE INDEX articles_permalink_index ON articles (permalink);
@@ -39,11 +40,12 @@ CREATE TABLE page_caches (
   name varchar(255)
 );
 
-CREATE INDEX idx_caches ON caches (page_name);
+CREATE INDEX idx_caches ON page_caches (name);
 
 CREATE TABLE pages (
   id SERIAL PRIMARY KEY NOT NULL,
   name varchar(255) default NULL,
+  title varchar(255) default NULL,
   body text,
   body_html text,
   text_filter varchar(20) default NULL,
@@ -135,12 +137,12 @@ CREATE TABLE sidebars (
   updated_at TIMESTAMP DEFAULT now()
 );
 
-insert into sidebars (id,controller,active_position,staged_position)
-  values (1,'category',0,0);
-insert into sidebars (id,controller,active_position,staged_position)
-  values (2,'static',1,1);
-insert into sidebars (id,controller,active_position,staged_position)
-  values (3,'xml',2,2);
+insert into sidebars (controller,active_position,staged_position)
+  values ('category',0,0);
+insert into sidebars (controller,active_position,staged_position)
+  values ('static',1,1);
+insert into sidebars (controller,active_position,staged_position)
+  values ('xml',2,2);
 
 CREATE TABLE trackbacks (
   id SERIAL PRIMARY KEY NOT NULL,
@@ -160,4 +162,4 @@ CREATE TABLE schema_info (
   version integer
 );
 
-INSERT into schema_info VALUES (7);
+INSERT into schema_info VALUES (9);

@@ -5,9 +5,10 @@
   <div class="tasks">
     <h3>Which settings group would you like to edit?</h3>
     <ul>
-      <li><a href="#gensettings" onclick="new Effect.ScrollTo('gensettings')">General Settings</a></li>
-      <li><a href="#textfilter" onclick="new Effect.ScrollTo('textfilter')">Text Filter</a></li>
-      <li><a href="#spam" onclick="new Effect.ScrollTo('spam')">Spam Protection</a></li>
+      <li><a href="#gensettings" onclick="new Effect.ScrollTo('gensettings'); return false">General Settings</a></li>
+      <li><a href="#textfilter" onclick="new Effect.ScrollTo('textfilter'); return false">Text Filter</a></li>
+      <li><a href="#spam" onclick="new Effect.ScrollTo('spam'); return false">Spam Protection</a></li>
+      <li><a href="#misc" onclick="new Effect.ScrollTo('misc'); return false">Cache</a></li>
     </ul>
     <div style="clear:both;"></div>
   </div>
@@ -17,11 +18,11 @@
   <h3>General Settings</h3>
     <p>
       <label for="blog_name">Blog name:</label> 
-      <input name="setting[blog_name]" id="blog_name" type="text" value="<%= config_value(:blog_name) %>" />
+      <input name="setting[blog_name]" id="blog_name" type="text" value="<%=h config_value(:blog_name) %>" />
     </p>
     <p>
       <label for="blog_subtitle">Blog subtitle:</label> 
-      <input name="setting[blog_subtitle]" id="blog_subtitle" type="text" value="<%= config_value(:blog_subtitle) %>" />
+      <input name="setting[blog_subtitle]" id="blog_subtitle" type="text" value="<%=h config_value(:blog_subtitle) %>" />
     </p>
     <p>
       <input name="setting[default_allow_comments]" id="default_allow_comments" type="checkbox" value="1" <%= 'checked="checked"' if config_value(:default_allow_comments)%> />
@@ -96,6 +97,16 @@
         <p class="r"><%= save("Save My Settings") %></p>
     </div>
  </div>
+ 
+ <div id="misc" class="set">
+   <h3>Cache</h3>
+     <%= link_to 'Empty Page Cache', :controller => 'cache', :action => 'sweep' %>
+   <div id="users">	
+     <p>There are <%= @page_cache_size %> entries in the page cache</p>
+   </div>
+</div>
+
+
   <div id="operations" class="tasks">
     <%= save("Save My Settings") %>  
   </div>

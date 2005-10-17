@@ -35,8 +35,10 @@ class Sidebars::Plugin < ApplicationController
 
   def index
     @sidebar=params['sidebar']
-    @sb_config=@sidebar.active_config
-    @sb_config||=self.class.default_config
+    @sb_config = @sidebar.active_config
+    if(not @sb_config or @sb_config.size == 0)
+      @sb_config = (self.class.default_config)
+    end
     content 
     render :action=>'content' unless performed?
   end

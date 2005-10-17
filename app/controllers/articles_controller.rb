@@ -1,5 +1,6 @@
 class ArticlesController < ApplicationController
   before_filter :verify_config
+  before_filter :ignore_page_query_param
   layout :theme_layout
 
   cache_sweeper :blog_sweeper
@@ -17,7 +18,7 @@ class ArticlesController < ApplicationController
   end
 
   def index
-    @pages = Paginator.new self, Article.count, config[:limit_article_display], page_number
+    @pages = Paginator.new self, Article.count, config[:limit_article_display], @params[:page]
     @articles = Article.find(:all, :conditions => 'published != 0', :order => 'created_at DESC', :limit => config[:limit_article_display], :offset => @pages.current.offset)
   end
   
@@ -55,7 +56,7 @@ class ArticlesController < ApplicationController
   
   def find_by_date
     @articles = Article.find_all_by_date(params[:year], params[:month], params[:day])
-    @pages = Paginator.new self, @articles.size, config[:limit_article_display], page_number
+    @pages = Paginator.new self, @articles.size, config[:limit_article_display], @params[:page]
 
     if @articles.empty?
       error("No posts found...")
@@ -81,7 +82,7 @@ class ArticlesController < ApplicationController
         :joins => ', articles_categories',
         :order => "created_at DESC")
       
-      @pages = Paginator.new self, @articles.size, config[:limit_article_display], page_number
+      @pages = Paginator.new self, @articles.size, config[:limit_article_display], @params[:page]
 
       start = @pages.current.offset
       stop  = (@pages.current.next.offset - 1) rescue @articles.size
@@ -162,28 +163,26 @@ class ArticlesController < ApplicationController
 
   def view_page
     if(@page = Page.find_by_name(params[:name].to_a.join('/')))
+      @page_title = @page.title
       render
     else
-      render :nothing, :status => 404
+      render :nothing => true, :status => 404
     end
   end
   
   private
 
-    def page_number
-      page = params[:page]
-      page = page[/\d+/] unless page.nil?
-      return page
+    def ignore_page_query_param
+      @params[:page] = nil unless @request.path =~ /\/page\// # assumes all page routes use /page/:page
     end
-    
-    def verify_config      
-      if !config.is_ok?
-        if User.count == 0 
-          redirect_to :controller => "accounts", :action => "signup"
-        else
-          redirect_to :controller => "admin/general", :action => "index"
-        end
-        return false
+
+    def verify_config
+      if User.count == 0
+        redirect_to :controller => "accounts", :action => "signup"
+      elsif !config.is_ok?
+        redirect_to :controller => "admin/general", :action => "index"
+      else
+        return true
       end
     end
     

@@ -4,10 +4,12 @@ require 'rake/rdoctask'
 #require 'rake/gempackagetask'
 #require 'rake/contrib/rubyforgepublisher'
 
-PKG_VERSION = "2.5.0"
+PKG_VERSION = "2.5.5"
 PKG_NAME = "typo"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 RUBY_FORGE_PROJECT = 'typo'
+RUBY_FORGE_USER = 'xal'
+RELEASE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
 $VERBOSE = nil
 TEST_CHANGES_SINCE = Time.now - 600
@@ -187,15 +189,6 @@ task :purge_test_database => :environment do
 end
 
 
-desc "Publish the zip/tgz"
-task :publish => [:package] do
-  Rake::SshFilePublisher.new("leetsoft.com", "dist/pkg", "pkg", "#{PKG_FILE_NAME}.zip").upload
-  Rake::SshFilePublisher.new("leetsoft.com", "dist/pkg", "pkg", "#{PKG_FILE_NAME}.tgz").upload
-  puts "tagging release"
-  #`svn cp svn://leetsoft.com/typo/trunk svn://leetsoft.com/typo/tags/release_#{PKG_VERSION.gsub(/\./,'_')} -m "tag release 
-##{PKG_VERSION}"`
-end
-
 ###spec = Gem::Specification.new do |s|
 ###  s.name = PKG_NAME
 ###  s.version = PKG_VERSION
@@ -226,8 +219,19 @@ task :sweep_cache => :environment do
   puts "Cache swept."
 end
 
+desc "Publish the zip/tgz"
+task :leetsoft_upload => [:package] do
+  Rake::SshFilePublisher.new("leetsoft.com", "dist/pkg", "pkg", "#{PKG_FILE_NAME}.zip").upload
+  Rake::SshFilePublisher.new("leetsoft.com", "dist/pkg", "pkg", "#{PKG_FILE_NAME}.tgz").upload
+end
+
 desc "Publish the release files to RubyForge."
-task :release => [:package] do
+task :tag_svn do
+  system("svn cp svn://leetsoft.com/typo/trunk svn://leetsoft.com/typo/tags/release_#{PKG_VERSION.gsub(/\./,'_')} -m 'tag release #{PKG_VERSION}'")
+end
+
+desc "Publish the release files to RubyForge."
+task :rubyforge_upload => [:package] do
   files = ["tgz", "zip"].map { |ext| "pkg/#{PKG_FILE_NAME}.#{ext}" }
 
   if RUBY_FORGE_PROJECT then

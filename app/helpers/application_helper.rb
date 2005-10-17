@@ -83,12 +83,12 @@ module ApplicationHelper
 
   def comment_url(comment, only_path = true)
     article = comment.article
-    url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month), :day => sprintf("%.2d", article.created_at.day), :title => article.stripped_title, :anchor=> "comment-#{comment.id}"
+    url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month), :day => sprintf("%.2d", article.created_at.day), :title => article.permalink, :anchor=> "comment-#{comment.id}"
   end
   
   def trackback_url(trackback, only_path = true)
     article = trackback.article
-    url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month), :day => sprintf("%.2d", article.created_at.day), :title => article.stripped_title, :anchor=> "trackback-#{trackback.id}"
+    url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month), :day => sprintf("%.2d", article.created_at.day), :title => article.permalink, :anchor=> "trackback-#{trackback.id}"
   end
   
   def responses(collection, word)
@@ -116,8 +116,8 @@ module ApplicationHelper
   end  
   
   def js_distance_of_time_in_words_to_now(date)
-    time = date.utc.strftime("%a, %d %b %Y %H:%M:%S %Z")
-    %{<script type="text/javascript">document.write(get_local_time_for_date("#{time}"));</script><noscript>on #{time}</noscript>}
+    time = date.utc.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    "<span class=\"typo_date\" title=\"#{time}\">#{time}</span>"
   end
   
   def render_sidebar(sidebar)
@@ -139,5 +139,9 @@ module ApplicationHelper
   def render_theme(options)
     options[:controller]=Themes::ThemeController.active_theme_name
     render_component(options)
+  end
+
+  def toggle_effect(domid, true_effect, true_opts, false_effect, false_opts)
+    "$('#{domid}').style.display == 'none' ? new #{false_effect}('#{domid}', {#{false_opts}}) : new #{true_effect}('#{domid}', {#{true_opts}}); return false;"
   end
 end
