@@ -10,6 +10,6 @@ class Ping < ActiveRecord::Base
 
     Net::HTTP.start(uri.host, uri.port) do |http|
       http.post("#{uri.path}?#{uri.query}", post)
-    end 
+    end
   end
 end

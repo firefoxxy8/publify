@@ -65,16 +65,10 @@ end
 
 class MetaWeblogService < TypoWebService
   web_service_api MetaWeblogApi
-  
   before_invocation :authenticate  
-  attr_reader :controller
-
-  def initialize(controller)
-    @controller = controller
-  end
 
   def getCategories(blogid, username, password)
-    Category.find_all.collect { |c| c.name }
+    Category.find(:all).collect { |c| c.name }
   end
 
   def getPost(postid, username, password)
@@ -93,24 +87,25 @@ class MetaWeblogService < TypoWebService
     article.title       = struct['title'] || ''
     article.published   = publish ? 1 : 0
     article.author      = username
-    article.created_at  = Time.now
+    article.created_at = struct['dateCreated'].to_time.getlocal rescue Time.now
     article.user        = @user
 
     # Movable Type API support
-    article.allow_comments = struct['mt_allow_comments'] || $config['default_allow_comments']
-    article.allow_pings    = struct['mt_allow_pings'] || $config['default_allow_pings']
+    article.allow_comments = struct['mt_allow_comments'] || config[:default_allow_comments]
+    article.allow_pings    = struct['mt_allow_pings'] || config[:default_allow_pings]
     article.extended       = struct['mt_text_more'] || ''
     article.excerpt        = struct['mt_excerpt'] || ''
     article.keywords       = struct['mt_keywords'] || ''
-    article.text_filter    = struct['mt_convert_breaks'] || ''
+    article.text_filter    = TextFilter.find_by_name(struct['mt_convert_breaks'] || config[:text_filter])
     
     if struct['categories']
       article.categories.clear
-      Category.find_all.each do |c|
+      Category.find(:all).each do |c|
         article.categories << c if struct['categories'].include?(c.name)
       end
     end
 
+    update_html(article)
     article.send_pings(article_url(article), struct['mt_tb_ping_urls'])
     
     article.save
@@ -129,44 +124,34 @@ class MetaWeblogService < TypoWebService
     article.title       = struct['title'] || ''
     article.published   = publish ? 1 : 0
     article.author      = username
-    # article.dateCreated
+    article.created_at  = struct['dateCreated'].to_time.getlocal unless struct['dateCreated'].blank?
 
     # Movable Type API support
-    article.allow_comments = struct['mt_allow_comments'] || $config['default_allow_comments']
-    article.allow_pings    = struct['mt_allow_pings'] || $config['default_allow_pings']
+    article.allow_comments = struct['mt_allow_comments'] || config['default_allow_comments']
+    article.allow_pings    = struct['mt_allow_pings'] || config['default_allow_pings']
     article.extended       = struct['mt_text_more'] || ''
     article.excerpt        = struct['mt_excerpt'] || ''
     article.keywords       = struct['mt_keywords'] || ''
-    article.text_filter    = struct['mt_convert_breaks'] || ''
+    article.text_filter    = TextFilter.find_by_name(struct['mt_convert_breaks'] || config[:text_filter])
 
     if struct['categories']
       article.categories.clear
-      Category.find_all.each do |c|
+      Category.find(:all).each do |c|
         article.categories << c if struct['categories'].include?(c.name)
       end
     end
     RAILS_DEFAULT_LOGGER.info(struct['mt_tb_ping_urls'])
+    update_html(article)
     article.send_pings(article_url(article), struct['mt_tb_ping_urls'])
-
     article.save    
     true
   end
     
   def newMediaObject(blogid, username, password, data)
-    path      = "#{RAILS_ROOT}/public/files/#{data["name"].split('/')[0..-2].join('/')}"
-    filepath  = "#{RAILS_ROOT}/public/files/#{data["name"]}"
+    resource = Resource.create(:filename => data['name'], :mime => data['type'], :created_at => Time.now)
+    resource.write_to_disk(data['bits'])
       
-    FileUtils.mkpath(path)
-      
-    File.open(filepath, "wb") { |f| f << data["bits"] }
-
-    resource = Resource.new
-    resource.filename   = data["name"]
-    resource.size       = File.size(path)
-    resource.mime       = data["type"]    
-    resource.save
-      
-    MetaWeblogStructs::Url.new("url" => controller.url_for(:controller => "/files/#{data["name"]}"))
+    MetaWeblogStructs::Url.new("url" => controller.url_for(:controller => "/files/#{resource.filename}"))
   end             
 
   def article_dto_from(article)
@@ -183,9 +168,9 @@ class MetaWeblogService < TypoWebService
       :mt_keywords       => article.keywords.to_s,
       :mt_allow_comments => article.allow_comments.to_i,
       :mt_allow_pings    => article.allow_pings.to_i,
-      :mt_convert_breaks => article.text_filter.to_s,
+      :mt_convert_breaks => (article.text_filter.name.to_s rescue ''),
       :mt_tb_ping_urls   => article.pings.collect { |p| p.url },
-      :dateCreated       => article.created_at || ""
+      :dateCreated       => (article.created_at.to_formatted_s(:db) rescue "")
       )
   end
 
@@ -205,5 +190,5 @@ class MetaWeblogService < TypoWebService
 
   def pub_date(time)
     time.strftime "%a, %e %b %Y %H:%M:%S %Z"
-  end
+  end  
 end

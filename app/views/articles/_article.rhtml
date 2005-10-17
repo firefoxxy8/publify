@@ -3,4 +3,4 @@
 <p class="auth"><!--Posted by <%= author_link(article) %>
   -->
 <%= date article.created_at %></p>
-<%= article.body_html %>
+<%= article_html(article,:body) %>

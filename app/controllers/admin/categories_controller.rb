@@ -6,7 +6,7 @@ class Admin::CategoriesController < Admin::BaseController
   end
 
   def list
-    @categories = Category.find(:all, :order => 'name')
+    @categories = Category.find(:all, :order => :position)
   end
 
   def show
@@ -18,8 +18,11 @@ class Admin::CategoriesController < Admin::BaseController
     
     if request.post? and @category.save
       flash[:notice] = 'Category was successfully created.'
-      redirect_to :action => 'list'
-    end      
+    else
+      flash[:error] = 'Category could not be created.'
+    end
+    
+    redirect_to :action => 'list'
   end
 
   def edit
@@ -38,5 +41,24 @@ class Admin::CategoriesController < Admin::BaseController
       redirect_to :action => 'list'
     end
   end
+
+  def order
+    Category.reorder(params[:category_list])
+    render :nothing => true
+  end
+
+  def asort
+    Category.reorder_alpha
+    render_component :action => "category_container"
+  end
   
+  def category_container
+    @categories = Category.find(:all, :order => :position)
+    render :partial => "categories"
+  end
+
+  def reorder
+    @categories = Category.find(:all, :order => :position)
+    render :layout => false
+  end
 end

@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 require 'dns_mock'
 
 class CommentTest < Test::Unit::TestCase
-  fixtures :articles, :comments, :blacklist_patterns, :settings
+  fixtures :articles, :comments, :blacklist_patterns, :settings, :text_filters
 
   def setup
     config.reload
@@ -16,8 +16,18 @@ class CommentTest < Test::Unit::TestCase
   
   def test_save_spam
     assert @spam_comment.save
-    assert_equal 'Test &lt;a href="http://fakeurl.co.uk" rel="nofollow"&gt;body&lt;/a&gt;', @spam_comment.body
     assert_equal "http://fakeurl.com", @spam_comment.url
+  end
+  
+  def test_create_comment
+    c = Comment.new
+    c.author = 'Bob'
+    c.article_id = 1
+    c.body = 'nice post'
+    c.ip = '1.2.3.4'
+    
+    assert c.save
+    assert c.guid.size > 15
   end
   
   def test_reject_spam_rbl

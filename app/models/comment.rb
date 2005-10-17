@@ -1,7 +1,10 @@
 require_dependency 'transforms'
 
 class Comment < ActiveRecord::Base
+  include TypoGuid
+  
   belongs_to :article
+  belongs_to :user
 
   validates_presence_of :author, :body
   validates_against_spamdb :body, :url, :ip
@@ -9,8 +12,8 @@ class Comment < ActiveRecord::Base
  
   protected
   
-  before_save :correct_url, :make_nofollow, :transform_body, :make_nofollow
-
+  before_save :correct_url, :make_nofollow, :create_guid
+  
   def correct_url
     unless url.to_s.empty?
       unless url =~ /^http\:\/\//
@@ -21,12 +24,6 @@ class Comment < ActiveRecord::Base
 
   def make_nofollow
     self.author = nofollowify(author)
-    self.body = nofollowify(body)
+    self.body_html = nofollowify(body_html.to_s)
   end
-
-  def transform_body
-    # Escape HTML in comments
-    self.body_html = HtmlEngine.transform(body, config["comment_text_filter"], [:filter_html]) 
-  end
-
 end

@@ -52,6 +52,7 @@ module ArticlesHelper
   def article_links(article)
     returning code = [] do
       code << category_links(article)   unless article.categories.empty?
+      code << tag_links(article)        unless article.tags.empty?
       code << comments_link(article)    if article.allow_comments?
       code << trackbacks_link(article)  if article.allow_pings?
     end.join("&nbsp;<strong>|</strong>&nbsp;")
@@ -59,9 +60,16 @@ module ArticlesHelper
   
   def category_links(article)
     "Posted in " + article.categories.collect { |c| link_to c.name,
-      { :controller=>"articles", :action=>"category", :id=>c.permalink },
-      :rel => "category tag"
+    { :controller=>"articles", :action => "category", :id => c.name },
+      :rel => "tag"
     }.join(", ")
+  end
+
+  def tag_links(article)
+    "Tags " + article.tags.collect { |tag| link_to tag.name,
+      { :controller=>"articles", :action=>"tag", :id=> tag.name },
+      :rel => "tag"
+    }.sort.join(", ")
   end
 
   def author_link(article)
@@ -74,4 +82,14 @@ module ArticlesHelper
     end
   end
 
+  # Generate the image tag for a commenters gravatar based on their email address
+  # Valid options are described at http://www.gravatar.com/implement.php
+  def gravatar_tag(email, options={})
+    options.update(:gravatar_id => Digest::MD5.hexdigest(email.strip))
+    options[:default] = CGI::escape(options[:default]) if options.include?(:default)
+    options[:size] ||= 60
+
+    image_tag("http://www.gravatar.com/avatar.php?" <<
+      options.map { |key,value| "#{key}=#{value}" }.sort.join("&"), :class => "gravatar")
+  end
 end

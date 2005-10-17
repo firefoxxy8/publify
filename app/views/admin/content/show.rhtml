@@ -8,22 +8,18 @@
   <h3><%=h @article.title %></h3>
 
   <div class="form">	
-    <div><%=@article.body_html %></div>
-    <div><%=@article.extended_html %></div>
+    <div><%= article_html(@article) %></div>
     <p class="meta"><label>Posted:</label> <%=h @article.created_at.to_formatted_s(:long_weekday) %> by <%=h @article.author %></p>
     <p class="meta"><label>Lasted updated:</label> <%=h @article.updated_at.to_formatted_s(:long_weekday) %></p>    
     <p class="meta"><label>Published:</label> <%=h (@article.published.zero? ? "No" : "Yes") %></p>
   </div>
     
   <h3>Categories</h3>
-  <div class="form">  
-  <h4>Currently this article is listed in following categories:</h4>
-  <% for category in @article.categories %>
-    <%= link_to "- #{category.name}", :action => "category_remove", :id => @article.id, :category_id => category.id %><br/>
-  <% end %>
+  <div id="categories" class="form">  
+    <%= render :partial => 'show_categories' -%>
+  </div>
 
-  <h4>You can add it to the following categories:</h4>
-  <% for category in @categories - @article.categories %>
-    <%= link_to "+ #{category.name}", :action => "category_add", :id => @article.id, :category_id => category.id %><br/>
-  <% end %>
-
+  <h3>Attachments</h3>
+  <div id="resources" class="form">
+    <%= render :partial => 'show_resources' -%>
+  </div>

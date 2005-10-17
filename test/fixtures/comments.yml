@@ -6,12 +6,18 @@ spam_comment:
   author: Bob Foo
   url: http://fakeurl.com
   body: Test <a href="http://fakeurl.co.uk">body</a>
-  created_at: 2005-01-01 01:00:00
+  created_at: 2005-01-01 02:00:00
+  updated_at: 2005-01-01 02:00:00
+  guid: 12313123123123123
 
 comment2:
   id: 2
   article_id: 1
   author: John Bar
+  user_id: 1000001
   url: www.google.com
+  email: john.bar@google.com
   body: Comment body _italic_ *bold*
-  created_at: 2005-01-01 01:00:00
+  created_at: 2005-01-01 02:00:01
+  updated_at: 2005-01-01 02:00:01
+  guid: 453456456456456

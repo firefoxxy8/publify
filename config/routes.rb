@@ -8,25 +8,41 @@ ActionController::Routing::Routes.draw do |map|
   # admin/comments controller needs parent article id
   map.connect 'blog/admin/comments/article/:article_id/:action/:id',
     :controller => 'admin/comments', :action => nil, :id => nil
-  map.connect 'blog/admin/trackback/article/:article_id/:action/:id',
-    :controller => 'admin/trackback', :action => nil, :id => nil
+  map.connect 'blog/admin/trackbacks/article/:article_id/:action/:id',
+    :controller => 'admin/trackbacks', :action => nil, :id => nil
   map.connect 'admin/content/:action/:id', :controller => 'admin/content'
 
   # make rss feed urls pretty and let them end in .xml
   # this improves caches_page because now apache and webrick will send out the 
   # cached feeds with the correct xml mime type. 
-  # MvZ: limit number of feeds
-  #map.xml 'blog/xml/:action/feed.xml', :controller => 'xml'
-  map.xml 'blog/xml/rss/feed.xml', :controller  => 'xml', :action => 'rss'
-  map.xml 'blog/xml/atom/feed.xml', :controller  => 'xml', :action => 'atom'
   #map.xml 'blog/xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
-
+  #map.xml 'blog/xml/commentrss/feed.xml', :controller => 'xml', :action => 'commentrss'
+  #map.xml 'blog/xml/trackbackrss/feed.xml', :controller => 'xml', :action => 'trackbackrss'
+  
+  # MvZ: Limit feed types.
+  map.xml 'blog/xml/rss/feed.xml', :controller  => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
+  map.xml 'blog/xml/atom/feed.xml', :controller  => 'xml', :action => 'feed', :type => 'feed', :format => 'atom'
+  #map.xml 'blog/xml/:format/feed.xml', :controller => 'xml', :action => 'feed', :type => 'feed'
+  #map.xml 'blog/xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
+  #map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
+  
   # allow neat perma urls
   map.connect 'blog',
     :controller => 'articles', :action => 'index'
   map.connect 'blog/page/:page',
     :controller => 'articles', :action => 'index',
     :page => /\d+/
+
+  #TODO
+  map.connect 'blog/:year/:month/:day',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/
+  map.connect 'blog/:year/:month',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/, :month => /\d{1,2}/
+  map.connect 'blog/:year',
+    :controller => 'articles', :action => 'find_by_date',
+    :year => /\d{4}/
 
   map.connect 'blog/:year/:month/:day/page/:page',
     :controller => 'articles', :action => 'find_by_date',
@@ -37,16 +53,6 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'blog/:year/page/:page',
     :controller => 'articles', :action => 'find_by_date',
     :year => /\d{4}/, :page => /\d+/
-
-  map.connect 'blog/:year/:month/:day',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/
-  map.connect 'blog/:year/:month',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/, :month => /\d{1,2}/
-  map.connect 'blog/:year',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/
 
   map.connect 'blog/:bryarid', :controller  => 'articles', :action => 'permalink', :bryarid => /id_\d*/
 
@@ -68,6 +74,9 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'theme', :action => 'javascript'
   map.connect 'images/theme/:filename',
     :controller => 'theme', :action => 'images'
+
+  map.connect 'plugins/filters/:filter/:public_action',
+    :controller => 'textfilter', :action => 'public_action'
 
   # Kill attempts to connect directly to the theme controller.
   # Ideally we'd disable these by removing the default route (below),

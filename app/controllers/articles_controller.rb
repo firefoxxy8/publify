@@ -4,7 +4,7 @@ class ArticlesController < ApplicationController
   layout :theme_layout
 
   cache_sweeper :blog_sweeper
-  caches_page :index, :read, :permalink, :category, :find_by_date, :archives, :view_page
+  caches_page :index, :read, :permalink, :category, :find_by_date, :archives, :view_page, :tag
 
   verify :only => [:nuke_comment, :nuke_trackback], :session => :user, :method => :post, :render => { :text => 'Forbidden', :status => 403 }
     
@@ -18,22 +18,36 @@ class ArticlesController < ApplicationController
   end
 
   def index
-    @pages = Paginator.new self, Article.count, config[:limit_article_display], @params[:page]
-    @articles = Article.find(:all, :conditions => 'published != 0', :order => 'created_at DESC', :limit => config[:limit_article_display], :offset => @pages.current.offset)
+    @pages, @articles = paginate :article, :per_page => config[:limit_article_display], :conditions => 'published != 0', :order_by => "created_at DESC"
   end
   
   def search
     @articles = Article.search(params[:q])
   end
 
+  def comment_preview
+    render :nothing => true and return if params[:comment].blank? or params[:comment][:body].blank?
+    
+    @headers["Content-Type"] = "text/html; charset=utf-8"
+    @comment = Comment.new(params[:comment])
+    @comment.body_html = nil
+    
+    render :layout => false
+  end
+
   def archives
     @articles = Article.find(:all, :conditions => 'published != 0', :order => 'created_at DESC', :include => [:categories])
   end
   
-  def read    
-    @article      = Article.find(params[:id], :include => [:categories])    
-    @comment      = Comment.new
-    @page_title   = @article.title
+  def read  
+    begin
+      @article      = Article.find(params[:id], :conditions => "published != 0", :include => [:categories])    
+      @comment      = Comment.new
+      @page_title   = @article.title
+      auto_discovery_feed :type => 'article', :id => @article.id
+    rescue
+      error("Post not found...") and return
+    end
   end
     
   def permalink
@@ -45,10 +59,11 @@ class ArticlesController < ApplicationController
       @article    = Article.find($1)
     end
     @comment    = Comment.new
-    
+
     if @article.nil?
       error("Post not found...")
     else
+      auto_discovery_feed :type => 'article', :id => @article.id
       @page_title = @article.title
       render :action => "read"
   	end
@@ -76,12 +91,8 @@ class ArticlesController < ApplicationController
   
   def category
     if category = Category.find_by_permalink(params[:id])
-      @articles = Article.find(:all, :conditions => [%{ published != 0
-          AND articles.id = articles_categories.article_id
-          AND articles_categories.category_id = ? }, category.id],
-        :joins => ', articles_categories',
-        :order => "created_at DESC")
-      
+      auto_discovery_feed :type => 'category', :id => category.permalink
+      @articles = Article.find_published_by_category_permalink(category.permalink)      
       @pages = Paginator.new self, @articles.size, config[:limit_article_display], @params[:page]
 
       start = @pages.current.offset
@@ -95,16 +106,36 @@ class ArticlesController < ApplicationController
     end
   end
     
+  def tag
+    @articles = Article.find_published_by_tag_name(params[:id])
+    auto_discovery_feed :type => 'tag', :id => params[:id]
+    
+    if(not @articles.empty?)
+      @pages = Paginator.new self, @articles.size, config[:limit_article_display], @params[:page]
+      
+      start = @pages.current.offset
+      stop  = (@pages.current.next.offset - 1) rescue @articles.size
+      # Why won't this work? @articles.slice!(start..stop)
+      @articles = @articles.slice(start..stop)
+      
+      render :action => "index"
+    else
+      error("Can't find posts with tag #{params[:id]}")
+    end
+  end
+    
   # Receive comments to articles
   def comment 
+    render :text => "non-ajax commenting is disabled", :status => 500 and return unless @request.xhr? or config[:sp_allow_non_ajax_comments]
+    
     @article = Article.find(params[:id])    
     @comment = Comment.new(params[:comment])
     @comment.article = @article
     @comment.ip = request.remote_ip
+    @comment.body_html = nil
+    @comment.user = session[:user]
 
-    if request.post? and @comment.save      
-      @comment.body = ""
-      
+    if request.post? and @comment.save    
       cookies[:author]  = { :value => @comment.author, :path => '/' + controller_name, :expires => 6.weeks.from_now } 
       cookies[:url]     = { :value => @comment.url, :path => '/' + controller_name, :expires => 6.weeks.from_now } 
 
@@ -112,6 +143,7 @@ class ArticlesController < ApplicationController
       
       render :partial => "comment", :object => @comment
     else
+      STDERR.puts @comment.errors.inspect
       render :text => @comment.errors.full_messages.join(", "), :status => 500
     end
   end  

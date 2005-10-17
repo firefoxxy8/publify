@@ -24,15 +24,21 @@ class ConfigurationTest < Test::Unit::TestCase
      "limit_article_display",
      "limit_rss_display",
      "link_to_author",
+     "ping_urls",
+     "send_outbound_pings",
+     "show_extended_on_rss",
+     "sp_allow_non_ajax_comments",
      "sp_article_auto_close",
      "sp_global",
      "sp_url_limit",
      "text_filter",
-     "theme"], Configuration.fields.keys.sort 
+     "theme",
+     "use_gravatar"], Configuration.fields.keys.sort 
   end
   
   def test_booleans
     assert_equal true, config[:sp_global]
+    assert_equal true, config[:sp_allow_non_ajax_comments]
     assert_equal true, config[:default_allow_comments]
     assert_equal false, config[:default_allow_pings]
     

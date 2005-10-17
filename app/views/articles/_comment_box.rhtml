@@ -9,6 +9,7 @@
 
 <div class="commentform">
   <div id="errors"></div>
+  <div id="preview" style="display: none"></div>
 
   <a name="respond"></a>
   <p><label for="comment_author">Your name:</label>
@@ -29,6 +30,7 @@
   <p>
   <p id="frm-btns">
   <input type="submit" name="submit" id="form-submit-button" value="submit" class="button" />&nbsp;&nbsp;
+      <a href="#" onclick="new Ajax.Updater('preview', '<%= url_for :action => 'comment_preview' %>',  {asynchronous:true, evalScripts:true, parameters:Form.serialize('commentform'), onComplete:function(request){Element.show('preview')}}); return false;">Preview comment</a>      
   <span id="comment_loading" style="display:none;"><%= image_tag "spinner.gif" %></span>
   </p>
 </div>

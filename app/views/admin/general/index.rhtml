@@ -42,17 +42,52 @@
       <label for="limit_rss_display">Display </label>
       <input name="setting[limit_rss_display]" size="4" id="limit_rss_display" type="text" value="<%= config_value(:limit_rss_display) %>" /> articles in my rss feed by default.
     </p>
+    <p>
+      <input name="setting[show_extended_on_rss]" id="show_extended_on_rss" type="checkbox" value="1" <%= 'checked="checked"' if config_value(:show_extended_on_rss)%> />
+      <input name="setting[show_extended_on_rss]" type="hidden" value="0"/>
+        <label for="show_extended_on_rss">Show full article on rss feed</label>
+    </p>
       
+    <hr />
+
     <p>Should the blog show mailto: links to your email address?</p>
     <p><input name="setting[link_to_author]" id="link_to_author" type="checkbox" value="1" <%= 'checked="checked"' if config_value(:link_to_author)%> /><input name="setting[link_to_author]" type="hidden" value="0"/> <label for="link_to_author">Enable E-Mail public display</label></p>
       
+    <hr />
+
+    <p>Should the blog use of the <a href="http://www.gravatar.com/">Globally Recognized Avatar (Gravatar)</a> service in comments?</p>
+    <p>
+      <input name="setting[use_gravatar]" id="use_gravatar" type="checkbox" value="1" <%= 'checked="checked"' if config_value(:use_gravatar) %> />
+      <input name="setting[use_gravatar]" type="hidden" value="0"/>
+      <label for="use_gravatar">Enable Gravatar integration</label>
+    </p>
+
+    <hr />
+
     <p>Would you like to include your latitude and longitude in your blog's HTML pages? See <a href="http://geourl.org">GeoURL</a> for details.  <br/>Example: <tt>47.774,-122.201</tt></p>
 
     <p>
       <label for="geourl_location">Latitude, Longitude:</label>
       <input name="setting[geourl_location]" size="20" id="geourl_location" type="text" value="<%= config_value(:geourl_location) %>" />
-    </p>      
-      
+    </p>
+    
+    <hr/>
+    
+    <p>Should Typo send trackbacks to websites that you link to?  This should be disabled 
+       for private blogs, as it will leak non-public information to sites that you're discussing.
+       For public blogs, there's no real point in disabling this.</p>
+    <p>
+      <input name="setting[send_outbound_pings]" id="send_outbound_pings" type="checkbox" value="1" <%= 'checked="checked"' if config_value(:send_outbound_pings)%> />
+         <input name="setting[send_outbound_pings]" type="hidden" value="0"/>
+           <label for="send_outbound_pings">Send trackbacks to external sites</label>
+         
+    </p>
+    
+    <p>
+      <label for="ping_urls">URLs to ping automatically:</label><br/>
+      <textarea name="setting[ping_urls]" id="ping_urls" rows="5" cols="50"><%=h config[:ping_urls] %></textarea>
+    </p>
+    
     <p class="r"><%= save("Save My Settings") %></p>
   </div>
   
@@ -62,13 +97,13 @@
         <p class="note">Your options depend on which gems you have installed. Following configurations are supported. <a href="http://www.whytheluckystiff.net/ruby/redcloth/" title="gem install redcloth">RedCloth</a>, <a href="http://www.deveiate.org/projects/BlueCloth">BlueCloth</a> and <a href="http://chneukirchen.org/blog/static/projects/rubypants.html">RubyPants</a> gems are supported.</p> 
       <p>
         <select name="setting[text_filter]" id="text_filter">
-          <%= options_for_select text_filter_options, config_value(:text_filter) %>
+          <%= options_for_select text_filter_options, TextFilter.find_by_name(config_value(:text_filter)) %>
         </select>
         <label for="text_filter">Article filter</label> 
       </p>
       <p>
         <select name="setting[comment_text_filter]" id="comment_text_filter">
-        <%= options_for_select text_filter_options, config_value(:comment_text_filter) %>
+        <%= options_for_select text_filter_options, TextFilter.find_by_name(config_value(:comment_text_filter)) %>
         </select>
         <label for="comment_text_filter">Comments filter</label> 
       </p>
@@ -78,10 +113,16 @@
     
     <div id="spam" class="set">
         <h3>Spam Protection</h3>
-        <p>Enabling spam protection will make typo compare the IP address of posters against blacklists. Good defense against spam bots.</p>
+        <p>Enabling spam protection will make typo compare the IP address of posters as well as the contents of their posts against local and remote blacklists. Good defense against spam bots.</p>
         <p>
           <input name="setting[sp_global]" id="sp_global" type="checkbox" value="1" <%= 'checked="checked"' if config_value(:sp_global)%> /><input name="setting[sp_global]" type="hidden" value="0"/>
           <label for="sp_global">Enable spam protection</label>
+        </p>
+        <p>
+          <input name="setting[sp_allow_non_ajax_comments]" id="sp_allow_non_ajax_comments" type="checkbox" value="1" <%= 'checked="checked"' if config_value(:sp_allow_non_ajax_comments)%> />
+          <input name="setting[sp_allow_non_ajax_comments]" type="hidden" value="0" />
+          <label for="sp_allow_non_ajax_comments">Allow non-ajax comments</label>
+          <br /><small>(Spam bots usually don't know anything about ajax comments)</small>
         </p>
         <p>
           <label for="sp_article_auto_close">Disable comments after</label>
@@ -100,7 +141,8 @@
  
  <div id="misc" class="set">
    <h3>Cache</h3>
-     <%= link_to 'Empty Page Cache', :controller => 'cache', :action => 'sweep' %>
+   <%= link_to 'Empty Page Cache', :controller => 'cache', :action => 'sweep' %><br />
+   <%= link_to 'Rebuild cached HTML', :controller => 'cache', :action => 'sweep_html' %><br />
    <div id="users">	
      <p>There are <%= @page_cache_size %> entries in the page cache</p>
    </div>

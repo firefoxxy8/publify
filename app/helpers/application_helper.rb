@@ -3,58 +3,8 @@ require 'digest/sha1'
 
 module ApplicationHelper
   
-  def categorylist()
-    categories = Category.find_all_with_article_counters
-    render_partial("shared/categories", categories)
-  end
-  
-  def flickrlist(url)
-    begin
-      render_partial("shared/flickr", check_cache(Flickr, url))
-    rescue 
-    end 
-  end
-
-  def tadalist(url)    
-    begin
-      render_partial("shared/tada", check_cache(Tada, url))
-    rescue 
-    end 
-  end
-
-  def deliciouslist(url)    
-    begin
-      render_partial("shared/delicious", check_cache(Delicious, url))
-    rescue 
-    end 
-  end
-
-  def fortythreelist(url)    
-    begin
-      render_partial("shared/fortythree", check_cache(Fortythree, url))
-    rescue 
-    end 
-	end
-	
-  def upcominglist(url)
-	  begin 
-	 	  render_partial("shared/upcoming", check_cache(Upcoming, url))
-	 	rescue
-		end
-	end
-
   def server_url_for(options = {})
     url_for options.update(:only_path => false)
-  end
-
-  def strip_html(text)
-    attribute_key = /[\w:_-]+/
-    attribute_value = /(?:[A-Za-z0-9]+|(?:'[^']*?'|"[^"]*?"))/
-    attribute = /(?:#{attribute_key}(?:\s*=\s*#{attribute_value})?)/
-    attributes = /(?:#{attribute}(?:\s+#{attribute})*)/
-    tag_key = attribute_key
-    tag = %r{<[!/?\[]?(?:#{tag_key}|--)(?:\s+#{attributes})?\s*(?:[!/?\]]+|--)?>}
-    text.gsub(tag, '').gsub(/\s+/, ' ').strip
   end
 
   def config_value(name)  
@@ -144,5 +94,37 @@ module ApplicationHelper
 
   def toggle_effect(domid, true_effect, true_opts, false_effect, false_opts)
     "$('#{domid}').style.display == 'none' ? new #{false_effect}('#{domid}', {#{false_opts}}) : new #{true_effect}('#{domid}', {#{true_opts}}); return false;"
+  end
+  
+  def article_html(article, what = :all)
+    article.html(@controller,what)
+  end
+  
+  def comment_html(comment)
+    if(comment.body_html.blank?)
+      comment.body_html = @controller.filter_text_by_name(comment.body, config[:comment_text_filter]) rescue comment.body
+      comment.save if comment.id and comment.article_id
+    end
+    
+    comment.body_html
+  end
+  
+  def page_html(page)
+    if(page.body_html.blank?)
+      page.body_html = @controller.filter_text_by_name(page.body, page.text_filter.name) rescue page.body
+      page.save if page.id
+    end
+    
+    page.body_html
+  end
+  
+  def strip_html(text)
+    attribute_key = /[\w:_-]+/
+    attribute_value = /(?:[A-Za-z0-9]+|(?:'[^']*?'|"[^"]*?"))/
+    attribute = /(?:#{attribute_key}(?:\s*=\s*#{attribute_value})?)/
+    attributes = /(?:#{attribute}(?:\s+#{attribute})*)/
+    tag_key = attribute_key
+    tag = %r{<[!/?\[]?(?:#{tag_key}|--)(?:\s+#{attributes})?\s*(?:[!/?\]]+|--)?>}
+    text.gsub(tag, '').gsub(/\s+/, ' ').strip
   end
 end

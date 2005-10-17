@@ -20,6 +20,7 @@ class Admin::PagesController < Admin::BaseController
     @page = Page.new(params[:page])
     @page.user_id = session[:user].id
     @page.text_filter ||= config[:text_filter]
+    update_html(@page)
     if request.post? and @page.save
       flash[:notice] = 'Page was successfully created.'
       redirect_to :action => 'show', :id => @page.id
@@ -27,8 +28,9 @@ class Admin::PagesController < Admin::BaseController
   end
 
   def edit
-    @page = Page.find(params[:id])
+    @page = Page.find(params[:id])  
     @page.attributes = params[:page]
+    update_html(@page)
     if request.post? and @page.save
       flash[:notice] = 'Page was successfully updated.'
       redirect_to :action => 'show', :id => @page.id
@@ -45,8 +47,15 @@ class Admin::PagesController < Admin::BaseController
   
   def preview
     @headers["Content-Type"] = "text/html; charset=utf-8"
-    @page = params[:page]
+    @page = Page.new
+    @page.attributes = params[:page]
+    update_html(@page)
     render :layout => false
   end
   
+  private
+
+  def update_html(page)
+    page.body_html = nil
+  end
 end
