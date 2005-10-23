@@ -18,8 +18,9 @@
   <div class="contents">
       <div class="main">
           <h1 id="sitename"><%= link_to config_value('blog_name'), { :controller => '/' } %></h1>
-        <%= @content_for_layout %>
-        </div>
+          <%= @content_for_layout %>
+          <%= javascript_tag "show_dates_as_local_time()" %>
+      </div>
       <div class="places">
         <p>Toxic Elephant is Matijs van Zuijlen's weblog.</p>
         <% if @frontpage -%>
@@ -47,16 +48,6 @@
                   :update => "search-results" -%>
 
         <%= render_component(:controller => 'sidebars/sidebar', :action => 'display_plugins') %>
-        <h3>Site</h3>
-        <ul class="navigation">
-          <li><a href="/">home</a></li>
-
-          <li><a href="/software/">software</a></li>
-          <li><a
-            href="http://www.xs4all.nl/~mvz/metaphoor/">metaphoor</a></li>
-          <li><a href="/blog/">blog</a></li>
-        </ul>
-
         <% end -%>
 	<!--
         <ul>

@@ -17,10 +17,8 @@
   <%= link_to("edit", { :controller => "admin/content", :action => "edit", :id => @article },
         :class => "admintools", :style => "display: none", :id => "admin_article") %>
   <h2><%= @article.title %></h2>
-  <p class="auth"><!--Posted by <%= author_link(@article) %>
-  MvZ TODO: Move customizations to theme.
-  -->
-  <%= date @article.created_at.utc %></p>
+  <p class="auth">Posted <!--by <%= author_link(@article) %>-->
+  <%= js_distance_of_time_in_words_to_now @article.created_at.utc %></p>
   <%= article_html(@article) %>
 </div>
 <p class="meta">
@@ -53,15 +51,6 @@
         render(:partial => "trackback", :collection => @article.trackbacks),
         :id => 'trackbackList', :class => 'trackback-list') unless @article.trackbacks.blank? %>  
 <% end -%>
-
-<p class="postmetadata alt">
-  <small>
-  <!--
-  <a href="<%= xml_url :action=>'feed', :type=>'article', :format => 'rss20', :id => @article %>" title="RSS Feed">RSS feed for this post</a>
-  -->
-  <a href="<%= server_url_for :controller=>"articles", :action=>"trackback", :id => @article.id %>" >trackback uri</a>  
-  </small>
-</p>
 
 <% if @article.allow_comments? -%>
   <%= render :partial => 'comment_box' %>

@@ -1,4 +1,4 @@
-<li class="comment" id="comment-<%= comment.id %>" <%= 'class="author_comment"' if comment.user %> <%= 'style="display:none"' if controller.request.xhr? %><%= onhover_show_admin_tools(:comment, comment.id) %>>
+<li id="comment-<%= comment.id %>" <%= 'class="author_comment"' if comment.user %> <%= 'style="display:none"' if controller.request.xhr? %><%= onhover_show_admin_tools(:comment, comment.id) %>>
   <%= admin_tools_for comment %>
   <p>
   <a name="comment-<%= comment.id %>"></a>
