@@ -4,7 +4,7 @@ class ArticlesController < ApplicationController
   layout :theme_layout
 
   cache_sweeper :blog_sweeper
-  caches_page :index, :read, :permalink, :category, :find_by_date, :archives, :view_page, :tag
+  caches_page :index, :read, :permalink, :category, :find_by_date, :archives, :view_page, :tag, :frontpage
 
   verify :only => [:nuke_comment, :nuke_trackback], :session => :user, :method => :post, :render => { :text => 'Forbidden', :status => 403 }
     
