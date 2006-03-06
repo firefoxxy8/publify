@@ -1,23 +1,14 @@
 class Plugins::Textfilters::MacroPreController < TextFilterPlugin
-  def self.display_name
-    "MacroPre"
-  end
+  plugin_display_name "MacroPre"
+  plugin_description "Macro expansion meta-filter (pre-markup)"
 
-  def self.description
-    "Macro expansion meta-filter (pre-markup)"
-  end
-
-  def filtertext
-    text = params[:text]
+  def self.filtertext(controller,content,text,params)
     filterparams = params[:filterparams]
     
     macros = TextFilter.available_filter_types['macropre']
-    text = macros.inject(text) do |text,macro|
-      render_component_as_string(:controller => macro.controller_path,
-        :action => 'filtertext', :params => {:text => text, :filterparams => filterparams})
+    macros.inject(text) do |text,macro|
+      macro.filtertext(controller,content,text,params)
     end
-
-    render :text => text
   end
 end
 

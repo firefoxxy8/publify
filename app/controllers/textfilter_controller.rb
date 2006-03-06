@@ -9,6 +9,9 @@ class TextFilterPlugin < ApplicationController
     include TypoPlugins
   end
   
+  plugin_display_name "Unknown Text Filter"
+  plugin_description "Unknown Text Filter Description"
+    
   # Disable HTML errors for subclasses
   def rescue_action(e) 
     raise e 
@@ -28,16 +31,6 @@ class TextFilterPlugin < ApplicationController
   # controller name, like 'markdown' or 'smartypants'. 
   def self.short_name
     component_name.split(%r{/}).last
-  end
-  
-  # The name that shows up in the UI
-  def self.display_name
-    # This is the default, but it's best to override it
-    short_name
-  end
-  
-  def self.description
-    short_name
   end
   
   def self.default_config
@@ -66,23 +59,21 @@ class TextFilterPlugin::Macro < TextFilterPlugin
     attributes
   end
 
-  def filtertext
-    text = params[:text]
+  def self.filtertext(controller, content, text, params)
     filterparams = params[:filterparams]
-    regex1 = /<typo:#{self.class.short_name}[^>]*\/>/
-    regex2 = /<typo:#{self.class.short_name}([^>]*)>(.*?)<\/typo:#{self.class.short_name}>/m
+    regex1 = /<typo:#{short_name}[^>]*\/>/
+    regex2 = /<typo:#{short_name}([^>]*)>(.*?)<\/typo:#{short_name}>/m
     
     new_text = text.gsub(regex1) do |match|
-      macrofilter(self.class.attributes_parse(match),filterparams)
+      macrofilter(controller,content,attributes_parse(match),params)
     end
     
     new_text = new_text.gsub(regex2) do |match|
-      macrofilter(self.class.attributes_parse($1.to_s),filterparams,$2.to_s)
+      macrofilter(controller,content,attributes_parse($1.to_s),params,$2.to_s)
     end
-
-    render :text => new_text
+    
+    new_text
   end
-
 end
 
 class TextFilterPlugin::MacroPre < TextFilterPlugin::Macro
@@ -106,6 +97,10 @@ class TextfilterController < ApplicationController
     else
       render :text => '', :status => 404
     end
+  end
+  
+  def test_action
+    render :text => ''
   end
 end
 

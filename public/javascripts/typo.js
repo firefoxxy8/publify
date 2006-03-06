@@ -1,7 +1,5 @@
 function register_onload(func) {
-  var old_event = window.onload;
-  if (typeof window.onload != 'function') { window.onload = func; }
-  else { window.onload = function() { old_event(); func(); }; }
+  Event.observe(window, 'load', func, false);
 }
 
 function show_dates_as_local_time() {
@@ -71,8 +69,11 @@ function complete(request) {
 
 register_onload(function() {
   if ($('commentform')) {
-    $('commentform').elements['comment[author]'].value = getCookie('author');
-    $('commentform').elements['comment[url]'].value = getCookie('url');
+	var _author = getCookie('author');
+	var _url = getCookie('url');
+
+    if(_author != null) { $('commentform').elements['comment[author]'].value = _author }
+    if(_url != null) { $('commentform').elements['comment[url]'].value = _url }
     
     if ($('commentform').elements['comment[url]'].value != ''
         || $('commentform').elements['comment[email]'].value != '') {

@@ -1,13 +1,8 @@
 class Plugins::Textfilters::NoneController < TextFilterPlugin::Markup
-  def self.display_name
-    "None"
-  end
+  plugin_display_name "None"
+  plugin_description 'Raw HTML only'
 
-  def self.description
-    'Raw HTML only'
-  end
-
-  def self.filter(text,params)
+  def self.filtertext(controller,content,text,params)
     text
   end
 end

@@ -1,7 +1,8 @@
 class LiveController < ApplicationController
-
+  session :off
+  
   def search
-    @search = request.raw_post
+    @search = params[:q]
     @articles = Article.search(@search)
     @headers["Content-Type"] = "text/html; charset=utf-8"
   end

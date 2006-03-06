@@ -2,6 +2,9 @@ require 'digest/sha1'
 
 # this model expects a certain database layout and its based on the name/login pattern. 
 class User < ActiveRecord::Base
+  has_and_belongs_to_many :notify_contents, :class_name => 'Content',
+    :join_table => 'notifications', :foreign_key => 'notify_user_id', 
+    :association_foreign_key => 'notify_content_id', :uniq => true
 
   # echo "typo" | sha1sum -
   @@salt = '20ac4d290c2293702c64b3b287ae5ea79b26a5c1'
@@ -23,7 +26,19 @@ class User < ActiveRecord::Base
     
     false
   end
-  
+
+  def password=(newpass)
+    @password = newpass
+  end
+
+  def password(cleartext = nil)
+    if cleartext
+      @password.to_s
+    else
+      @password || read_attribute("password")
+    end
+  end
+
   protected
 
   # Apply SHA1 encryption to the supplied password. 
@@ -32,14 +47,15 @@ class User < ActiveRecord::Base
   def self.sha1(pass)
     Digest::SHA1.hexdigest("#{salt}--#{pass}--")
   end
-    
+
   before_create :crypt_password
   
   # Before saving the record to database we will crypt the password 
   # using SHA1. 
   # We never store the actual password in the DB.
   def crypt_password
-    write_attribute "password", self.class.sha1(password)
+    write_attribute "password", self.class.sha1(password(true))
+    @password = nil
   end
   
   before_update :crypt_unless_empty
@@ -48,11 +64,12 @@ class User < ActiveRecord::Base
   # If its empty we assume that the user didn't want to change his
   # password and just reset it to the old value.
   def crypt_unless_empty
-    if password.empty?      
+    if password(true).empty?      
       user = self.class.find(self.id)
       self.password = user.password
     else
-      write_attribute "password", self.class.sha1(password)
+      write_attribute "password", self.class.sha1(password(true))
+      @password = nil
     end        
   end  
   

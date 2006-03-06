@@ -2,16 +2,8 @@ require 'net/http'
 require 'flickr/flickr'
 
 class Plugins::Textfilters::FlickrController < TextFilterPlugin::MacroPost
-
-  KEY='84f652422f05b96b29b9a960e0081c50'
-
-  def self.display_name
-    "Flickr"
-  end
-
-  def self.description
-    "Automatically generate image tags for Flickr images"
-  end
+  plugin_display_name "Flickr"
+  plugin_description "Automatically generate image tags for Flickr images"
 
 #  def self.default_config
 #    {"flickr-user-id" => {:default => "",
@@ -50,7 +42,7 @@ This macro takes a number of parameters:
 }
   end
 
-  def macrofilter(attrib,params,text="")
+  def self.macrofilter(controller,content,attrib,params,text="")
     img     = attrib['img']
     size    = attrib['size'] || "square"
     style   = attrib['style']
@@ -58,7 +50,7 @@ This macro takes a number of parameters:
     title   = attrib['title']
     alt     = attrib['alt']
 
-    flickr = Flickr.new(KEY)
+    flickr = Flickr.new(FLICKR_KEY)
     flickrimage = Flickr::Photo.new(img)
     sizes = flickrimage.sizes
     

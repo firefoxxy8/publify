@@ -1,5 +1,6 @@
 class XmlController < ApplicationController  
   caches_page :feed
+  session :off
   
   FORMATS = {'atom' => 'atom03', 'rss' => 'rss20', 
     'atom03' => nil, 'atom10' => nil, 'rss20' => nil}
@@ -22,17 +23,19 @@ class XmlController < ApplicationController
     
     case params[:type]
     when 'feed'
-      @items = Article.find(:all, :order => 'created_at DESC', 
-        :conditions => 'published=1', :limit => config[:limit_rss_display])
+      @items = Article.find_published(:all, :order => 'created_at DESC', 
+                                      :limit => config[:limit_rss_display])
     when 'comments'
-      @items = Comment.find(:all, :order => 'created_at DESC', :limit => config[:limit_rss_display])
+      @items = Comment.find_published(:all, :order => 'created_at DESC',
+                                      :limit => config[:limit_rss_display])
       @feed_title = "#{config[:blog_name]} comments"
     when 'trackbacks'
-      @items = Trackback.find(:all, :order => 'created_at DESC', :limit => config[:limit_rss_display])
+      @items = Trackback.find_published(:all, :order => 'created_at DESC',
+                                        :limit => config[:limit_rss_display])
       @feed_title = "#{config[:blog_name]} trackbacks"
     when 'article'
       article = Article.find(params[:id])
-      @items = article.comments.find(:all, :order => 'created_at DESC', :limit => 25)
+      @items = article.comments.find_published(:all, :order => 'created_at DESC', :limit => 25)      
       @items.push(article)
       @feed_title = "#{config[:blog_name]}: #{article.title}"
       @link = article_url(article, false)
@@ -45,7 +48,7 @@ class XmlController < ApplicationController
     when 'tag'
       tag = Tag.find_by_name(params[:id])
       @items = Article.find_published_by_tag_name(params[:id], :limit => config[:limit_rss_display])
-      @feed_title = "#{config[:blog_name]}: Tag #{tag.name}"
+      @feed_title = "#{config[:blog_name]}: Tag #{tag.display_name}"
       @link = url_for({:controller => "articles", :action => 'tag', :tag => tag.name},
         {:only_path => false})
     else
@@ -54,6 +57,13 @@ class XmlController < ApplicationController
     end
     
     render :action => "#{@format}_feed"
+  end
+  
+  def itunes
+    @feed_title = "#{config[:blog_name]} Podcast"
+    @items = Resource.find(:all, :order => 'created_at DESC',
+      :conditions => ['itunes_metadata = ?', true], :limit => config[:limit_rss_display])
+    render :action => "itunes_feed"
   end
 
   def articlerss

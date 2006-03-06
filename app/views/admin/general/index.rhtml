@@ -8,6 +8,7 @@
       <li><a href="#gensettings" onclick="new Effect.ScrollTo('gensettings'); return false">General Settings</a></li>
       <li><a href="#textfilter" onclick="new Effect.ScrollTo('textfilter'); return false">Text Filter</a></li>
       <li><a href="#spam" onclick="new Effect.ScrollTo('spam'); return false">Spam Protection</a></li>
+      <li><a href="#resources" onclick="new Effect.ScrollTo('resources'); return false">Resource Defaults</a></li>
       <li><a href="#misc" onclick="new Effect.ScrollTo('misc'); return false">Cache</a></li>
     </ul>
     <div style="clear:both;"></div>
@@ -94,7 +95,7 @@
   
   <div id="textfilter" class="set">
   <h3>Text Filter</h3>
-        <p class="note">Your options depend on which gems you have installed. Following configurations are supported. <a href="http://www.whytheluckystiff.net/ruby/redcloth/" title="gem install redcloth">RedCloth</a>, <a href="http://www.deveiate.org/projects/BlueCloth">BlueCloth</a> and <a href="http://chneukirchen.org/blog/static/projects/rubypants.html">RubyPants</a> gems are supported.</p> 
+        <p class="note">Typo supports a number of text filtering options.  To add new filters, see the "filters" tab on the toolbar above.</p> 
       <p>
         <select name="setting[text_filter]" id="text_filter">
           <%= options_for_select text_filter_options, TextFilter.find_by_name(config_value(:text_filter)) %>
@@ -107,6 +108,24 @@
         </select>
         <label for="comment_text_filter">Comments filter</label> 
       </p>
+      <p class="r"><%= save("Save My Settings") %></p>
+    </div>
+    
+    <div id="notification" class="set">
+    <h3>Notification</h3>
+    <p>Typo can notify you when new articles or comments are posted</p>
+    <p>
+      <label for="email_from">Email address to use in From: field when Typo sends mail:</label>
+      <input name="setting[email_from]" size="20" id="email_from" type="text" value="<%= config_value(:email_from) %>" />
+    </p>
+    <p>
+      <label for="jabber_address">Jabber account to use when sending Jabber notifications:</label>
+      <input name="setting[jabber_address]" size="20" id="jabber_address" type="text" value="<%= config_value(:jabber_address) %>" />
+    </p>
+    <p>
+      <label for="jabber_password">Password for Jabber account:</label>
+      <input name="setting[jabber_password]" size="20" id="jabber_password" type="password" value="<%= config_value(:jabber_password) %>" />
+    </p>
       <p class="r"><%= save("Save My Settings") %></p>
     </div>
     
@@ -137,14 +156,51 @@
         </p>
         <p class="r"><%= save("Save My Settings") %></p>
     </div>
+    <div id="resources" class="set">
+        <h3>Resource Defaults</h3>
+        <p>
+          The below settings act as defaults when you choose to publish an enclosure with iTunes metadata.
+        </p>
+        <p>
+          <label for="itunes_author">Author:</label> 
+          <input name="setting[itunes_author]" size="25" id="itunes_author" type="text" value="<%= config_value(:itunes_author) %>" /> 
+        </p>
+        <p>
+          <label for="itunes_subtitle">Subtitle:</label> 
+          <input name="setting[itunes_subtitle]" size="25" id="itunes_subtitle" type="text" value="<%= config_value(:itunes_subtitle) %>" /><small>(setting for channel)</small>
+        </p>
+        <p>
+        <label for="itunes_summary">Summary:<small>(setting for channel)</small>
+</label> <br />
+          <textarea name="setting[itunes_summary]" cols="40" rows="3"><%= config_value(:itunes_summary) %></textarea>
+        </p>
+        <p>
+          <label for="itunes_email">Email:</label> 
+          <input name="setting[itunes_email]" size="25" id="itunes_email" type="text" value="<%= config_value(:itunes_email) %>" /> <small> Not Published by Apple</small>
+        </p>
+        <p>
+          <label for="itunes_name">Optional Name:</label> 
+          <input name="setting[itunes_name]" size="25" id="itunes_name" type="text" value="<%= config_value(:itunes_name) %>" /> <small> Not Published by Apple</small>
+
+        </p>
+        <p>
+          <label for="itunes_copyright">Copyright Information:</label> 
+          <input name="setting[itunes_copyright]" size="25" id="itunes_copyright" type="text" value="<%= config_value(:itunes_copyright) %>" /> 
+        </p>
+        <p>
+          <label for="itunes_explicit">Explicit:</label> 
+          <input name="setting[itunes_explicit]" id="itunes_explicit" type="checkbox"  value="1" <%= 'checked="checked"' if config_value(:itunes_explicit)%> /><input name="setting[itunes_explicit]" type="hidden" value="0" /> 
+        </p>
+        <p class="r"><%= save("Save My Settings") %></p>
+    </div>
  </div>
  
  <div id="misc" class="set">
    <h3>Cache</h3>
-   <%= link_to 'Empty Page Cache', :controller => 'cache', :action => 'sweep' %><br />
+   <%= link_to 'Empty Fragment Cache', :controller => 'cache', :action => 'sweep' %><br />
    <%= link_to 'Rebuild cached HTML', :controller => 'cache', :action => 'sweep_html' %><br />
    <div id="users">	
-     <p>There are <%= @page_cache_size %> entries in the page cache</p>
+     <p>There are <%= @page_cache_size %> entries in the cache</p>
    </div>
 </div>
 

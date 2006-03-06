@@ -1,14 +1,8 @@
 class Plugins::Textfilters::HtmlfilterController < TextFilterPlugin
-  def self.display_name
-    "HTML Filter"
-  end
+  plugin_display_name "HTML Filter"
+  plugin_description 'Strip HTML tags'
 
-  def self.description
-    'Strip HTML tags'
-  end
-
-  def filtertext
-    text = params[:text].to_s
-    render :text => text.gsub( "<", "&lt;" ).gsub( ">", "&gt;" )
+  def self.filtertext(controller,content,text,params)
+    text.to_s.gsub( "<", "&lt;" ).gsub( ">", "&gt;" )
   end
 end

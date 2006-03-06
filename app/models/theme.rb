@@ -13,7 +13,7 @@ class Theme
   end
 
   def description
-    File.read("#{path}/about.markdown")
+    File.read("#{path}/about.markdown") rescue "### #{name}"
   end
   
   def self.themes_root
@@ -44,8 +44,9 @@ class Theme
   end  
 
   def self.search_theme_directory
-    Dir.glob("#{themes_root}/[-_a-zA-Z0-9]*").collect do |file|
-      file if File.directory?(file)      
+    glob = "#{themes_root}/[-_a-zA-Z0-9]*"
+    Dir.glob(glob).select do |file|
+      File.readable?("#{file}/about.markdown")
     end.compact
   end  
 end

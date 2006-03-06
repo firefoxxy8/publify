@@ -2,6 +2,34 @@
 require 'digest/sha1'
 
 module ApplicationHelper
+
+  # NB: This overrides an undocumented rails function in order to add
+  # a search path. We need this to get themes working, but I'd be
+  # happier if we didn't have to override undocumented methods. Ho
+  # hum. -- pdcawley
+  
+  def render_file(template_path, use_full_path = true, local_assigns = {}) #:nodoc:
+    search_path = [
+                   "../themes/#{config[:theme]}/views",     # for components
+                   "../../themes/#{config[:theme]}/views",  # for normal views
+                   "."                                      # fallback
+                  ]
+    
+    if use_full_path
+      search_path.each do |prefix|
+        theme_path = prefix+'/'+template_path
+        begin
+          template_extension = pick_template_extension(theme_path)
+        rescue ActionView::ActionViewError => err
+          next
+        end
+        return super(theme_path, use_full_path, local_assigns)
+      end
+      raise "Can't locate theme #{config[:theme]}"
+    else
+      super(template_path, use_full_path, local_assigns)
+    end
+  end
   
   def server_url_for(options = {})
     url_for options.update(:only_path => false)
@@ -42,28 +70,28 @@ module ApplicationHelper
     url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month), :day => sprintf("%.2d", article.created_at.day), :title => article.permalink, :anchor=> "trackback-#{trackback.id}"
   end
   
-  def responses(collection, word)
-    case collection.size
+  def pluralize(size, word)
+    case size
     when 0
       "no #{word}s"
     when 1
       "1 #{word}"
     else
-      "#{collection.size} #{word}s"
+      "#{size} #{word}s"
     end
   end
     
   def comments_link(article)
-    article_link  responses(article.comments, "comment"), article, 'comments'
+    article_link  pluralize(article.comments.size, "comment"), article, 'comments'
   end
 
   def trackbacks_link(article)  
-    article_link responses(article.trackbacks, "trackback"), article, 'trackbacks'
+    article_link pluralize(article.trackbacks.size, "trackback"), article, 'trackbacks'
   end
   
-  def check_cache(aggregator, url)
-    hash = "#{aggregator.to_s}_#{Digest::SHA1.hexdigest(url)}".to_sym
-    controller.cache[hash] ||= aggregator.new(url)
+  def check_cache(aggregator, *args)
+    hash = "#{aggregator.to_s}_#{args.collect { |arg| Digest::SHA1.hexdigest(arg) }.join('_') }".to_sym
+    controller.cache[hash] ||= aggregator.new(*args)
   end  
   
   def js_distance_of_time_in_words_to_now(date)
@@ -73,7 +101,9 @@ module ApplicationHelper
   
   def render_sidebar(sidebar)
     begin
-      render_component :layout => false, :controller => sidebar.sidebar_controller.component_name, :action=>'index', :params => {:sidebar => sidebar }
+      render_component :layout => false, :controller => sidebar.sidebar_controller.component_name, 
+        :action=>'index', :params => {:sidebar => sidebar,
+                                      :contents => (@params[:contents])}
     rescue => e 
       content_tag :p, e.message, :class => 'error'
     end
@@ -96,35 +126,17 @@ module ApplicationHelper
     "$('#{domid}').style.display == 'none' ? new #{false_effect}('#{domid}', {#{false_opts}}) : new #{true_effect}('#{domid}', {#{true_opts}}); return false;"
   end
   
-  def article_html(article, what = :all)
-    article.html(@controller,what)
+  def article_html(article, what = :all) 
+    article.html(@controller,what) 
   end
   
-  def comment_html(comment)
-    if(comment.body_html.blank?)
-      comment.body_html = @controller.filter_text_by_name(comment.body, config[:comment_text_filter]) rescue comment.body
-      comment.save if comment.id and comment.article_id
-    end
-    
-    comment.body_html
+  def comment_html(comment) 
+    comment.html(@controller,:body)
   end
   
   def page_html(page)
-    if(page.body_html.blank?)
-      page.body_html = @controller.filter_text_by_name(page.body, page.text_filter.name) rescue page.body
-      page.save if page.id
-    end
-    
-    page.body_html
+    page.html(@controller,:body) 
   end
   
-  def strip_html(text)
-    attribute_key = /[\w:_-]+/
-    attribute_value = /(?:[A-Za-z0-9]+|(?:'[^']*?'|"[^"]*?"))/
-    attribute = /(?:#{attribute_key}(?:\s*=\s*#{attribute_value})?)/
-    attributes = /(?:#{attribute}(?:\s+#{attribute})*)/
-    tag_key = attribute_key
-    tag = %r{<[!/?\[]?(?:#{tag_key}|--)(?:\s+#{attributes})?\s*(?:[!/?\]]+|--)?>}
-    text.gsub(tag, '').gsub(/\s+/, ' ').strip
-  end
+  def strip_html(text) text.strip_html end
 end

@@ -25,62 +25,78 @@ class ApplicationController < ActionController::Base
     end
   end
   
-  def auto_discovery_defaults
-    auto_discovery_feed(:type => 'feed')
+  def reload_settings
+    unless @request.instance_variable_get(:@config_reloaded)
+      @request.instance_variable_set(:@config_reloaded, true)
+      config.reload
+    end
   end
-  
+
+  def auto_discovery_defaults
+    @auto_discovery_url_rss = 
+        @request.instance_variable_get(:@auto_discovery_url_rss)
+    @auto_discovery_url_atom =
+         @request.instance_variable_get(:@auto_discovery_url_atom)
+    unless @auto_discovery_url_rss && @auto_discovery_url_atom
+      auto_discovery_feed(:type => 'feed')
+      @request.instance_variable_set(:@auto_discovery_url_rss,
+                                      @auto_discovery_url_rss)
+      @request.instance_variable_set(:@auto_discovery_url_atom, 
+                                      @auto_discovery_url_atom)
+    end
+  end
+    
   def auto_discovery_feed(options)
     options = {:only_path => false, :action => 'feed', :controller => 'xml'}.merge options
-    @auto_discovery_url_rss = url_for(({:format => 'rss'}.merge options))
-    @auto_discovery_url_atom = url_for(({:format => 'atom'}.merge options))
+    @auto_discovery_url_rss = url_for(({:format => 'rss20'}.merge options))
+    @auto_discovery_url_atom = url_for(({:format => 'atom10'}.merge options))
   end
   
   def article_url(article, only_path = true, anchor = nil)
     url_for :only_path => only_path, :controller=>"/articles", :action =>"permalink", :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month), :day => sprintf("%.2d", article.created_at.day), :title => article.permalink, :anchor => anchor
+  end
+
+  def server_url
+    url_for :only_path => false, :controller => "/"
   end
   
   def cache
     $cache ||= SimpleCache.new 1.hour
   end
   
-  def reload_settings
-    config.reload
-  end
-
   def theme_layout
     Theme.current.layout
   end
   
-  def filter_text(text, filters, filterparams={}, filter_html=false)
-    map=TextFilter.filters_map
-
-    if(filter_html)
-      filters = [:htmlfilter, filters].flatten
+  helper_method :contents
+  def contents
+    if @articles
+      @articles
+    elsif @article
+      [@article]
+    elsif @page
+      [@page]
+    else
+      []
     end
+  end
+  
+  protected
 
-    filters.each do |filter|
-      begin
-        filter_component = map[filter.to_s].controller_path
-        text = render_component_as_string(:controller => filter_component, 
-          :action => 'filtertext', 
-          :params => {:text => text, :filterparams => filterparams} )
-      rescue => err
-        logger.error "Filter #{filter} failed: #{err}"
+  def self.include_protected(*modules)
+    modules.reverse.each do |mod|
+      included_methods = mod.public_instance_methods.reject do |meth|
+        self.method_defined?(meth)
+      end
+      self.send(:include, mod)
+      included_methods.each do |meth|
+        protected meth
       end
     end
-
-    text
   end
-
-  def filter_text_by_name(text, filtername, filter_html=false)
-    f = TextFilter.find_by_name(filtername)
-    if (f)
-      filters = [:macropre, f.markup, :macropost, f.filters].flatten
-      filter_text(text,filters,f.params,filter_html)
-    else
-      filter_text(text,[:macropre,:macropost],{},filter_html)
-    end
-  end
+  
+  include_protected ActionView::Helpers::TagHelper, ActionView::Helpers::TextHelper
+  
 end
 
 require_dependency 'controllers/textfilter_controller'

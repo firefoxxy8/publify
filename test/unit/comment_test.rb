@@ -3,20 +3,20 @@ require File.dirname(__FILE__) + '/../test_helper'
 require 'dns_mock'
 
 class CommentTest < Test::Unit::TestCase
-  fixtures :articles, :comments, :blacklist_patterns, :settings, :text_filters
+  fixtures :contents, :blacklist_patterns, :settings, :text_filters
 
   def setup
     config.reload
   end
 
   def test_save_regular
-    assert @comment2.save
-    assert_equal "http://www.google.com", @comment2.url
+    assert contents(:comment2).save
+    assert_equal "http://www.google.com", contents(:comment2).url
   end
   
   def test_save_spam
-    assert @spam_comment.save
-    assert_equal "http://fakeurl.com", @spam_comment.url
+    assert contents(:spam_comment).save
+    assert_equal "http://fakeurl.com", contents(:spam_comment).url
   end
   
   def test_create_comment
@@ -32,7 +32,7 @@ class CommentTest < Test::Unit::TestCase
   
   def test_reject_spam_rbl
     c = Comment.new
-    c.author "Spammer"
+    c.author = "Spammer"
     c.body = %{This is just some random text. &lt;a href="http://chinaaircatering.com"&gt;without any senses.&lt;/a&gt;. Please disregard.}
     c.url = "http://buy-computer.us"
     c.ip = "212.42.230.206"
@@ -40,6 +40,7 @@ class CommentTest < Test::Unit::TestCase
     assert ! c.save
     assert c.errors.invalid?('body')
     assert c.errors.invalid?('url')
+    assert c.errors.invalid?('ip')
   end
 
   def test_reject_spam_pattern
@@ -67,7 +68,7 @@ class CommentTest < Test::Unit::TestCase
     c = Comment.new
     c.author = "Old Spammer"
     c.body = "Old trackback body"
-    c.article = @article3
+    c.article = contents(:inactive_article)
 
     assert ! c.save
     assert c.errors.invalid?('article_id')
@@ -78,9 +79,16 @@ class CommentTest < Test::Unit::TestCase
     assert c.errors.empty?
   end
 
+  def test_modify_old_comment
+    c = contents(:inactive_article).comments.first
+    c.body = 'Comment body <em>italic</em> <strong>bold</strong>'
+    assert c.save
+    assert c.errors.empty?
+  end
+
   def test_article_relation
-    assert_equal true, @comment2.has_article?
-    assert_equal 1, @comment2.article.id
+    assert_equal true, contents(:comment2).has_article?
+    assert_equal 1, contents(:comment2).article.id
   end
 
   def test_xss_rejection

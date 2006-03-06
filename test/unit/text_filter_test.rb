@@ -17,7 +17,7 @@ class TextFilterTest < Test::Unit::TestCase
   def test_markdownsmartypants_fixture
     ms = TextFilter.find_by_name('markdown smartypants')
 
-    assert_equal @markdownsmartypants_filter, ms
+    assert_equal text_filters(:markdownsmartypants_filter), ms
     assert_equal 'markdown', ms.markup
     assert_equal [:smartypants], ms.filters
     assert_equal Hash.new, ms.params
@@ -25,7 +25,7 @@ class TextFilterTest < Test::Unit::TestCase
 
   def test_textile_fixture
     tx = TextFilter.find_by_name('textile')
-    assert_equal @textile_filter, tx
+    assert_equal text_filters(:textile_filter), tx
     assert_equal 'textile', tx.markup
     assert_equal [], tx.filters
   end
@@ -43,6 +43,15 @@ class TextFilterTest < Test::Unit::TestCase
     assert !filters.include?(TextFilterPlugin::Markup)
     assert !filters.include?(TextFilterPlugin::Macro)
     assert !filters.include?(TextFilterPlugin::PostProcess)
+  end
+  
+  def test_descriptions
+    TextFilter.available_filters.each do |filter|
+      assert filter.display_name.to_s.size > 0, "Blank display name for #{filter}"
+      assert filter.description.to_s.size > 0, "Blank description for #{filter}"
+      assert_not_equal 'Unknown Text Filter ',filter.display_name
+      assert_not_equal 'Unknown Text Filter Description',filter.description
+    end
   end
 
   def test_filtertypes

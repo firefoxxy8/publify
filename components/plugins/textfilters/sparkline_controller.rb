@@ -5,16 +5,10 @@ begin
 
   class Plugins::Textfilters::SparklineController < TextFilterPlugin::MacroPost
     plugin_public_action :plot
+    plugin_display_name "Sparkline"
+    plugin_description "Produce Sparklines"
 
-    def self.display_name
-      "Sparkline"
-      end
-
-      def self.description
-        "Produce Sparklines"
-        end
-  
-        def self.help_text
+    def self.help_text
     %{
 You can use `<typo:sparkline>` to generate [Sparklines][], which are essentially small inline charts.
 Example:
@@ -25,7 +19,7 @@ Options:
 
 * **data** This is the data to be plotted.  You may also include the data between `<typo:sparkline>` 
 and `</typo:sparkline>` tags.
-* **type** This is the type of sparkline to be generated.  Options include `area`, `discreet`, `pie`, and `smooth`.
+* **type** This is the type of sparkline to be generated.  Options include `area`, `discrete`, `pie`, and `smooth`.
 
 For other options, see the [Ruby Sparkline][] website.
 
@@ -34,7 +28,7 @@ For other options, see the [Ruby Sparkline][] website.
 }
     end
   
-    def opt(attrib,optname)
+    def self.opt(attrib,optname)
       if(attrib[optname])
         " #{optname}=\"#{attrib.delete(optname)}\""
       else  
@@ -42,7 +36,7 @@ For other options, see the [Ruby Sparkline][] website.
       end
     end
   
-    def macrofilter(attrib,params,text="")
+    def self.macrofilter(controller,content,attrib,params,text="")
       img_opts = opt(attrib,'style') + opt(attrib,'alt') + opt(attrib,'title')
       data = text.to_s.split(/\s+/).join(',')
     
@@ -50,7 +44,7 @@ For other options, see the [Ruby Sparkline][] website.
         data = attrib.delete('data').to_s.split.join(',')
       end
     
-      url = url_for(
+      url = controller.url_for(
         {:controller => '/textfilter', :action => 'public_action', :filter => 'sparkline',
         :public_action => 'plot', :data => data}.update(attrib))
       
@@ -62,12 +56,12 @@ For other options, see the [Ruby Sparkline][] website.
       ary = params['data'].split(',').collect { |i| i.to_i }
       params.delete('filename')
       
-      if(params['type'] and not ['smooth', 'pie', 'discreet', 'area'].include?(params['type']))
+      if(params['type'] and not ['smooth', 'pie', 'discrete', 'area'].include?(params['type']))
         render :text => 'bad params', :status => 500
         return
       end
     
-      fragmentname = @request.path+'?'+@request.parameters.keys.sort.collect {|k| "#{k}=#{@request.parameters[k]}"}.join('&')    
+      fragmentname = @request.path+'?'+@request.parameters.keys.sort.collect {|k| "#{k}=#{@request.parameters[k]}"}.join('&amp;')
       fragment_cache = read_fragment(fragmentname)
 
       if(not fragment_cache)

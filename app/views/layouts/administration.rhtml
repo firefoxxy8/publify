@@ -45,7 +45,7 @@
 	  <% if flash[:notice] or flash[:error] %>
   	<div id="flash">
   	  <%= render_flash rescue nil %>
-  	</div>  
+  	</div>
   	<% end %>
 
   	<div id="content">
@@ -66,6 +66,9 @@
   	  </div>
   	  </div>
   	</div>
+	<div id="footer">
+	    Typo <%=h TYPO_VERSION %>
+	</div>
 	</div>
 	</body>
 </html>

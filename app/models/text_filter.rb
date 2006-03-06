@@ -30,16 +30,44 @@ class TextFilter < ActiveRecord::Base
              TextFilterPlugin::PostProcess => "postprocess",
              TextFilterPlugin => "other"}
     
-    filters.each do |filter|
-      types[typemap[filter.superclass]].push(filter)
-    end
-
+    filters.each { |filter| types[typemap[filter.superclass]].push(filter) }
+    
     types
   end
 
   def self.filters_map
-    filters=self.available_filters
-    filters.inject({}) { |map,filter| map[filter.short_name] = filter; map }
+    available_filters.inject({}) { |map,filter| map[filter.short_name] = filter; map }
+  end
+
+  def self.filter_text(text, controller, content, filters, filterparams={}, filter_html=false)
+
+    map=TextFilter.filters_map
+    filters = [:htmlfilter, filters].flatten if filter_html
+
+    filters.each do |filter|
+      next if filter == nil
+      begin
+        filter_controller = map[filter.to_s]
+        next unless filter_controller
+        text = filter_controller.filtertext(controller, content, text, :filterparams => filterparams)
+      rescue => err
+        logger.error "Filter #{filter} failed: #{err}"
+      end
+    end
+
+    text
+  end
+
+  def self.filter_text_by_name(text, controller, filtername, filter_html=false)
+    f = TextFilter.find_by_name(filtername)
+    f.filter_text_for_controller text, controller, nil, filter_html
+  end
+
+  def filter_text_for_controller(text, controller, content, filter_html=false)
+    self.class.filter_text(
+      text, controller, content,
+      [:macropre, markup, :macropost, filters].flatten, params,
+      filter_html)
   end
 
   def filter(text,filter_html=false)
@@ -57,11 +85,7 @@ class TextFilter < ActiveRecord::Base
     filters.each { |f| help.push(filter_map[f.to_s]) }
 
     help_text = help.collect do |f|
-      if(f.help_text.blank?)
-        ""
-      else
-        "<h3>#{f.display_name}</h3>\n#{BlueCloth.new(f.help_text).to_html}\n"
-      end
+      f.help_text.blank? ? '' : "<h3>#{f.display_name}</h3>\n#{BlueCloth.new(f.help_text).to_html}\n"
     end
     
     help_text.join("\n")
@@ -75,17 +99,13 @@ class TextFilter < ActiveRecord::Base
     filters.each { |f| help.push(filter_map[f.to_s]) }
 
     help_text = help.collect do |f|
-      if(f.help_text.blank?)
-        ""
-      else
-        "#{BlueCloth.new(f.help_text).to_html}\n"
-      end
+      f.help_text.blank? ? '' : "#{BlueCloth.new(f.help_text).to_html}\n"
     end
     
     return help_text
   end
   
-  def to_s
-    self.name
-  end
+  def to_s; self.name; end
+
+  def to_text_filter; self; end
 end

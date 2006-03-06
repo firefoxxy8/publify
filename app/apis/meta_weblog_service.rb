@@ -85,11 +85,11 @@ class MetaWeblogService < TypoWebService
     article = Article.new 
     article.body        = struct['description'] || ''
     article.title       = struct['title'] || ''
-    article.published   = publish ? 1 : 0
+    article.published   = publish
     article.author      = username
     article.created_at = struct['dateCreated'].to_time.getlocal rescue Time.now
     article.user        = @user
-
+    
     # Movable Type API support
     article.allow_comments = struct['mt_allow_comments'] || config[:default_allow_comments]
     article.allow_pings    = struct['mt_allow_pings'] || config[:default_allow_pings]
@@ -98,17 +98,18 @@ class MetaWeblogService < TypoWebService
     article.keywords       = struct['mt_keywords'] || ''
     article.text_filter    = TextFilter.find_by_name(struct['mt_convert_breaks'] || config[:text_filter])
     
+    article.html(@controller)
+    
     if struct['categories']
       article.categories.clear
       Category.find(:all).each do |c|
         article.categories << c if struct['categories'].include?(c.name)
       end
     end
-
-    update_html(article)
-    article.send_pings(article_url(article), struct['mt_tb_ping_urls'])
     
     article.save
+    article.send_notifications(@controller)
+    article.send_pings(server_url, article_url(article), struct['mt_tb_ping_urls'])
     article.id.to_s
   end
     
@@ -122,7 +123,7 @@ class MetaWeblogService < TypoWebService
     article = Article.find(postid)
     article.body        = struct['description'] || ''
     article.title       = struct['title'] || ''
-    article.published   = publish ? 1 : 0
+    article.published   = publish
     article.author      = username
     article.created_at  = struct['dateCreated'].to_time.getlocal unless struct['dateCreated'].blank?
 
@@ -133,6 +134,8 @@ class MetaWeblogService < TypoWebService
     article.excerpt        = struct['mt_excerpt'] || ''
     article.keywords       = struct['mt_keywords'] || ''
     article.text_filter    = TextFilter.find_by_name(struct['mt_convert_breaks'] || config[:text_filter])
+    
+    article.html(@controller)
 
     if struct['categories']
       article.categories.clear
@@ -141,8 +144,7 @@ class MetaWeblogService < TypoWebService
       end
     end
     RAILS_DEFAULT_LOGGER.info(struct['mt_tb_ping_urls'])
-    update_html(article)
-    article.send_pings(article_url(article), struct['mt_tb_ping_urls'])
+    article.send_pings(server_url, article_url(article), struct['mt_tb_ping_urls'])
     article.save    
     true
   end
@@ -166,8 +168,8 @@ class MetaWeblogService < TypoWebService
       :mt_text_more      => article.extended.to_s,
       :mt_excerpt        => article.excerpt.to_s,
       :mt_keywords       => article.keywords.to_s,
-      :mt_allow_comments => article.allow_comments.to_i,
-      :mt_allow_pings    => article.allow_pings.to_i,
+      :mt_allow_comments => article.allow_comments? ? 1 : 0,
+      :mt_allow_pings    => article.allow_pings? ? 1 : 0,
       :mt_convert_breaks => (article.text_filter.name.to_s rescue ''),
       :mt_tb_ping_urls   => article.pings.collect { |p| p.url },
       :dateCreated       => (article.created_at.to_formatted_s(:db) rescue "")
@@ -178,14 +180,19 @@ class MetaWeblogService < TypoWebService
 
   def article_url(article)
     begin
-      controller.url_for :controller=>"/articles", :action =>"permalink",
+      controller.url_for :controller=>"articles", :action =>"permalink",
         :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month),
         :day => sprintf("%.2d", article.created_at.day), :title => article.stripped_title
     rescue
+      created = article.created_at
+      sprintf("/articles/%.4d/%.2d/%.2d/#{article.stripped_title}", created.year, created.month, created.day)
       # FIXME: rescue is needed for functional tests as the test framework currently doesn't supply fully
       # fledged controller instances (yet?)
-      "/articles/read/#{article.id}"
     end
+  end
+
+  def server_url
+    controller.url_for(:only_path => false, :controller => "/")
   end
 
   def pub_date(time)

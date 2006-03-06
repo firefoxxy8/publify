@@ -1,10 +1,15 @@
 class ArticlesController < ApplicationController
   before_filter :verify_config
-  before_filter :ignore_page_query_param
+  before_filter :check_page_query_param_for_missing_routes
   layout :theme_layout
 
   cache_sweeper :blog_sweeper
-  caches_page :index, :read, :permalink, :category, :find_by_date, :archives, :view_page, :tag, :frontpage
+  
+  cached_pages = [:index, :read, :permalink, :category, :find_by_date, :archives, :view_page, :tag, :frontpage]
+  # If you're really memory-constrained, then consider replacing caches_action_with_params with caches_page
+  # caches_action_with_params *cached_pages
+  caches_page *cached_pages
+  session :off, :only => cached_pages
 
   verify :only => [:nuke_comment, :nuke_trackback], :session => :user, :method => :post, :render => { :text => 'Forbidden', :status => 403 }
     
@@ -18,9 +23,9 @@ class ArticlesController < ApplicationController
   end
 
   def index
-    @pages, @articles = paginate :article, :per_page => config[:limit_article_display], :conditions => 'published != 0', :order_by => "created_at DESC"
+    @pages, @articles = paginate :article, :per_page => config[:limit_article_display], :conditions => ['published = ?', true], :order_by => "created_at DESC"
   end
-  
+
   def search
     @articles = Article.search(params[:q])
   end
@@ -30,18 +35,18 @@ class ArticlesController < ApplicationController
     
     @headers["Content-Type"] = "text/html; charset=utf-8"
     @comment = Comment.new(params[:comment])
-    @comment.body_html = nil
+    @controller = self
     
     render :layout => false
   end
 
   def archives
-    @articles = Article.find(:all, :conditions => 'published != 0', :order => 'created_at DESC', :include => [:categories])
+    @articles = Article.find_published(:all, :order => 'created_at DESC', :include => [:categories])
   end
   
-  def read  
+  def read
     begin
-      @article      = Article.find(params[:id], :conditions => "published != 0", :include => [:categories])    
+      @article      = Article.find_published(params[:id], :include => [:categories, :tags])    
       @comment      = Comment.new
       @page_title   = @article.title
       auto_discovery_feed :type => 'article', :id => @article.id
@@ -90,6 +95,12 @@ class ArticlesController < ApplicationController
   end
   
   def category
+    unless params[:id]
+      @categories = Category.find_all_with_article_counters
+      render :action => "categorylist"
+      return
+    end
+    
     if category = Category.find_by_permalink(params[:id])
       auto_discovery_feed :type => 'category', :id => category.permalink
       @articles = Article.find_published_by_category_permalink(category.permalink)      
@@ -107,6 +118,12 @@ class ArticlesController < ApplicationController
   end
     
   def tag
+    unless params[:id]
+      @tags = Tag.find_all_with_article_counters 1000
+      render :action => "taglist"
+      return
+    end
+  
     @articles = Article.find_published_by_tag_name(params[:id])
     auto_discovery_feed :type => 'tag', :id => params[:id]
     
@@ -125,29 +142,35 @@ class ArticlesController < ApplicationController
   end
     
   # Receive comments to articles
-  def comment 
-    render :text => "non-ajax commenting is disabled", :status => 500 and return unless @request.xhr? or config[:sp_allow_non_ajax_comments]
+  def comment
+    unless @request.xhr? || config[:sp_allow_non_ajax_comments]
+      render \
+        :text => "non-ajax commenting is disabled", 
+        :status => 500
+      return
+    end
     
     @article = Article.find(params[:id])    
     @comment = Comment.new(params[:comment])
+    
     @comment.article = @article
     @comment.ip = request.remote_ip
-    @comment.body_html = nil
     @comment.user = session[:user]
+    @comment.published = true
 
-    if request.post? and @comment.save    
-      cookies[:author]  = { :value => @comment.author, :path => '/' + controller_name, :expires => 6.weeks.from_now } 
-      cookies[:url]     = { :value => @comment.url, :path => '/' + controller_name, :expires => 6.weeks.from_now } 
+    if request.post? and @comment.save
+      add_to_cookies(:author, @comment.author)
+      add_to_cookies(:url, @comment.url)
 
       @headers["Content-Type"] = "text/html; charset=utf-8"
-      
       render :partial => "comment", :object => @comment
+      @comment.send_notifications(self)
     else
       STDERR.puts @comment.errors.inspect
       render :text => @comment.errors.full_messages.join(", "), :status => 500
     end
   end  
-
+  
   # Receive trackbacks linked to articles
   def trackback
     @result = true
@@ -162,12 +185,19 @@ class ArticlesController < ApplicationController
       else
         begin
           article = Article.find(params[:id])
-          tb = article.build_to_trackbacks
-          tb.url       = params[:url]
-          tb.title     = params[:title] || params[:url]
-          tb.excerpt   = params[:excerpt]
-          tb.blog_name = params[:blog_name]
-          tb.ip        = request.remote_ip
+          unless article.allow_pings?
+            @result = false
+            @error_message = "Article doesn't allow pings"
+          else
+            tb = article.build_to_trackbacks
+            tb.url       = params[:url]
+            tb.title     = params[:title] || params[:url]
+            tb.excerpt   = params[:excerpt]
+            tb.blog_name = params[:blog_name]
+            tb.ip        = request.remote_ip
+            tb.published = true
+          end
+          
           unless article.save
             @result = false
             @error_message = "Trackback not saved.  Database problem most likely."
@@ -201,25 +231,32 @@ class ArticlesController < ApplicationController
       render :nothing => true, :status => 404
     end
   end
-  
+
   private
 
-    def ignore_page_query_param
-      @params[:page] = nil unless @request.path =~ /\/page\// # assumes all page routes use /page/:page
-    end
+  def add_to_cookies(name, value, path=nil, expires=nil)
+    cookies[name] = { :value => value, :path => path || "/#{controller_name}",
+                       :expires => 6.weeks.from_now }
+  end
 
-    def verify_config
-      if User.count == 0
-        redirect_to :controller => "accounts", :action => "signup"
-      elsif !config.is_ok?
-        redirect_to :controller => "admin/general", :action => "index"
-      else
-        return true
-      end
+  def check_page_query_param_for_missing_routes
+    unless request.path =~ /\/page\//  # check if all page routes use /page/:page
+      raise "Page param problem" unless params[:page].nil?
     end
-    
-    def rescue_action_in_public(exception)
-      error(exception.message)
+  end
+  
+  def verify_config
+    if User.count == 0
+      redirect_to :controller => "accounts", :action => "signup"
+    elsif !config.is_ok?
+      redirect_to :controller => "admin/general", :action => "index"
+    else
+      return true
     end
-
+  end
+  
+  def rescue_action_in_public(exception)
+    error(exception.message)
+  end
+  
 end

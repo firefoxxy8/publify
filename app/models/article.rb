@@ -1,60 +1,30 @@
 require 'uri'
 require 'net/http'
 
-class Article < ActiveRecord::Base
+class Article < Content
   include TypoGuid
+
+  content_fields :body, :extended
   
   has_many :pings, :dependent => true, :order => "created_at ASC"
   has_many :comments, :dependent => true, :order => "created_at ASC"
   has_many :trackbacks, :dependent => true, :order => "created_at ASC"
-  has_many :resources, :order => "created_at DESC"
-  
-  has_and_belongs_to_many :categories
-  has_and_belongs_to_many :tags
+  has_many :resources, :order => "created_at DESC",
+           :class_name => "Resource", :foreign_key => 'article_id'
+  has_and_belongs_to_many :categories, :foreign_key => 'article_id'
+  has_and_belongs_to_many :tags, :foreign_key => 'article_id'
   belongs_to :user
-  belongs_to :text_filter
   
   after_destroy :fix_resources
   
-  # Compatibility hack, so Article.attributes(params[:article]) still works.
-  def text_filter=(filter)
-    if filter.nil?
-      self.text_filter_id = nil
-    elsif filter.kind_of? TextFilter
-      self.text_filter_id = filter.id
-    else
-      new_filter = TextFilter.find_by_name(filter.to_s)
-      self.text_filter_id = (new_filter.nil? ? nil : new_filter.id)
-    end
-  end
-  
   def stripped_title
-    self.title.to_url
-  end
-  
-  def html(controller,what = :all)
-    if(self.body_html.blank?)
-      self.body_html = controller.filter_text_by_name(body, text_filter.name) rescue body.to_s
-      self.extended_html = controller.filter_text_by_name(extended, text_filter.name) rescue extended.to_s
-      save if self.id
-    end
-    
-    case what
-    when :all
-      body_html+"\n"+extended_html.to_s
-    when :body
-      body_html
-    when :extended
-      extended_html.to_s
-    else
-      raise "Unknown 'what' in article.html"
-    end
+    self.title.gsub(/<[^>]*>/,'').to_url
   end
   
   def html_urls
     urls = Array.new
     
-    (body_html.to_s + extended_html.to_s).gsub(/<a [^>]*>/) do |tag|
+    html(:all).gsub(/<a [^>]*>/) do |tag|
       if(tag =~ /href="([^"]+)"/)
         urls.push($1)
       end
@@ -63,19 +33,28 @@ class Article < ActiveRecord::Base
     urls
   end
   
-  def send_pings(articleurl, urllist)
+  def send_pings(serverurl, articleurl, urllist)
     return unless config[:send_outbound_pings]
     
-    ping_urls = config[:ping_urls].gsub(/ +/,'').split(/[\n\r]+/)
-    ping_urls += self.html_urls
-    ping_urls += urllist.to_a
+    weblogupdatesping_urls = config[:ping_urls].gsub(/ +/,'').split(/[\n\r]+/)
+    pingback_or_tracback_urls = self.html_urls
+    trackback_urls = urllist.to_a
+
+    ping_urls = weblogupdatesping_urls + pingback_or_tracback_urls + trackback_urls
     
     ping_urls.uniq.each do |url|            
       begin
         unless pings.collect { |p| p.url }.include?(url.strip) 
           ping = pings.build("url" => url)
 
-          ping.send_ping(articleurl)
+          if weblogupdatesping_urls.include?(url)
+            ping.send_weblogupdatesping(serverurl, articleurl)
+          elsif pingback_or_tracback_urls.include?(url)
+            ping.send_pingback_or_trackback(articleurl)
+          else
+            ping.send_trackback(articleurl)
+          end
+
           ping.save
         end
         
@@ -85,31 +64,40 @@ class Article < ActiveRecord::Base
       end      
     end
   end
+  
+  def next
+    Article.find(:first, :conditions => ['created_at > ?', created_at], :order => 'created_at asc')
+  end
+
+  def previous
+    Article.find(:first, :conditions => ['created_at < ?', created_at], :order => 'created_at desc')
+  end
 
   # Count articles on a certain date
   def self.count_by_date(year, month = nil, day = nil, limit = nil)  
     from, to = self.time_delta(year, month, day)
-    Article.count(["#{Article.table_name}.created_at BETWEEN ? AND ? AND #{Article.table_name}.published != 0", from, to])
+    Article.count(["created_at BETWEEN ? AND ? AND published = ?", from, to, true])
   end
   
   # Find all articles on a certain date
   def self.find_all_by_date(year, month = nil, day = nil)
     from, to = self.time_delta(year, month, day)
-    Article.find(:all, :conditions => ["#{Article.table_name}.created_at BETWEEN ? AND ? AND #{Article.table_name}.published != 0", from, to], :order => "#{Article.table_name}.created_at DESC")
+    Article.find_published(:all, :conditions => ["created_at BETWEEN ? AND ?",
+                                                 from, to],
+                           :order => "#{Article.table_name}.created_at DESC")
   end
 
   # Find one article on a certain date
-  def self.find_by_date(year, month, day)  
+
+  def self.find_by_date(year, month, day)
     find_all_by_date(year, month, day).first
   end
   
   # Finds one article which was posted on a certain date and matches the supplied dashed-title
   def self.find_by_permalink(year, month, day, title)
     from, to = self.time_delta(year, month, day)
-    find(:first, :conditions => [ %{
-      permalink = ?
-      AND #{Article.table_name}.created_at BETWEEN ? AND ?
-      AND #{Article.table_name}.published != 0
+    find_published(:first, :conditions => [ %{permalink = ?
+      AND  #{Article.table_name}.created_at BETWEEN ? AND ?
     }, title, from, to ])
   end
   
@@ -117,71 +105,97 @@ class Article < ActiveRecord::Base
     category = Category.find_by_permalink(category_permalink)
     return [] unless category
     
-    Article.find(:all, 
-      { :conditions => [%{ published != 0 
-        AND #{Article.table_name}.id = articles_categories.article_id
-        AND articles_categories.category_id = ? }, category.id], 
-      :joins => ", #{Article.table_name_prefix}articles_categories#{Article.table_name_suffix} articles_categories",
-      :order => "created_at DESC"}.merge(options))
+    Article.find_published(:all,
+      { :conditions => ["#{Article.table_name}.id = articles_categories.article_id AND articles_categories.category_id = ?", category.id], 
+        :joins => ", #{Article.table_name_prefix}articles_categories#{Article.table_name_suffix} articles_categories",
+        :order => "created_at DESC", :readonly => false }.merge(options))
   end
 
   def self.find_published_by_tag_name(tag_name, options = {})
     tag = Tag.find_by_name(tag_name)
     return [] unless tag
 
-    Article.find(:all, 
-      { :conditions => [%{ published != 0 
-        AND #{Article.table_name}.id = articles_tags.article_id
+    Article.find_published(:all, 
+      { :conditions => [%{ #{Article.table_name}.id = articles_tags.article_id
         AND articles_tags.tag_id = ? }, tag.id], 
       :joins => ", #{Article.table_name_prefix}articles_tags#{Article.table_name_suffix} articles_tags",
-      :order => "created_at DESC"}.merge(options))
+      :order => "created_at DESC", :readonly => false}.merge(options))
   end
 
   # Fulltext searches the body of published articles
   def self.search(query)
     if !query.to_s.strip.empty?
       tokens = query.split.collect {|c| "%#{c.downcase}%"}
-      find_by_sql(["SELECT * FROM #{Article.table_name} WHERE #{Article.table_name}.published != 0 AND #{ (["(LOWER(body) LIKE ? OR LOWER(extended) LIKE ? OR LOWER(title) LIKE ?)"] * tokens.size).join(" AND ") } AND published != 0 ORDER by created_at DESC", *tokens.collect { |token| [token] * 3 }.flatten])
+     find_published(:all,
+                     :conditions => [(["(LOWER(body) LIKE ? OR LOWER(extended) LIKE ? OR LOWER(title) LIKE ?)"] * tokens.size).join(" AND "), *tokens.collect { |token| [token] * 3 }.flatten],
+                     :order => 'created_at DESC')
     else
       []
     end
   end
   
   def keywords_to_tags
+    return unless schema_version >= 10
+
     Article.transaction do
       tags.clear
-      keywords.to_s.split.uniq.each do |tagword|
+      keywords.to_s.scan(/((['"]).*?\2|[[:alnum:]]+)/).collect { |x| x.first.tr(%{'"}, '') }.uniq.each do |tagword|
         tags << Tag.get(tagword)
       end
     end
   end
   
+  def send_notifications(controller)
+    User.find_boolean(:all, :notify_on_new_articles).each do |u|
+      send_notification_to_user(controller, u)
+    end
+  end
+  
+  def send_notification_to_user(controller, user)
+    if user.notify_via_email? 
+      EmailNotify.send_article(controller, self, user)
+    end
+    
+    if user.notify_via_jabber?
+      JabberNotify.send_message(user, "New post", "A new message was posted to #{config[:blog_name]}",body_html)
+    end
+  end
+  
   protected  
 
-  before_save :set_defaults, :create_guid
+  before_create :set_defaults, :create_guid, :add_notifications
+  after_save :keywords_to_tags
+
+  def correct_counts
+    self.comments_count = self.comments_count
+    self.trackbacks_count = self.trackbacks_count
+  end
   
   def set_defaults
-    begin
-      schema_info=Article.connection.select_one("select * from schema_info limit 1")
-      schema_version=schema_info["version"].to_i
-    rescue
-      # The test DB doesn't currently support schema_info.
-      schema_version=10
-    end
-
-    self.published ||= 1
+#    self.published = true if self.published.nil?
     
     if schema_version >= 7
       self.permalink = self.stripped_title if self.attributes.include?("permalink") and self.permalink.blank?
     end
 
-    if schema_version >= 10
-      keywords_to_tags
+    if schema_version >= 29
+      correct_counts
     end
-
-    if schema_version >= 13
-      self.text_filter = TextFilter.find_by_name(config['text_filter']) if self.text_filter_id.blank?
-    end
+  end
+  
+  def add_notifications
+    # Grr, how do I do :conditions => 'notify_on_new_articles = true' when on MySQL boolean DB tables
+    # are integers, Postgres booleans are booleans, and sqlite is basically just a string?
+    #
+    # I'm punting for now and doing the test in Ruby.  Feel free to rewrite.
+    
+    self.notify_users = User.find_boolean(:all, :notify_on_new_articles)
+    self.notify_users << self.user if (self.user.notify_watch_my_articles? rescue false)
+    self.notify_users.uniq!
+  end
+  
+  def default_text_filter_config_key
+    'text_filter'
   end
   
   def self.time_delta(year, month = nil, day = nil)
@@ -193,15 +207,27 @@ class Article < ActiveRecord::Base
     to   = to.tomorrow    unless month.blank?
     return [from, to]
   end
+  
 
   validates_uniqueness_of :guid
   validates_presence_of :title
 
   private
+
   def fix_resources
     Resource.find(:all, :conditions => "article_id = #{id}").each do |fu|
       fu.article_id = nil
       fu.save
+    end
+  end
+
+  def schema_version
+    @schema_version ||= begin
+      schema_info=Article.connection.select_one("select * from schema_info limit 1")
+      schema_info["version"].to_i
+    rescue
+      # The test DB doesn't currently support schema_info.
+      25
     end
   end
 end

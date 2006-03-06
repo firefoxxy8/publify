@@ -73,11 +73,15 @@ class BloggerService < TypoWebService
     article = Article.new 
     article.body        = body || content || ''
     article.title       = title || content.split.slice(0..5).join(' ') || ''
-    article.published   = publish ? 1 : 0
+    article.published   = publish
     article.author      = username
     article.created_at  = Time.now
     article.user        = @user
-    article.text_filter ||= TextFilter.find_by_name(config[:text_filter])
+    article.allow_comments = config[:default_allow_comments]
+    article.allow_pings    = config[:default_allow_pings]
+    article.text_filter    = config[:text_filter]
+    article.html(@controller)
+    article.save
 
     if categories
       categories.split(",").each do |c|
@@ -85,9 +89,7 @@ class BloggerService < TypoWebService
       end
     end
 
-    update_html(article)
-    
-    article.save
+    article.send_notifications(@controller)
     article.id
   end
   

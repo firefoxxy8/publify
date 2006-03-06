@@ -1,14 +1,8 @@
 require 'syntax/convertors/html'
 
 class Plugins::Textfilters::CodeController < TextFilterPlugin::MacroPre
-
-  def self.display_name
-    "Code"
-  end
-
-  def self.description
-    "Apply syntax highlighting to a code block"
-  end
+  plugin_display_name "Code"
+  plugin_description "Apply syntax highlighting to a code block"
 
   def self.help_text
     %{
@@ -20,6 +14,7 @@ You can use `<typo:code>` to include syntax-highlighted code blocks.  Example:
         "abcde"
       end
     end
+    </typo:code>
     
 This uses the Ruby [Syntax](http://syntax.rubyforge.org/) module.  Options:
 
@@ -32,7 +27,7 @@ have syntax highlighting.
 }    
   end
 
-  def macrofilter(attrib,params,text="")
+  def self.macrofilter(controller,content,attrib,params,text="")
     lang       = attrib['lang'] || 'default'
     title      = attrib['title']
     cssclass   = attrib['class']

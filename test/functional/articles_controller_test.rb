@@ -6,8 +6,15 @@ require 'http_mock'
 # Re-raise errors caught by the controller.
 class ArticlesController; def rescue_action(e) raise e end; end
 
+class Content
+  def self.find_last_posted
+    self.find(:first, :order => 'created_at desc')
+  end
+end
+
 class ArticlesControllerTest < Test::Unit::TestCase
-  fixtures :articles, :categories, :settings, :users, :comments, :trackbacks, :pages, :articles_categories, :text_filters, :articles_tags, :tags
+  fixtures :contents, :categories, :settings, :users, :articles_categories, :text_filters, :articles_tags, :tags
+  include ArticlesHelper
 
   def setup
     @controller = ArticlesController.new
@@ -34,6 +41,25 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_tag :tag => 'h2', :content => 'Article 2!'
     assert_tag :tag => 'h2', :content => 'Article 1!'
   end
+
+  def test_tag_routes
+    opts = {:controller => "articles", :action => "tag", :id => "foo", :page => "2"}
+    assert_routing("articles/tag/foo/page/2", opts)
+  end
+
+  def test_simple_tag_pagination
+    settings(:limit_article_display).update_attribute(:value, 1)
+    get :tag, :id => "foo"
+    assert_equal 1, assigns(:articles).size
+    assert_tag(:tag => 'p',
+               :attributes =>{ 
+                  :id => 'pagination'},
+               :content => 'Older posts: 1',
+               :descendant => {:tag => 'a',
+                               :attributes =>{
+                                  :href => "/articles/tag/foo/page/2"},
+                               :content => "2"})
+  end
   
   # Main index
   def test_index
@@ -51,75 +77,105 @@ class ArticlesControllerTest < Test::Unit::TestCase
   
   # Permalinks
   def test_permalink
-    get :permalink, :year => 2005, :month => 01, :day => 01, :title => "article-1"
+    get :permalink, :year => 2004, :month => 06, :day => 01, :title => "article-3"
     assert_response :success
     assert_template "read"
     assert_not_nil assigns(:article)
-    assert_equal @article1, assigns(:article)
+    assert_equal contents(:article3), assigns(:article)
   end
 
   # Posts for given day
   def test_find_by_date
-    get :find_by_date, :year => 2005, :month => 01, :day => 01
+    get :find_by_date, :year => 2004, :month => 06, :day => 01
     assert_response :success
     assert_rendered_file "index"
   end
   
   def test_comment_posting
+    emails = ActionMailer::Base.deliveries
+    emails.clear
+    
+    assert_equal 0, emails.size
+    
+    Article.find(1).notify_users << users(:tobi)
+
     post :comment, { :id => 1, :comment => {'body' => 'This is *textile*', 'author' => 'bob' }}
     
     assert_response :success
     assert_tag :tag => 'strong', :content => 'textile'
     
-    comment = Comment.find(:first, :order => 'created_at desc')
+    comment = Comment.find_last_posted
     assert comment
     
-    assert_equal "<p>This is <strong>textile</strong></p>", comment.body_html.to_s
+    assert_not_nil cookies["author"]
+    
+    assert_equal "<p>This is <strong>textile</strong></p>", comment.html(@controller).to_s
+    
+    assert_equal User.find(:all, 
+                           :conditions => ['(notify_via_email = ?) and (notify_on_comments = ?)', true, true], 
+                           :order => 'email').collect { |each| each.email },
+                 emails.collect { |each| each.to[0] }.sort
   end
-  
-  def test_comment_spam1
+
+  def test_comment_spam_markdown_smarty
+    settings(:comment_text_filter).update_attribute(:value, "markdown smartypants")
+    test_comment_spam1
+  end
+
+  def comment_template_test(expected_html, source_text,
+                            art_id=1, author='bob', email='foo', args={})
     post :comment, {
-      :id => 1, 
+      :id => art_id,
       :comment => {
-        'body' => 'Link to <a href="http://spammer.example.com">spammy goodness</a>',
-        'author' => 'bob',
-        'url' => 'http://spam2.example.com',
-        'email' => 'foo'}}
+        'body' => source_text,
+        'author' => author,
+        'email' => email }.merge(args) }
 
     assert_response :success
-
-    comment = Comment.find(:first, :order => 'created_at desc')
+    comment = Comment.find_last_posted
     assert comment
 
-    assert_equal "<p>Link to <a href=\"http://spammer.example.com\" rel=\"nofollow\">spammy goodness</a></p>", comment.body_html.to_s
+    assert_match expected_html, comment.html(@controller).to_s
+    $do_breakpoints
+  end
+
+  def test_comment_spam1
+    comment_template_test "<p>Link to <a href='http://spammer.example.com' rel=\"nofollow\">spammy goodness</a></p>", 'Link to <a href="http://spammer.example.com">spammy goodness</a>'
   end
 
   def test_comment_spam2
-    post :comment, {
-      :id => 1, 
-      :comment => {
-        'body' => 'Link to "spammy goodness":http://spammer.example.com',
-        'author' => 'bob',
-        'url' => 'http://spam2.example.com',
-        'email' => 'foo'}}
-
-    assert_response :success
-
-    comment = Comment.find(:first, :order => 'created_at desc')
-    assert comment
-
-    assert_equal "<p>Link to <a href=\"http://spammer.example.com\" rel=\"nofollow\">spammy goodness</a></p>", comment.body_html.to_s
+    comment_template_test %r{<p>Link to <a href=["']http://spammer.example.com["'] rel=["']nofollow["']>spammy goodness</a></p>}, 'Link to "spammy goodness":http://spammer.example.com'
   end
+  
+  def test_comment_xss1
+    settings(:comment_text_filter).update_attribute(:value, "none")
+    comment_template_test %{Have you ever &lt;script lang='javascript'>alert("foo");&lt;/script> been hacked?},
+    %{Have you ever <script lang="javascript">alert("foo");</script> been hacked?}
+  end
+  
+  def test_comment_xss2
+    settings(:comment_text_filter).update_attribute(:value, "none")
+    comment_template_test "Have you ever <a href='#' rel=\"nofollow\">been hacked?</a>", 'Have you ever <a href="#" onclick="javascript">been hacked?</a>'
+  end
+  
+  def test_comment_autolink
+    comment_template_test "<p>What&#8217;s up with <a href='http://slashdot.org' rel=\"nofollow\">http://slashdot.org</a> these days?</p>", "What's up with http://slashdot.org these days?"
+  end #"
 
+  ### TODO -- there's a bug in Rails with auto_links
+#   def test_comment_autolink2
+#     comment_template_test "<p>My web page is <a href='http://somewhere.com/~me/index.html' rel=\"nofollow\">http://somewhere.com/~me/index.html</a></p>", "My web page is http://somewhere.com/~me/index.html"
+#   end
+  
   def test_comment_nuking 
     num_comments = Comment.count
-    post :nuke_comment, { :id => 1 }, {}
+    post :nuke_comment, { :id => 5 }, {}
     assert_response 403
 
-    get :nuke_comment, { :id => 1 }, { :user => users(:bob)}
+    get :nuke_comment, { :id => 5 }, { :user => users(:bob)}
     assert_response 403
       
-    post :nuke_comment, { :id => 1 }, { :user => users(:bob)}
+    post :nuke_comment, { :id => 5 }, { :user => users(:bob)}
     assert_response :success
     assert_equal num_comments -1, Comment.count    
   end
@@ -128,7 +184,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     post :comment, { :id => 2, :comment => {'body' => 'foo', 'author' => 'bob' }}
     assert_response :success
 
-    comment = Comment.find(:first, :order => 'created_at desc')
+    comment = Comment.find_last_posted
     assert comment
     assert_nil comment.user_id
     
@@ -140,13 +196,13 @@ class ArticlesControllerTest < Test::Unit::TestCase
   end
   
   def test_comment_user_set
-    @request.session = { :user => @tobi }
+    @request.session = { :user => users(:tobi) }
     post :comment, { :id => 2, :comment => {'body' => 'foo', 'author' => 'bob' }}
     assert_response :success
 
-    comment = Comment.find(:first, :order => 'created_at desc')
+    comment = Comment.find_last_posted
     assert comment
-    assert_equal @tobi, comment.user
+    assert_equal users(:tobi), comment.user
 
     get :read, {:id => 2}
     assert_response :success
@@ -157,13 +213,13 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_trackback_nuking 
     num_comments = Trackback.count
 
-    post :nuke_trackback, { :id => 1 }, {}
+    post :nuke_trackback, { :id => 7 }, {}
     assert_response 403
 
-    get :nuke_trackback, { :id => 1 }, { :user => users(:bob)}
+    get :nuke_trackback, { :id => 7 }, { :user => users(:bob)}
     assert_response 403
 
-    post :nuke_trackback, { :id => 1 }, { :user => users(:bob)}
+    post :nuke_trackback, { :id => 7 }, { :user => users(:bob)}
     assert_response :success
     assert_equal num_comments -1, Trackback.count    
   end
@@ -266,13 +322,13 @@ class ArticlesControllerTest < Test::Unit::TestCase
   end
 
   def test_read_article_with_comments_and_trackbacks
-    get :read, :id => @article1.id
+    get :read, :id => contents(:article1).id
     assert_response :success
     assert_template "read"
     
     assert_tag :tag => "ol",
       :attributes => { :id => "commentList"},
-      :children => { :count => @article1.comments.size,
+      :children => { :count => contents(:article1).comments.to_a.select{|c| c.published?}.size,
         :only => { :tag => "li" } }
         
     assert_tag :tag => "li",
@@ -280,12 +336,12 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     assert_tag :tag => "ol",
       :attributes => { :id => "trackbackList" },
-      :children => { :count => @article1.trackbacks.size,
+      :children => { :count => contents(:article1).trackbacks.size,
         :only => { :tag => "li" } }
   end
 
   def test_read_article_no_comments_no_trackbacks
-    get :read, :id => @article3.id
+    get :read, :id => contents(:article3).id
     assert_response :success
     assert_template "read"
 
@@ -304,7 +360,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_tag :tag => 'link', :attributes => 
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS', 
-        :href => 'http://test.host/xml/rss/feed.xml'}
+        :href => 'http://test.host/xml/rss20/feed.xml'}
+    assert_tag :tag => 'link', :attributes => 
+      { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom', 
+        :href => 'http://test.host/xml/atom10/feed.xml'}
   end
 
 
@@ -313,7 +372,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_tag :tag => 'link', :attributes => 
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS', 
-        :href => 'http://test.host/xml/rss/article/1/feed.xml'}
+        :href => 'http://test.host/xml/rss20/article/1/feed.xml'}
+    assert_tag :tag => 'link', :attributes => 
+      { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom', 
+        :href => 'http://test.host/xml/atom10/article/1/feed.xml'}
   end
 
   def test_autodiscovery_category
@@ -321,7 +383,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_tag :tag => 'link', :attributes => 
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS', 
-        :href => 'http://test.host/xml/rss/category/hardware/feed.xml'}
+        :href => 'http://test.host/xml/rss20/category/hardware/feed.xml'}
+    assert_tag :tag => 'link', :attributes => 
+      { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom', 
+        :href => 'http://test.host/xml/atom10/category/hardware/feed.xml'}
   end
   
   def test_autodiscovery_tag
@@ -329,7 +394,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_tag :tag => 'link', :attributes => 
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS', 
-        :href => 'http://test.host/xml/rss/tag/hardware/feed.xml'}
+        :href => 'http://test.host/xml/rss20/tag/hardware/feed.xml'}
+    assert_tag :tag => 'link', :attributes => 
+      { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom', 
+        :href => 'http://test.host/xml/atom10/tag/hardware/feed.xml'}
   end
   
   def test_disabled_ajax_comments
@@ -344,7 +412,35 @@ class ArticlesControllerTest < Test::Unit::TestCase
     @request.env['HTTP_X_REQUESTED_WITH'] = "XMLHttpRequest"  
     post :comment, :id => 1, :comment => {'body' => 'This is posted *with* ajax', 'author' => 'bob' }
     assert_response :success
-    ajax_comment = Comment.find(:first, :order => "id DESC")
+    ajax_comment = Comment.find_last_posted
     assert_equal "This is posted *with* ajax", ajax_comment.body
   end
+  
+  def test_tag_max_article_count_is_first
+    tags = Tag.find_all_with_article_counters
+    assert tags.size > 1
+    max = tags[0].article_counter
+    tags.each do |tag|
+      assert tag.article_counter <= max
+    end
+  end
+
+  def test_calc_distributed_class_basic
+    assert_equal "prefix5", calc_distributed_class(0, 0, "prefix", 5, 15)
+    (0..10).each do |article|
+      assert_equal "prefix#{article}", calc_distributed_class(article, 10, "prefix", 0, 10)
+    end
+    (0..20).each do |article|
+      assert_equal "prefix#{(article/2).to_i}", calc_distributed_class(article, 20, "prefix", 0, 10)
+    end
+    (0..5).each do |article|
+      assert_equal "prefix#{(article*2).to_i}", calc_distributed_class(article, 5, "prefix", 0, 10)
+    end
+  end
+  
+  def test_calc_distributed_class_offset
+    (0..10).each do |article|
+      assert_equal "prefix#{article+6}", calc_distributed_class(article, 10, "prefix", 6, 16)
+    end
+  end  
 end

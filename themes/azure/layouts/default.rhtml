@@ -1,20 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title><%= page_title %></title>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <%= meta_tag 'ICBM', config_value(:geourl_location)  %>
-  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="<%= server_url_for :controller => 'xml', :action => 'rsd' %>" />
-  <link rel="alternate" type="application/rss+xml" title="RSS" href="<%= @auto_discovery_url_rss %>" />
-  <link rel="alternate" type="application/atom+xml" title="Atom" href="<%= @auto_discovery_url_atom %>" />
-  <%= stylesheet_link_tag "/stylesheets/theme/azure" %>
-  <%= stylesheet_link_tag "/stylesheets/user-styles" %>
-  <%= javascript_include_tag "cookies" %>
-  <%= javascript_include_tag "prototype" %>
-  <%= javascript_include_tag "effects" %>
-  <%= javascript_include_tag "typo" %>
-  <script type="text/javascript"><%= @content_for_script %></script>
+  <title><%=h page_title %></title>
+  <%= page_header %>
+  <%= stylesheet_link_tag "/stylesheets/theme/azure", :media => 'all' %>
+  <%= stylesheet_link_tag "/stylesheets/user-styles", :media => 'all' %>
+  <%= stylesheet_link_tag "/stylesheets/theme/print", :media => 'print' %>
 </head>
+<% benchmark "BENCHMARK: layout/body" do %>
 <body>
   <div id="container" class="clearfix">
       <div id="header">
@@ -25,17 +18,21 @@
       </div>
       
       <div id="search"> <%= render :partial => "shared/search" %></div>
-      
+      <% benchmark "BENCHMARK: layout/content" do %>
+
       <div id="content" class="clearfix">
         <div id="main">
           <%= @content_for_layout %>
           <%= javascript_tag "show_dates_as_local_time()" %>
         </div>
+        <% end %>
         <div id="sidebar">
           
             <div id="search-results"></div>
-
-            <%= render_component(:controller => 'sidebars/sidebar', :action => 'display_plugins') %>
+            <% benchmark "BENCHMARK: layout/sidebars" do %>
+              <%= render_sidebars %>
+            <% end %>
+            
             <%= link_to image_tag("powered.gif"),  "http://typo.leetsoft.com/", {:class => "powered" } %>
             </div>
 
@@ -50,3 +47,4 @@
   </div>
 </body>
 </html>
+<% end %>

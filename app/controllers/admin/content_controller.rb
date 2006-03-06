@@ -10,7 +10,6 @@ class Admin::ContentController < Admin::BaseController
     @articles_pages, @articles = paginate :article, :per_page => 15, :order_by => "created_at DESC", :parameter => 'id'
     @categories = Category.find(:all)
     @article = Article.new(params[:article])
-    @article.text_filter = config[:text_filter]
   end
 
   def show
@@ -21,26 +20,27 @@ class Admin::ContentController < Admin::BaseController
 
   def new
     @article = Article.new(params[:article])
-    @article.author = session[:user].login
-    @article.allow_comments ||= config[:default_allow_comments]
-    @article.allow_pings ||= config[:default_allow_pings]
-    @article.text_filter ||= TextFilter.find_by_name(config[:text_filter])
-    @article.user = session[:user]
-    update_html(@article)
-    
-    @categories = Category.find(:all, :order => 'UPPER(name)')
-    if request.post?
-      @article.categories.clear
-      @article.categories << Category.find(params[:categories]) if params[:categories]
+    @article.allow_comments = config[:default_allow_comments]
+    @article.allow_pings    = config[:default_allow_pings]
 
+    @categories = Category.find(:all, :order => 'UPPER(name)')
+
+    if request.post?
+      @article.author = session[:user].login
+      @article.user = session[:user]
+      
       params[:attachments].each do |k,v|
         a = attachment_save(params[:attachments][k])
         @article.resources << a unless a.nil?
       end unless params[:attachments].nil?
 
       if @article.save
+        @article.categories.clear
+        @article.categories = Category.find(params[:categories]) if params[:categories]
+
         @article.html(self)
-        @article.send_pings(article_url(@article),[])
+        @article.send_notifications(self)
+        @article.send_pings(server_url, article_url(@article, false),[])
         flash[:notice] = 'Article was successfully created.'
         redirect_to :action => 'show', :id => @article.id
       end
@@ -55,7 +55,6 @@ class Admin::ContentController < Admin::BaseController
     if request.post? 
       @article.categories.clear
       @article.categories << Category.find(params[:categories]) if params[:categories]
-      update_html(@article)
       
       params[:attachments].each do |k,v|
         a = attachment_save(params[:attachments][k])        
@@ -99,7 +98,6 @@ class Admin::ContentController < Admin::BaseController
     @headers["Content-Type"] = "text/html; charset=utf-8"
     @article = Article.new
     @article.attributes = params[:article]
-    update_html(@article)
     render :layout => false
   end
   
@@ -140,10 +138,4 @@ class Admin::ContentController < Admin::BaseController
     end
   end
 
-  private
-  def update_html(article)
-    article.body_html = nil
-    article.extended_html = nil
-  end
-  
 end

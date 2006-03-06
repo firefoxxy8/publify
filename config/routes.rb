@@ -15,6 +15,7 @@ ActionController::Routing::Routes.draw do |map|
   # make rss feed urls pretty and let them end in .xml
   # this improves caches_page because now apache and webrick will send out the 
   # cached feeds with the correct xml mime type. 
+  map.xml 'xml/itunes/feed.xml', :controller => 'xml', :action => 'itunes'
   #map.xml 'blog/xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
   #map.xml 'blog/xml/commentrss/feed.xml', :controller => 'xml', :action => 'commentrss'
   #map.xml 'blog/xml/trackbackrss/feed.xml', :controller => 'xml', :action => 'trackbackrss'
@@ -25,6 +26,7 @@ ActionController::Routing::Routes.draw do |map|
   #map.xml 'blog/xml/:format/feed.xml', :controller => 'xml', :action => 'feed', :type => 'feed'
   #map.xml 'blog/xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
   #map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
+  map.xml 'xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed'
   
   # allow neat perma urls
   map.connect 'blog',
@@ -66,7 +68,13 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'articles', :action => 'category',
     :page => /\d+/
 
-#map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
+  map.connect 'articles/tag/:id',
+    :controller => 'articles', :action => 'tag'
+  map.connect 'articles/tag/:id/page/:page',
+    :controller => 'articles', :action => 'tag',
+    :page => /\d+/
+
+  #map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
 
   map.connect 'stylesheets/theme/:filename',
     :controller => 'theme', :action => 'stylesheets'
@@ -86,4 +94,6 @@ ActionController::Routing::Routes.draw do |map|
      
   # Allow legacy urls to still work
   map.connect 'blog/:controller/:action/:id'
+  
+  map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

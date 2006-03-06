@@ -1,11 +1,6 @@
 class Plugins::Textfilters::MarkdownController < TextFilterPlugin::Markup
-  def self.display_name
-    "Markdown"
-  end
-
-  def self.description
-    'Markdown markup language from <a href="http://daringfireball.com/">Daring Fireball</a>'
-  end
+  plugin_display_name "Markdown"
+  plugin_description 'Markdown markup language from <a href="http://daringfireball.com/">Daring Fireball</a>'
   
   def self.help_text
     %{
@@ -31,8 +26,7 @@ is available from the author's site, but here's a short summary:
     }
   end
 
-  def filtertext
-    text = params[:text].gsub(%r{</?notextile>}, '')
-    render :text => BlueCloth.new(text).to_html
+  def self.filtertext(controller,content,text,params)
+    BlueCloth.new(text.gsub(%r{</?notextile>}, '')).to_html
   end
 end

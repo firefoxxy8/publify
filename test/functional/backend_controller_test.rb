@@ -8,7 +8,7 @@ require 'base64'
 class BackendController; def rescue_action(e) raise e end; end
 
 class BackendControllerTest < Test::Unit::TestCase
-  fixtures :articles, :categories, :settings, :trackbacks, :users, :articles_categories
+  fixtures :contents, :categories, :settings, :users, :articles_categories, :text_filters
 
   def setup
     @controller = BackendController.new
@@ -46,9 +46,9 @@ class BackendControllerTest < Test::Unit::TestCase
     new_post = Article.find(result)
     assert_equal "new post title", new_post.title
     assert_equal "new post *body*", new_post.body
-    assert_equal "<p>new post <strong>body</strong></p>", new_post.body_html
+    assert_equal "<p>new post <strong>body</strong></p>", new_post.html(@controller, :body)
     assert_equal "textile", new_post.text_filter.name
-    assert_equal @tobi, new_post.user
+    assert_equal users(:tobi), new_post.user
   end
   
   def test_blogger_new_post_no_title
@@ -59,7 +59,7 @@ class BackendControllerTest < Test::Unit::TestCase
     new_post = Article.find(result)
     assert_equal "new post body for post without", new_post.title
     assert_equal "new post body for post without title but with a lenghty body", new_post.body
-    assert_equal "<p>new post body for post without title but with a lenghty body</p>", new_post.body_html
+    assert_equal "<p>new post body for post without title but with a lenghty body</p>", new_post.html(@controller, :body)
   end
 
   def test_blogger_new_post_with_categories
@@ -70,7 +70,7 @@ class BackendControllerTest < Test::Unit::TestCase
     new_post = Article.find(result)
     assert_equal "new post title", new_post.title
     assert_equal "new post body", new_post.body
-    assert_equal [@software, @hardware], new_post.categories.sort_by { |c| c.id }
+    assert_equal [categories(:software), categories(:hardware)], new_post.categories.sort_by { |c| c.id }
   end
 
   def test_blogger_new_post_with_non_existing_categories
@@ -79,7 +79,7 @@ class BackendControllerTest < Test::Unit::TestCase
     result = invoke_layered :blogger, :newPost, *args
     assert_not_nil result
     new_post = Article.find(result)
-    assert_equal [@hardware], new_post.categories
+    assert_equal [categories(:hardware)], new_post.categories
   end
 
   def test_blogger_fail_authentication
@@ -108,7 +108,7 @@ class BackendControllerTest < Test::Unit::TestCase
     
     result = invoke_layered :metaWeblog, :getRecentPosts, *args
     assert_equal result.size, 2
-    assert_equal result.last['title'], 'Article 2!'
+    assert_equal result.last['title'], 'Article 1!'
   end
 
   def test_meta_weblog_delete_post
@@ -134,7 +134,7 @@ class BackendControllerTest < Test::Unit::TestCase
     
     assert_equal article.title, new_article.title
     assert_equal article.body, new_article.body
-    assert_equal "<p>this is a <strong>test</strong></p>", new_article.body_html
+    assert_equal "<p>this is a <strong>test</strong></p>", new_article.html(@controller, :body)
     assert_equal Time.now.midnight.to_s, new_article.created_at.to_s
   end
 
@@ -151,17 +151,18 @@ class BackendControllerTest < Test::Unit::TestCase
     result = invoke_layered :metaWeblog, :newPost, *args
     assert result
     new_post = Article.find(result)
+    
     assert_equal "Posted via Test", new_post.title
     assert_equal "textile", new_post.text_filter.name
     assert_equal article.body, new_post.body
-    assert_equal "<p>body</p>", new_post.body_html
+    assert_equal "<p>body</p>", new_post.html(@controller, :body)
     assert_equal article.extended, new_post.extended
-    assert_equal "<p>extend me</p>", new_post.extended_html
+    assert_equal "<p>extend me</p>", new_post.html(@controller, :extended)
     assert_equal Time.now.midnight.to_s, new_post.created_at.to_s
     
-    assert_equal 2, new_post.pings.size
-    assert_equal 'http://ping.example.com/ping', new_post.pings[0].url
-    assert_equal 'http://alsoping.example.com/rpc/ping', new_post.pings[1].url
+#    assert_equal 2, new_post.pings.size
+#    assert_equal 'http://ping.example.com/ping', new_post.pings[0].url
+#    assert_equal 'http://alsoping.example.com/rpc/ping', new_post.pings[1].url
   end
 
   def test_meta_weblog_new_media_object
@@ -195,7 +196,7 @@ class BackendControllerTest < Test::Unit::TestCase
 
   def test_mt_get_post_categories
     article = Article.find(1)
-    article.categories << @software
+    article.categories << categories(:software)
 
     args = [ 1, 'tobi', 'whatever' ]
     
@@ -207,7 +208,7 @@ class BackendControllerTest < Test::Unit::TestCase
     args = [ 1, 'tobi', 'whatever', 2 ]    
     
     result = invoke_layered :mt, :getRecentPostTitles, *args
-    assert_equal result.first['title'], Article.find(1).title
+    assert_equal result.first['title'], Article.find(2).title
   end
 
   def test_mt_set_post_categories
@@ -215,7 +216,7 @@ class BackendControllerTest < Test::Unit::TestCase
       [MovableTypeStructs::CategoryPerPost.new('categoryName' => 'personal', 'categoryId' => 3, 'isPrimary' => 1)] ]
     
     result = invoke_layered :mt, :setPostCategories, *args
-    assert_equal [@personal], Article.find(2).categories
+    assert_equal [categories(:personal)], Article.find(2).categories
 
     args = [ 2, 'tobi', 'whatever',
       [MovableTypeStructs::CategoryPerPost.new('categoryName' => 'Software', 'categoryId' => 1, 'isPrimary' => 1),
@@ -223,7 +224,7 @@ class BackendControllerTest < Test::Unit::TestCase
 
      result = invoke_layered :mt, :setPostCategories, *args
 
-     assert Article.find(2).categories.include?(@hardware)
+     assert Article.find(2).categories.include?(categories(:hardware))
 
   end
 
@@ -250,12 +251,12 @@ class BackendControllerTest < Test::Unit::TestCase
   def test_mt_publish_post
     args = [ 4, 'tobi', 'whatever' ]
 
-    assert_equal 0, Article.find(4).published
+    assert (not Article.find(4).published?)
     
     result = invoke_layered :mt, :publishPost, *args
     
     assert result
-    assert_equal 1, Article.find(4).published
+    assert Article.find(4).published?
   end
 
   def test_mt_fail_authentication

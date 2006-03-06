@@ -35,10 +35,8 @@ class Sidebars::Plugin < ApplicationController
 
   def index
     @sidebar=params['sidebar']
-    @sb_config = @sidebar.active_config
-    if(not @sb_config or @sb_config.size == 0)
-      @sb_config = (self.class.default_config)
-    end
+    @sb_config = self.class.default_config
+    @sb_config.merge! @sidebar.active_config
     content 
     render :action=>'content' unless performed?
   end
@@ -72,10 +70,16 @@ class Sidebars::Plugin < ApplicationController
   def controller
     self
   end
+  
+  def log_processing
+    logger.info "\n\nProcessing #{controller_class_name}\##{action_name} (for #{request_origin})"
+  end
+
 end
   
 module Sidebars
   class SidebarController < ApplicationController
+    @@available_sidebars = nil
 
     uses_component_template_root
     
@@ -87,12 +91,14 @@ module Sidebars
     def self.enabled_sidebars
       available=available_sidebars.inject({}) { |h,i| h[i.short_name]=i; h}
       
-      enabled=Sidebar.find_all_visible.select do |sidebar|
+      Sidebar.find_all_visible.select do |sidebar|
         sidebar.controller and available[sidebar.controller]
       end
     end
 
     def self.available_sidebars
+      return @@available_sidebars if @@available_sidebars
+      
       objects=[]
       ObjectSpace.each_object(Class) do |o|
         if Plugin > o
@@ -100,8 +106,13 @@ module Sidebars
         end
       end
 
-      objects
+      @@available_sidebars = objects
     end
+    
+    def log_processing
+      logger.info "\n\nProcessing #{controller_class_name}\##{action_name} (for #{request_origin})"
+    end
+    
   end
 end
 

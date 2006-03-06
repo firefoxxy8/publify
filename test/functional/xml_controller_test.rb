@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 require 'xml_controller'
+require 'dns_mock'
 
 # This test now has optional support for validating the generated RSS feeds.
 # Since Ruby doesn't have a RSS/Atom validator, I'm using the Python source
@@ -29,8 +30,8 @@ end
 class XmlController; def rescue_action(e) raise e end; end
 
 class XmlControllerTest < Test::Unit::TestCase
-  fixtures :articles, :comments, :trackbacks, :categories,
-    :articles_categories, :tags, :articles_tags, :users, :settings
+  fixtures :contents, :categories, :articles_categories, :tags, 
+    :articles_tags, :users, :settings, :resources
 
   def setup
     @controller = XmlController.new
@@ -54,7 +55,7 @@ class XmlControllerTest < Test::Unit::TestCase
 
       okay, messages = parse_validator_messages(messages)
 
-      assert okay, messages
+      assert okay, messages + "\nFeed text:\n"+rss
     end
   end
   
@@ -77,7 +78,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
     
-    assert_tag :tag => 'channel', :children => {:count => 3, :only => {:tag => 'item' }}
+    assert_tag :tag => 'channel', :children => {:count => 4, :only => {:tag => 'item' }}
   end
   
   def test_feed_rss20_comments
@@ -86,7 +87,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'channel', :children => {:count => 2, :only => {:tag => 'item' }}
+    assert_tag :tag => 'channel', :children => {:count => 3, :only => {:tag => 'item' }}
   end
 
   def test_feed_rss20_trackbacks
@@ -131,7 +132,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
     
-    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
+    assert_tag :tag => 'feed', :children => {:count => 4, :only => {:tag => 'entry' }}
   end
 
   def test_feed_atom03_comments
@@ -140,7 +141,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
     
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
   end
 
   def test_feed_atom03_trackbacks
@@ -186,7 +187,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
+    assert_tag :tag => 'feed', :children => {:count => 4, :only => {:tag => 'entry' }}
   end
 
   def test_feed_atom10_comments
@@ -195,7 +196,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
   end
 
   def test_feed_atom10_trackbacks
@@ -263,7 +264,7 @@ class XmlControllerTest < Test::Unit::TestCase
     get :feed, :format => 'rss20', :type => 'feed'
     assert_response :success
     xml = REXML::Document.new(@response.body)
-    assert_equal @article1.created_at.rfc822, REXML::XPath.match(xml, '/rss/channel/item/pubDate').first.text
+    assert_equal contents(:article2).created_at.rfc822, REXML::XPath.match(xml, '/rss/channel/item/pubDate').first.text
   end
   
   def test_rsd
@@ -309,12 +310,47 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_response :success  	
     assert_no_match /extended content/, @response.body
   end
+  
+  def test_enclosure_rss20
+    get :feed, :format => 'rss20', :type => 'feed'
+    assert_response :success
+  
+    # There's an enclosure in there somewhere
+    assert_xpath('/rss/channel/item/enclosure')
+    
+    # There's an enclosure attached to the node with the title "Article 1!"
+    assert_xpath('/rss/channel/item[title="Article 1!"]/enclosure')    
+    assert_xpath('/rss/channel/item[title="Article 2!"]/enclosure')
+    
+    # Article 3 exists, but has no enclosure
+    assert_xpath('/rss/channel/item[title="Article 3!"]')
+    assert_not_xpath('/rss/channel/item[title="Article 3!"]/enclosure')
+  end
+  
+  def test_itunes
+    get :itunes
+    assert_response :success
+    assert_xml @response.body
+    assert_feedvalidator @response.body
+  end
 
+  def get_xpath(xpath)
+    rexml = REXML::Document.new(@response.body)
+    assert rexml
+
+    rexml.get_elements(xpath)
+  end
+  
+  def assert_xpath(xpath)
+    assert !(get_xpath(xpath).empty?)
+  end
+  
+  def assert_not_xpath(xpath)
+    assert get_xpath(xpath).empty?
+  end
 
   def set_extended_on_rss(value)
-    unless setting = Setting.find_by_name("show_extended_on_rss")
-      setting = Setting.create("name" => "show_extended_on_rss", "value" => value)
-    end
+    setting = Setting.find_by_name('show_extended_on_rss') || Setting.new(:name => 'show_extended_on_rss')
     setting.value = value
     setting.save
     config.reload

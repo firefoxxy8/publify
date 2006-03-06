@@ -7,13 +7,13 @@ require 'http_mock'
 class Admin::ContentController; def rescue_action(e) raise e end; end
 
 class Admin::ContentControllerTest < Test::Unit::TestCase
-  fixtures :articles, :users, :categories, :resources, :text_filters, :settings
+  fixtures :contents, :users, :categories, :resources, :text_filters, :settings, :articles_categories
 
   def setup
     @controller = Admin::ContentController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-    @request.session = { :user => @tobi }
+    @request.session = { :user => users(:tobi) }
   end
 
   def test_index
@@ -45,14 +45,22 @@ class Admin::ContentControllerTest < Test::Unit::TestCase
 
   def test_create
     num_articles = Article.find_all.size
-
-    post :new, 'article' => { :title => "posted via tests!", :body => "Foo" }
+    emails = ActionMailer::Base.deliveries
+    emails.clear
+    tags = ['foo', 'bar', 'baz bliz', 'gorp gack gar']
+    post :new, 'article' => { :title => "posted via tests!", :body => "Foo", :keywords => "foo bar 'baz bliz' \"gorp gack gar\""}, 'categories' => [1]
     assert_redirected_to :action => 'show'
 
     assert_equal num_articles + 1, Article.find_all.size
 
     new_article = Article.find(:first, :order => "id DESC")
-    assert_equal @tobi, new_article.user
+    assert_equal users(:tobi), new_article.user
+    assert_equal 1, new_article.categories.size
+    assert_equal [1], new_article.categories.collect {|c| c.id}
+    assert_equal 4, new_article.tags.size
+    
+    assert_equal(1, emails.size)
+    assert_equal('randomuser@example.com', emails.first.to[0])
   end
     
   def test_create_filtered
@@ -61,12 +69,12 @@ class Admin::ContentControllerTest < Test::Unit::TestCase
     post :new, 'article' => { :title => "another test", :body => body, :extended => extended}
     assert_redirected_to :action => 'show'
     
-    new_article = Article.find(:first, :order => "id DESC")
+    new_article = Article.find(:first, :order => "created_at DESC")
     assert_equal body, new_article.body
     assert_equal extended, new_article.extended
     assert_equal "textile", new_article.text_filter.name
-    assert_equal "<p>body via <strong>textile</strong></p>", new_article.body_html
-    assert_equal "<p><strong>foo</strong></p>", new_article.extended_html
+    assert_equal "<p>body via <strong>textile</strong></p>", new_article.html(@controller, :body)
+    assert_equal "<p><strong>foo</strong></p>", new_article.html(@controller, :extended)
   end
 
   def test_edit
@@ -77,6 +85,9 @@ class Admin::ContentControllerTest < Test::Unit::TestCase
   end
 
   def test_update
+    emails = ActionMailer::Base.deliveries
+    emails.clear
+    
     body = "another *textile* test"
     post :edit, 'id' => 1, 'article' => {:body => body, :text_filter => 'textile'}
     assert_redirected_to :action => 'show', :id => 1
@@ -84,7 +95,11 @@ class Admin::ContentControllerTest < Test::Unit::TestCase
     article = Article.find(1)
     assert_equal "textile", article.text_filter.name
     assert_equal body, article.body
-    assert_nil article.body_html
+    # Deliberately *not* using the mediating protocol, we want to ensure that the 
+    # body_html got reset to nil.
+    assert_nil article.body_html 
+    
+    assert_equal 0, emails.size
   end
 
   def test_destroy
@@ -158,5 +173,17 @@ class Admin::ContentControllerTest < Test::Unit::TestCase
   def test_attachment_box_remove
     get :attachment_box_remove, :id => 1
     assert_tag :tag => 'script', :attributes => {:type => 'text/javascript'}
+  end
+
+  def test_resource_container
+    get :show, :id => contents(:article1).id # article without attachments 
+    Resource.find(:all).each do |resource|
+      assert_tag( :tag => 'a',
+                  :attributes =>{
+                    :onclick =>
+                      /^new Ajax.Updater\('resources/
+                  },
+                  :content => /[-+] #{resource.filename}/)
+    end
   end
 end

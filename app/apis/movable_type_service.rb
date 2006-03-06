@@ -108,7 +108,6 @@ class MovableTypeService < TypoWebService
       category = Category.find(c['categoryId'])
       article.categories.push_with_attributes(category, :is_primary => c['isPrimary'])
     end
-    update_html(article)
     article.save
   end
 
@@ -137,7 +136,7 @@ class MovableTypeService < TypoWebService
 
   def publishPost(postid, username, password)
     article = Article.find(postid)
-    article.published = 1
+    article.published = true
     article.save    
   end
 

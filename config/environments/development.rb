@@ -1,7 +1,5 @@
-require 'active_support/whiny_nil'
+# In the development environment your application's code is reloaded on
+# every request.  This slows down response time but is perfect for development
+# since you don't have to restart the webserver when you make code changes.
+config.cache_classes     = false
 
-Dependencies.mechanism                             = :load
-ActionController::Base.consider_all_requests_local = true
-ActionController::Base.perform_caching             = false
-Migrator.offer_migration_when_available            = true
-BREAKPOINT_SERVER_PORT = 42531
