@@ -46,6 +46,11 @@ class SuperclassArticles < ActiveRecord::Migration
 
       if not $schema_generator
 
+        #if config[RAILS_ENV]['adapter'] == 'postgresql'
+          STDERR.puts "MvZ: Presetting PostgreSQL sequence"
+          execute "select setval('contents_id_seq',1)"
+        #end
+
         Bare20Article.find(:all).each do |a|
           t = Bare20Content.new(
             :type => 'Article',
@@ -73,11 +78,11 @@ class SuperclassArticles < ActiveRecord::Migration
         end
 
         config = ActiveRecord::Base.configurations
-        if config[RAILS_ENV]['adapter'] == 'postgresql'
+        #if config[RAILS_ENV]['adapter'] == 'postgresql'
           STDERR.puts "Resetting PostgreSQL sequences"
           execute "select setval('contents_id_seq',max(id)) from contents"
           execute "select nextval('contents_id_seq')"
-        end
+        #end
       end
 
       remove_index :articles, :permalink

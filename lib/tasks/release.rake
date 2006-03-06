@@ -1,5 +1,5 @@
-require 'rake/gempackagetask'
-require 'rake/contrib/rubyforgepublisher'
+#require 'rake/gempackagetask'
+#require 'rake/contrib/rubyforgepublisher'
 
 PKG_VERSION = "3.9.0"
 PKG_NAME = "typo"
@@ -8,6 +8,7 @@ RUBY_FORGE_PROJECT = 'typo'
 RUBY_FORGE_USER = 'scottlaird'
 RELEASE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
+if false then
 spec = Gem::Specification.new do |s|
   s.name = PKG_NAME
   s.version = PKG_VERSION
@@ -162,3 +163,4 @@ end
 desc "Upload the package to leetsoft, rubyforge and tag the release in svn"
 task :release => [:sweep_cache, :package, :leetsoft_upload, :rubyforge_upload, :tag_svn ]
 
+end
