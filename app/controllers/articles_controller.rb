@@ -16,7 +16,7 @@ class ArticlesController < ApplicationController
   def frontpage
     @frontpage = true;
     @articles = Article.find(
-      :all, :conditions => 'published != 0',
+      :all, :conditions => ['published = ?', true],
       :order => 'created_at DESC',
       :limit => 3
     )
