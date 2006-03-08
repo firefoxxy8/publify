@@ -1,18 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title><%= page_title %></title>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <%= meta_tag 'ICBM', config_value(:geourl_location)  %>
-  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="<%= server_url_for :controller => 'xml', :action => 'rsd' %>" />
-  <%= auto_discovery_link_tag :rss, :controller => 'xml', :action => 'rss' %>
-  <%= auto_discovery_link_tag :atom, :controller => 'xml', :action => 'atom' %>
-  <%= stylesheet_link_tag "/stylesheets/theme/passepartout" %>
-  <%= javascript_include_tag "cookies" %>
-  <%= javascript_include_tag "prototype" %>
-  <%= javascript_include_tag "effects" %>
-  <%= javascript_include_tag "typo" %>
-  <script type="text/javascript"><%= @content_for_script %></script>
+  <title><%=h page_title %></title>
+  <%= page_header %>
+  <%= stylesheet_link_tag "/stylesheets/theme/passepartout", :media => 'all' %>
+  <%= stylesheet_link_tag "/stylesheets/user-styles", :media => 'all' %>
+  <%= stylesheet_link_tag "/stylesheets/theme/print", :media => 'print' %>
 </head>
 <body>
   <div class="contents">
@@ -37,17 +30,11 @@
 
         <% else -%>
         <%= link_to image_tag("powered.gif"),  "http://typo.leetsoft.com/", {:class => "powered" } %>
-      <div id="search"> <%= render_partial "shared/search" %></div>
+	<div id="search"> <%= render :partial => "shared/search" %></div>
 
             <div id="search-results"></div>
-              <%= observe_field "q", 
-                  :frequency => 1, 
-                  :url => { :controller => "live", :action => "search" }, 
-                  :loading => "Element.show('search_spinner')",
-                  :complete => "Element.hide('search_spinner')",
-                  :update => "search-results" -%>
 
-        <%= render_component(:controller => 'sidebars/sidebar', :action => 'display_plugins') %>
+        <%= render_sidebars %>
         <% end -%>
 	<!--
         <ul>
@@ -56,7 +43,7 @@
         </ul>
 	-->
       </div>
-      <p class="copyright">Copyright 2002&ndash;2005, Matijs van Zuijlen</p>
+      <p class="copyright">Copyright 2002&ndash;2006, Matijs van Zuijlen</p>
   </div>
 </body>
 </html>

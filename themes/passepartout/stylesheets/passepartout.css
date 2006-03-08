@@ -116,6 +116,25 @@ div.places {
    * IE think it's too wide to display next to the float */
   /* margin-right: 50px; */ /* 25px padding, plus 25px to right edge of image. */
 }
+
+/* Layout of text inside the right border. Basically, this part is filled
+ * with lists, but we don't want them to look like standard lists. */
+.places ul {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+.places ul li {
+  margin: 0px;
+}
+.places * {
+  margin-bottom: 0.4em;
+  margin-top: 0.4em;
+}
+.places h2, .places h3 {
+  margin-top: 1em;
+}
+
 h2, h3, h4, h5, h6 {
   color: #c20;
   font-weight: normal;
@@ -140,6 +159,13 @@ h1 {
 			 * of the dark rectangle */
   margin: 0px;
 }
+
+/* Main text */
+.main p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
 
 /* This text is also in central grey area. 20px padding to inner edge of
  * border. */
@@ -185,13 +211,40 @@ a {
 
 /* Blog-specific styles */
 
+/*
+ * Typo displays headings as links, but I want them to look normal.
+ */
+h1 a, h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/*
+ * Article layout
+ */
+
+p.auth, p.meta {
+  font-size: 80%;
+  color: #555;
+}
+p.meta a, p.postmetadata a {
+  color: inherit;
+}
+
+h4.blueblk {
+  margin-bottom: 0em;
+}
+
+/*
+ * Commenting
+ */
 div.comment, div.comment-box {
   margin-top: 10px;
   margin-bottom: 10px;
   margin-left: 0em;
   margin-right: 0em;
   /*background-color: #ddd;*/
-  border: 1px solid black;
+  border: 1px solid #a5945a;
   padding: 0.1px 10px;
 }
 
@@ -199,46 +252,40 @@ div.comment p, div.comment-box p {
   margin-left: 0em;
   margin-right: 0em;
 }
-textarea {
-  width: 400px;
-}
 
-
-/*
- * FOOTNOTES:
- * [1] I'm setting div.contents as the containing block. see
- * <http://www.autisticcuckoo.net/archive.php?id=2004/12/07/relatively-absolute>.
- * [2] This has to do with the exact effect of the clear property. See
- * <http://www.autisticcuckoo.net/archive.php?id=2004/12/10/floating>. 
- * [3] http://www.positioniseverything.net/explorer/doubled-margin.html
- * [4] http://w3development.de/css/hide_css_from_browsers/more/
- * [5] http://tantek.com/CSS/Examples/boxmodelhack.html, via
- * http://w3development.de/css/hide_css_from_browsers/tantek/
- */
-
-/* Stuff we forgot last time */
-.places ul {
+/* Other bits from azure.css, to be adapted */
+.comment-list {
   list-style: none;
   margin: 0px;
   padding: 0px;
 }
-
-.places ul li {
+.comment-list li {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 0em;
+  margin-right: 0em;
+  /*background-color: #ddd;*/
+  border: 1px solid #a5945a;
+  padding: 0.1px 10px;
+}
+/* Is this needed? */
+.comment-list li div {
   margin: 0px;
+  padding: 0px;
 }
-.places * {
-  margin-bottom: 0.4em;
-  margin-top: 0.4em;
+.comment-list li p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding: 0px;
+}
+li.author_comment {
+  border: 1px solid #c20;
 }
 
-.places h2, .places h3 {
-  margin-top: 1em;
-}
+#comment_body { height: 220px; }
 
-/* Stuff that needs to be changed because typo displays headings as links */
-h1 a, h2 a {
-  color: inherit;
-  text-decoration: none;
+textarea {
+  width: 400px;
 }
 
 a:hover { color: #85ab02; /* TODO: Color */}
@@ -260,36 +307,6 @@ a:hover { color: #85ab02; /* TODO: Color */}
 }
 
 /* Other bits from azure.css, to be adapted */
-.comment-list {
-  list-style: none;
-  margin: 0px;
-  padding: 0px;
-}
-.comment-list li {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  margin-left: 0em;
-  margin-right: 0em;
-  /*background-color: #ddd;*/
-  border: 1px solid black;
-  padding: 0.1px 10px;
-}
-/* Is this needed? */
-.comment-list li div {
-  margin: 0px;
-  padding: 0px;
-}
-.comment-list li p {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  padding: 0px;
-}
-li.author_comment {
-  border: 1px solid #AAF;
-}
-
-#comment_body { height: 220px; }
-
 .powered img {
   border: 0px;
 }
@@ -297,3 +314,15 @@ li.author_comment {
   /* avoid re-layouting of other stuff */
   position: absolute;
 }
+
+/*
+ * FOOTNOTES:
+ * [1] I'm setting div.contents as the containing block. see
+ * <http://www.autisticcuckoo.net/archive.php?id=2004/12/07/relatively-absolute>.
+ * [2] This has to do with the exact effect of the clear property. See
+ * <http://www.autisticcuckoo.net/archive.php?id=2004/12/10/floating>. 
+ * [3] http://www.positioniseverything.net/explorer/doubled-margin.html
+ * [4] http://w3development.de/css/hide_css_from_browsers/more/
+ * [5] http://tantek.com/CSS/Examples/boxmodelhack.html, via
+ * http://w3development.de/css/hide_css_from_browsers/tantek/
+ */

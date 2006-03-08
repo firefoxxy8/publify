@@ -56,11 +56,11 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'articles', :action => 'find_by_date',
     :year => /\d{4}/, :page => /\d+/
 
-  map.connect 'blog/:bryarid', :controller  => 'articles', :action => 'permalink', :bryarid => /id_\d*/
+  map.connect 'blog/:year/:month/:day/:title',
+    :controller => 'articles', :action => 'permalink',
+    :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/
 
-#  map.connect 'blog/:year/:month/:day/:title',
-#    :controller => 'articles', :action => 'permalink',
-#    :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/
+  map.connect 'blog/:bryarid', :controller  => 'articles', :action => 'permalink', :bryarid => /id_\d*/
 
   map.connect 'blog/category/:id',
     :controller => 'articles', :action => 'category'
