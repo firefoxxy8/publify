@@ -1,10 +1,10 @@
 ActionController::Routing::Routes.draw do |map|
 
-  # default   
+  # default
   map.index '', :controller  => 'articles', :action => 'frontpage'
   map.index 'blog', :controller  => 'articles', :action => 'index'
   map.admin 'blog/admin', :controller  => 'admin/general', :action => 'index'
-  
+
   # admin/comments controller needs parent article id
   map.connect 'blog/admin/comments/article/:article_id/:action/:id',
     :controller => 'admin/comments', :action => nil, :id => nil
@@ -13,21 +13,21 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'blog/admin/content/:action/:id', :controller => 'admin/content'
 
   # make rss feed urls pretty and let them end in .xml
-  # this improves caches_page because now apache and webrick will send out the 
-  # cached feeds with the correct xml mime type. 
+  # this improves caches_page because now apache and webrick will send out the
+  # cached feeds with the correct xml mime type.
   map.xml 'xml/itunes/feed.xml', :controller => 'xml', :action => 'itunes'
   #map.xml 'blog/xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
   #map.xml 'blog/xml/commentrss/feed.xml', :controller => 'xml', :action => 'commentrss'
   #map.xml 'blog/xml/trackbackrss/feed.xml', :controller => 'xml', :action => 'trackbackrss'
-  
+
   # MvZ: Limit feed types.
   map.xml 'blog/xml/rss/feed.xml', :controller  => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
   map.xml 'blog/xml/atom/feed.xml', :controller  => 'xml', :action => 'feed', :type => 'feed', :format => 'atom'
   #map.xml 'blog/xml/:format/feed.xml', :controller => 'xml', :action => 'feed', :type => 'feed'
   #map.xml 'blog/xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
   #map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
-  map.xml 'xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed'
-  
+  map.xml 'xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
+
   # allow neat perma urls
   map.connect 'blog',
     :controller => 'articles', :action => 'index'
@@ -91,9 +91,9 @@ ActionController::Routing::Routes.draw do |map|
   # but that breaks too many things for Typo 2.5.
   map.connect 'theme/*stuff',
     :controller => 'theme', :action => 'error'
-     
+
   # Allow legacy urls to still work
   map.connect 'blog/:controller/:action/:id'
-  
+
   map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

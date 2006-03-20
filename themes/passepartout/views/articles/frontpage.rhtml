@@ -1,11 +1,28 @@
-<% for article in @articles[0..-2] -%>
- <div class="post">
-  <%= render_partial "article", article %>
-  <%= article_link "Read more...", article if article.extended? %>  
-  <p class="meta"><%= article_links article %></p> 
-  </div>
-<% end -%>
+<h2>At this web site</h2>
 
-<p id="pagination">You can read
-	<%= link_to 'the rest of my blog here', { :controller => '/' } %>
-</p>
+<h3>Software</h3>
+
+<p>Some of the <a href="/software/">software I've written</a>.</p>
+
+<h3>Metaphoor</h3>
+
+<p>Metaphoor is a hybernating association for geofiction of which I
+am a member. I am also the editor of the <a
+href="http://www.xs4all.nl/~mvz/metaphoor/">Metaphoor web site (in
+    Dutch)</a>, where Metaphoor's members publish information about
+their countries (such as <a
+    href="http://www.xs4all.nl/~mvz/metaphoor/wereld/liger/">mine</a>).</p>
+
+<h2>Trivia</h2>
+
+<p>My computers run <a href="http://www.debian.org">Debian
+GNU/Linux</a></p>
+
+<p>You can take a look at a <a href="/picture">slightly outdated
+picture of me</a>.</p>
+
+<h2>Contact</h2>
+
+<p>I can be reached at <a
+href="mailto:mvz@xs4all.nl">mvz@xs4all.nl</a>.</p>
+

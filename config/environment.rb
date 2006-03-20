@@ -31,7 +31,7 @@ Rails::Initializer.run do |config|
     vendor/rails/actionwebservice/lib
   ).map {|dir| "#{RAILS_ROOT}/#{dir}"}.select { |dir| File.directory?(dir) }
 
-  # Force all environments to use the same logger level 
+  # Force all environments to use the same logger level
   # (by default production uses :info, the others :debug)
   # config.log_level = :debug
 
@@ -48,7 +48,7 @@ Rails::Initializer.run do |config|
 
   # Make Active Record use UTC-base instead of local time
   # config.active_record.default_timezone = :utc
-  
+
   # Use Active Record's schema dumper instead of SQL when creating the test database
   # (enables use of different database adapters for development and test environments)
   # config.active_record.schema_format = :ruby
@@ -56,7 +56,7 @@ Rails::Initializer.run do |config|
   # See Rails::Configuration for more options
 end
 
-# Add new inflection rules using the following format 
+# Add new inflection rules using the following format
 # (all these examples are active by default):
 # Inflector.inflections do |inflect|
 #   inflect.plural /^(ox)$/i, '\1en'
@@ -68,9 +68,9 @@ end
 # Include your application configuration below
 
 # Load included libraries.
-require 'redcloth' 
-require 'bluecloth' 
-require 'rubypants' 
+require 'redcloth'
+require 'bluecloth'
+require 'rubypants'
 require 'flickr'
 require 'uuidtools'
 
@@ -91,9 +91,10 @@ require_dependency 'aggregations/delicious'
 require_dependency 'aggregations/tada'
 require_dependency 'aggregations/flickr'
 require_dependency 'aggregations/fortythree'
+require_dependency 'aggregations/magnolia'
 require_dependency 'aggregations/upcoming'
-require_dependency 'config_manager' 
-require_dependency 'configuration'
+require_dependency 'config_manager'
+require_dependency 'blog'
 require_dependency 'spam_protection'
 require_dependency 'xmlrpc_fix'
 require_dependency 'guid'
@@ -110,7 +111,7 @@ ActionMailer::Base.default_charset = 'utf-8'
 if RAILS_ENV != 'test'
   begin
     mail_settings = YAML.load(File.read("#{RAILS_ROOT}/config/mail.yml"))
-  
+
     ActionMailer::Base.delivery_method = mail_settings['method']
     ActionMailer::Base.server_settings = mail_settings['settings']
   rescue
@@ -120,3 +121,4 @@ if RAILS_ENV != 'test'
 end
 
 FLICKR_KEY='84f652422f05b96b29b9a960e0081c50'
+DEFAULT_BLOG_ID=1

@@ -3,33 +3,29 @@ require File.dirname(__FILE__) + '/../test_helper'
 require 'dns_mock'
 
 class CommentTest < Test::Unit::TestCase
-  fixtures :contents, :blacklist_patterns, :settings, :text_filters
-
-  def setup
-    config.reload
-  end
+  fixtures :contents, :blacklist_patterns, :text_filters, :blogs
 
   def test_save_regular
     assert contents(:comment2).save
     assert_equal "http://www.google.com", contents(:comment2).url
   end
-  
+
   def test_save_spam
     assert contents(:spam_comment).save
     assert_equal "http://fakeurl.com", contents(:spam_comment).url
   end
-  
+
   def test_create_comment
     c = Comment.new
     c.author = 'Bob'
     c.article_id = 1
     c.body = 'nice post'
     c.ip = '1.2.3.4'
-    
+
     assert c.save
     assert c.guid.size > 15
   end
-  
+
   def test_reject_spam_rbl
     c = Comment.new
     c.author = "Spammer"
@@ -48,18 +44,18 @@ class CommentTest < Test::Unit::TestCase
     c.author = "Another Spammer"
     c.body = "Texas hold-em poker crap"
     c.url = "http://texas.hold-em.us"
-    
+
     assert ! c.save
     assert c.errors.invalid?('body')
   end
-  
+
   def test_reject_spam_uri_limit
     c = Comment.new
     c.author = "Yet Another Spammer"
     c.body = %{ <a href="http://www.one.com/">one</a> <a href="http://www.two.com/">two</a> <a href="http://www.three.com/">three</a> <a href="http://www.four.com/">four</a> }
     c.url = "http://www.uri-limit.com"
     c.ip = "123.123.123.123"
-    
+
     assert ! c.save
     assert c.errors.invalid?('body')
   end
@@ -72,9 +68,9 @@ class CommentTest < Test::Unit::TestCase
 
     assert ! c.save
     assert c.errors.invalid?('article_id')
-      
+
     c.article = @article1
-      
+
     assert c.save
     assert c.errors.empty?
   end
@@ -100,21 +96,12 @@ class CommentTest < Test::Unit::TestCase
     # Test each filter to make sure that we don't allow scripts through.
     # Yes, this is ugly.
     ['','textile','markdown','smartypants','markdown smartypants'].each do |filter|
-      setting = find_or_create("comment_text_filter")
-      setting.value = filter
-      setting.save
+      this_blog.comment_text_filter = filter
 
       assert c.save
       assert c.errors.empty?
 
       assert c.body_html !~ /<script>/
     end
-  end
-
-  def find_or_create(name)
-    unless setting = Setting.find_by_name(name)
-      setting = Setting.new("name" => name)
-    end
-    setting
   end
 end

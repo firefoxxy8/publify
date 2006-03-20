@@ -10,26 +10,20 @@
 <body>
   <div class="contents">
       <div class="main">
+	  <% if @frontpage -%>
+          <h1 id="sitename">matijs.net</h1>
+	  <% else -%>
           <h1 id="sitename"><%= link_to config_value('blog_name'), { :controller => '/' } %></h1>
-          <%= @content_for_layout %>
+	  <% end -%>
+	  <%= @content_for_layout %>
           <%= javascript_tag "show_dates_as_local_time()" %>
       </div>
       <div class="places">
-        <p>Toxic Elephant is Matijs van Zuijlen's weblog.</p>
         <% if @frontpage -%>
         <%= render_partial "articles/frontbar" %>
-        <h2>Site</h2>
-        <ul class="navigation">
-          <li>home</li>
-          <li><a href="/software/">software</a></li>
-
-          <li><a
-            href="http://www.xs4all.nl/~mvz/metaphoor/">metaphoor</a></li>
-          <li><a href="/blog/">blog</a></li>
-        </ul>
-
         <% else -%>
-        <%= link_to image_tag("powered.gif"),  "http://typo.leetsoft.com/", {:class => "powered" } %>
+	<p>Toxic Elephant is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
+	<%= link_to image_tag("powered.gif"),  "http://www.typosphere.org/", {:class => "powered" } %>
 	<div id="search"> <%= render :partial => "shared/search" %></div>
 
             <div id="search-results"></div>

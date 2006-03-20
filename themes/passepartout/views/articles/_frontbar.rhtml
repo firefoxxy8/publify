@@ -1,26 +1,20 @@
-<h2>Software</h2>
+<h2>Recent Blog Entries</h2>
+<ul class="navigation">
+<% for article in @articles -%>
+<li><%= article_link h(article.title), article %></li>
+<% end -%>
+</ul>
 
-<p>Some of the <a href="/software/">software I've written</a>.</p>
+<p id="pagination">You can read
+	<%= link_to 'the rest of my blog here', { :controller => '/' } %>.
+</p>
 
-<h2>Metaphoor</h2>
+<h2>Site</h2>
+<ul class="navigation">
+  <li>home</li>
+  <li><a href="/software/">software</a></li>
 
-<p>Metaphoor is a hybernating association for geofiction of which I
-am a member. I am also the editor of the <a
-href="http://www.xs4all.nl/~mvz/metaphoor/">Metaphoor web site (in
-    Dutch)</a>, where Metaphoor's members publish information about
-their countries (such as <a
-    href="http://www.xs4all.nl/~mvz/metaphoor/wereld/liger/">mine</a>).</p>
-
-<h2>Trivia</h2>
-
-<p>Two of my computers run <a href="http://www.debian.org">Debian
-GNU/Linux</a>, and one runs <a
-href="http://leaf.sourceforge.net/">LEAF</a>.</p>
-
-<p>You can take a look at a <a href="/picture">slightly outdated
-picture of me</a>.</p>
-
-<h2>Contact</h2>
-
-<p>I can be reached at <a
-href="mailto:mvz@xs4all.nl">mvz@xs4all.nl</a>.</p>
+  <li><a
+    href="http://www.xs4all.nl/~mvz/metaphoor/">metaphoor</a></li>
+  <li><a href="/blog/">blog</a></li>
+</ul>

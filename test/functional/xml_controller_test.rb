@@ -30,25 +30,30 @@ end
 class XmlController; def rescue_action(e) raise e end; end
 
 class XmlControllerTest < Test::Unit::TestCase
-  fixtures :contents, :categories, :articles_categories, :tags, 
-    :articles_tags, :users, :settings, :resources
+  fixtures :contents, :categories, :articles_categories, :tags,
+    :articles_tags, :users, :blogs, :resources
 
   def setup
     @controller = XmlController.new
     @request, @response = ActionController::TestRequest.new, ActionController::TestResponse.new
+
+    Article.create!(:title => "News from the future!",
+                    :body => "The future is cool!",
+                    :keywords => "future",
+                    :created_at => Time.now + 12.minutes)
   end
-  
+
   def assert_feedvalidator(rss)
     return unless $validator_installed
-    
+
     begin
       file = Tempfile.new('typo-feed-test')
       filename = file.path
       file.write(rss)
       file.close
-      
+
       messages = ''
-      
+
       IO.popen("feedvalidator file://#{filename}") do |pipe|
         messages = pipe.read
       end
@@ -58,7 +63,7 @@ class XmlControllerTest < Test::Unit::TestCase
       assert okay, messages + "\nFeed text:\n"+rss
     end
   end
-  
+
   def parse_validator_messages(message)
     messages=message.split(/\n/).reject do |m|
       m =~ /Feeds should not be served with the "text\/plain" media type/ ||
@@ -67,27 +72,27 @@ class XmlControllerTest < Test::Unit::TestCase
 
     if(messages.size > 1)
       [false, messages.join("\n")]
-    else  
+    else
       [true, ""]
     end
   end
-  
+
   def test_feed_rss20
     get :feed, :format => 'rss20', :type => 'feed'
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
-    
-    assert_tag :tag => 'channel', :children => {:count => 4, :only => {:tag => 'item' }}
+
+    assert_rss20(4)
   end
-  
+
   def test_feed_rss20_comments
     get :feed, :format => 'rss20', :type => 'comments'
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'channel', :children => {:count => 3, :only => {:tag => 'item' }}
+    assert_rss20(3)
   end
 
   def test_feed_rss20_trackbacks
@@ -96,7 +101,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'channel', :children => {:count => 2, :only => {:tag => 'item' }}
+    assert_rss20(2)
   end
 
   def test_feed_rss20_article
@@ -104,8 +109,8 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
-    
-    assert_tag :tag => 'channel', :children => {:count => 2, :only => {:tag => 'item' }}
+
+    assert_rss20(2)
   end
 
   def test_feed_rss20_category
@@ -114,16 +119,16 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'channel', :children => {:count => 3, :only => {:tag => 'item' }}
+    assert_rss20(3)
   end
-  
+
   def test_feed_rss20_tag
     get :feed, :format => 'rss20', :type => 'tag', :id => 'foo'
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'channel', :children => {:count => 2, :only => {:tag => 'item' }}
+    assert_rss20(2)
   end
 
   def test_feed_atom03_feed
@@ -131,8 +136,8 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
-    
-    assert_tag :tag => 'feed', :children => {:count => 4, :only => {:tag => 'entry' }}
+
+    assert_atom03(4)
   end
 
   def test_feed_atom03_comments
@@ -140,8 +145,8 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
-    
-    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
+
+    assert_atom03(3)
   end
 
   def test_feed_atom03_trackbacks
@@ -149,8 +154,8 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
-    
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+
+    assert_atom03(2)
   end
 
   def test_feed_atom03_article
@@ -159,16 +164,16 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+    assert_atom03(2)
   end
-  
+
   def test_feed_atom03_category
     get :feed, :format => 'atom03', :type => 'category', :id => 'personal'
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
+    assert_atom03(3)
   end
 
   def test_feed_atom03_tag
@@ -177,17 +182,17 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+    assert_atom03(2)
   end
 
   def test_feed_atom10_feed
     get :feed, :format => 'atom10', :type => 'feed'
-    
+
     assert_response :success
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 4, :only => {:tag => 'entry' }}
+    assert_atom10(4)
   end
 
   def test_feed_atom10_comments
@@ -196,7 +201,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
+    assert_atom10(3)
   end
 
   def test_feed_atom10_trackbacks
@@ -205,7 +210,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+    assert_atom10(2)
   end
 
   def test_feed_atom10_article
@@ -214,7 +219,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+    assert_atom10(2)
   end
 
   def test_feed_atom10_category
@@ -223,7 +228,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 3, :only => {:tag => 'entry' }}
+    assert_atom10(3)
   end
 
   def test_feed_atom10_tag
@@ -232,29 +237,29 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_tag :tag => 'feed', :children => {:count => 2, :only => {:tag => 'entry' }}
+    assert_atom10(2)
   end
 
   def test_articlerss
-    get :articlerss, :id => 1 
+    get :articlerss, :id => 1
     assert_response :redirect
   end
-  
+
   def test_commentrss
-    get :commentrss, :id => 1 
+    get :commentrss, :id => 1
     assert_response :redirect
   end
-  
+
   def test_trackbackrss
-    get :trackbackrss, :id => 1 
+    get :trackbackrss, :id => 1
     assert_response :redirect
   end
-  
+
   def test_bad_format
     get :feed, :format => 'atom04', :type => 'feed'
     assert_response :missing
   end
-  
+
   def test_bad_type
     get :feed, :format => 'rss20', :type => 'foobar'
     assert_response :missing
@@ -266,15 +271,15 @@ class XmlControllerTest < Test::Unit::TestCase
     xml = REXML::Document.new(@response.body)
     assert_equal contents(:article2).created_at.rfc822, REXML::XPath.match(xml, '/rss/channel/item/pubDate').first.text
   end
-  
+
   def test_rsd
-    get :rsd, :id => 1 
+    get :rsd, :id => 1
     assert_response :success
     assert_nothing_raised do
       assert REXML::Document.new(@response.body)
     end
-  end 
-  
+  end
+
   def test_extended_rss20
     set_extended_on_rss true
     get :feed, :format => 'rss20', :type => 'feed'
@@ -283,7 +288,7 @@ class XmlControllerTest < Test::Unit::TestCase
 
     set_extended_on_rss false
     get :feed, :format => 'rss20', :type => 'feed'
-    assert_response :success  	
+    assert_response :success
     assert_no_match /extended content/, @response.body
   end
 
@@ -295,7 +300,7 @@ class XmlControllerTest < Test::Unit::TestCase
 
     set_extended_on_rss false
     get :feed, :format => 'atom03', :type => 'feed'
-    assert_response :success  	
+    assert_response :success
     assert_no_match /extended content/, @response.body
   end
 
@@ -307,26 +312,26 @@ class XmlControllerTest < Test::Unit::TestCase
 
     set_extended_on_rss false
     get :feed, :format => 'atom10', :type => 'feed'
-    assert_response :success  	
+    assert_response :success
     assert_no_match /extended content/, @response.body
   end
-  
+
   def test_enclosure_rss20
     get :feed, :format => 'rss20', :type => 'feed'
     assert_response :success
-  
+
     # There's an enclosure in there somewhere
     assert_xpath('/rss/channel/item/enclosure')
-    
+
     # There's an enclosure attached to the node with the title "Article 1!"
-    assert_xpath('/rss/channel/item[title="Article 1!"]/enclosure')    
+    assert_xpath('/rss/channel/item[title="Article 1!"]/enclosure')
     assert_xpath('/rss/channel/item[title="Article 2!"]/enclosure')
-    
+
     # Article 3 exists, but has no enclosure
     assert_xpath('/rss/channel/item[title="Article 3!"]')
     assert_not_xpath('/rss/channel/item[title="Article 3!"]/enclosure')
   end
-  
+
   def test_itunes
     get :itunes
     assert_response :success
@@ -340,20 +345,28 @@ class XmlControllerTest < Test::Unit::TestCase
 
     rexml.get_elements(xpath)
   end
-  
+
   def assert_xpath(xpath)
     assert !(get_xpath(xpath).empty?)
   end
-  
+
   def assert_not_xpath(xpath)
     assert get_xpath(xpath).empty?
   end
 
+  def assert_rss20(items)
+    assert_equal 1, get_xpath(%{/rss[@version="2.0"]/channel[count(child::item)=#{items}]}).size, "RSS 2.0 feed has wrong number of channel/item nodes"
+  end
+
+  def assert_atom03(entries)
+    assert_equal 1, get_xpath(%{/feed[@version="0.3" and count(child::entry)=#{entries}]}).size, "Atom 0.3 feed has wrong number of feed/entry nodes"
+  end
+
+  def assert_atom10(entries)
+    assert_equal 1, get_xpath(%{/feed[@xmlns="http://www.w3.org/2005/Atom" and count(child::entry)=#{entries}]}).size, "Atom 1.0 feed has wrong number of feed/entry nodes"
+  end
+
   def set_extended_on_rss(value)
-    setting = Setting.find_by_name('show_extended_on_rss') || Setting.new(:name => 'show_extended_on_rss')
-    setting.value = value
-    setting.save
-    config.reload
-    assert config["show_extended_on_rss"] == value
+    this_blog.show_extended_on_rss = value
   end
 end

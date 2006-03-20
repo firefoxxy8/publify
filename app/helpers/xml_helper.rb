@@ -10,16 +10,16 @@ module XmlHelper
   def post_link(post)
     article_url(post, false)
   end
-  
+
   def comment_link(comment)
     comment_url(comment, false)
   end
-  
+
   def trackback_link(trackback)
     trackback_url(trackback, false)
   end
-  
+
   def blog_title
-    config_value("blog_name") || "Unnamed blog"
+    this_blog.blog_name || "Unnamed blog"
   end
 end
