@@ -20,6 +20,7 @@ class ArticlesController < ContentController
       :all, :order => 'created_at DESC',
       :limit => config[:limit_article_display]
     )
+    @page_title   = 'matijs.net'
   end
 
   def index

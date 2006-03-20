@@ -13,7 +13,7 @@
 	  <% if @frontpage -%>
           <h1 id="sitename">matijs.net</h1>
 	  <% else -%>
-          <h1 id="sitename"><%= link_to config_value('blog_name'), { :controller => '/' } %></h1>
+          <h1 id="sitename"><%= link_to this_blog.blog_name, { :controller => '/' } %></h1>
 	  <% end -%>
 	  <%= @content_for_layout %>
           <%= javascript_tag "show_dates_as_local_time()" %>

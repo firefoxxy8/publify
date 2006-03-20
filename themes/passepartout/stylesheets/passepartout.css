@@ -1,6 +1,6 @@
 /*
  * Passepartout style for matijs.net
- * Copyright 2004-2005 Matijs van Zuijlen
+ * Copyright 2004-2006 Matijs van Zuijlen
  * http://www.matijs.net/
  */
 /*
@@ -23,6 +23,15 @@
  * horizontal edges occur at 30px and 95px.
  *
  * The dark rectangle in the top image has a bottom edge at 110px.
+ *
+ * COLOR SCHEME
+ *
+ * Top bar (brown): #a5945a;
+ * Main text (black): #000;
+ * Headings (red): #c20;
+ * Secondary text (gray): #555;
+ * Link hover (green): #85ab02;
+ * Admin tools, gray on white, red when active: #ccc; #fff; #c00;
  */
 html {
   /* background is centered to line it op with the pattern on the frame */
@@ -120,12 +129,17 @@ div.places {
 /* Layout of text inside the right border. Basically, this part is filled
  * with lists, but we don't want them to look like standard lists. */
 .places ul {
-  list-style: none;
+  list-style: square;
   margin: 0px;
+  margin-left: 1.5em;
   padding: 0px;
+  color: #a5945a;
 }
 .places ul li {
   margin: 0px;
+}
+.places ul li .nolink {
+  color: #000;
 }
 .places * {
   margin-bottom: 0.4em;
@@ -243,7 +257,6 @@ div.comment, div.comment-box {
   margin-bottom: 10px;
   margin-left: 0em;
   margin-right: 0em;
-  /*background-color: #ddd;*/
   border: 1px solid #a5945a;
   padding: 0.1px 10px;
 }
@@ -264,7 +277,6 @@ div.comment p, div.comment-box p {
   margin-bottom: 10px;
   margin-left: 0em;
   margin-right: 0em;
-  /*background-color: #ddd;*/
   border: 1px solid #a5945a;
   padding: 0.1px 10px;
 }
@@ -288,6 +300,7 @@ textarea {
   width: 400px;
 }
 
+a { color: #000; /* TODO: Color */}
 a:hover { color: #85ab02; /* TODO: Color */}
 
 /* Admin tools: copied from azure.css, the standart typo style sheet */
