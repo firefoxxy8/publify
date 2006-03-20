@@ -2,7 +2,7 @@ class XmlController < ContentController
   caches_action_with_params :feed
   session :off
 
-  FORMATS = {'atom' => 'atom03', 'rss' => 'rss20',
+  FORMATS = {'atom' => 'atom10', 'rss' => 'rss20',
     'atom03' => nil, 'atom10' => nil, 'rss20' => nil}
 
   def feed

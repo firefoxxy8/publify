@@ -1,4 +1,4 @@
-<h2>Recent Blog Entries</h2>
+<h3>Recent Blog Entries</h3>
 <ul class="navigation">
 <% for article in @articles -%>
 <li><%= article_link h(article.title), article %></li>
@@ -9,7 +9,7 @@
 	<%= link_to 'the rest of my blog here', { :controller => '/' } %>.
 </p>
 
-<h2>Site</h2>
+<h3>Site</h3>
 <ul class="navigation">
   <li><span class="nolink">home</span></li>
   <li><a href="/software/">software</a></li>

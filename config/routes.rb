@@ -1,7 +1,9 @@
 ActionController::Routing::Routes.draw do |map|
 
-  # default
+  # front page
   map.index '', :controller  => 'articles', :action => 'frontpage'
+
+  # default
   map.index 'blog', :controller  => 'articles', :action => 'index'
   map.admin 'blog/admin', :controller  => 'admin/general', :action => 'index'
 
@@ -15,18 +17,15 @@ ActionController::Routing::Routes.draw do |map|
   # make rss feed urls pretty and let them end in .xml
   # this improves caches_page because now apache and webrick will send out the
   # cached feeds with the correct xml mime type.
-  map.xml 'xml/itunes/feed.xml', :controller => 'xml', :action => 'itunes'
-  #map.xml 'blog/xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
-  #map.xml 'blog/xml/commentrss/feed.xml', :controller => 'xml', :action => 'commentrss'
-  #map.xml 'blog/xml/trackbackrss/feed.xml', :controller => 'xml', :action => 'trackbackrss'
+  map.xml 'blog/xml/itunes/feed.xml', :controller => 'xml', :action => 'itunes'
+  map.xml 'blog/xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
+  map.xml 'blog/xml/commentrss/feed.xml', :controller => 'xml', :action => 'commentrss'
+  map.xml 'blog/xml/trackbackrss/feed.xml', :controller => 'xml', :action => 'trackbackrss'
 
-  # MvZ: Limit feed types.
-  map.xml 'blog/xml/rss/feed.xml', :controller  => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
-  map.xml 'blog/xml/atom/feed.xml', :controller  => 'xml', :action => 'feed', :type => 'feed', :format => 'atom'
-  #map.xml 'blog/xml/:format/feed.xml', :controller => 'xml', :action => 'feed', :type => 'feed'
-  #map.xml 'blog/xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
-  #map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
-  map.xml 'xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
+  map.xml 'blog/xml/:format/feed.xml', :controller => 'xml', :action => 'feed', :type => 'feed'
+  map.xml 'blog/xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
+  map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
+  map.xml 'blog/xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
 
   # allow neat perma urls
   map.connect 'blog',
@@ -35,7 +34,6 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'articles', :action => 'index',
     :page => /\d+/
 
-  #TODO
   map.connect 'blog/:year/:month/:day',
     :controller => 'articles', :action => 'find_by_date',
     :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/
@@ -68,13 +66,13 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'articles', :action => 'category',
     :page => /\d+/
 
-  map.connect 'articles/tag/:id',
+  map.connect 'blog/tag/:id',
     :controller => 'articles', :action => 'tag'
-  map.connect 'articles/tag/:id/page/:page',
+  map.connect 'blog/tag/:id/page/:page',
     :controller => 'articles', :action => 'tag',
     :page => /\d+/
 
-  #map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
+  map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
 
   map.connect 'stylesheets/theme/:filename',
     :controller => 'theme', :action => 'stylesheets'
@@ -89,7 +87,7 @@ ActionController::Routing::Routes.draw do |map|
   # Kill attempts to connect directly to the theme controller.
   # Ideally we'd disable these by removing the default route (below),
   # but that breaks too many things for Typo 2.5.
-  map.connect 'theme/*stuff',
+  map.connect 'blog/theme/*stuff',
     :controller => 'theme', :action => 'error'
 
   # Allow legacy urls to still work
