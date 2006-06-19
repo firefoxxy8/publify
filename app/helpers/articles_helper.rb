@@ -1,5 +1,4 @@
 module ArticlesHelper
-
   def admin_tools_for(model)
     type = model.class.to_s.downcase
     tag = []
@@ -57,6 +56,9 @@ module ArticlesHelper
   #{ meta_tag 'ICBM', this_blog.geourl_location unless this_blog.geourl_location.empty? }
   <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ server_url_for :controller => 'xml', :action => 'rsd' }" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ @auto_discovery_url_atom }" />
+  <!--
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ @auto_discovery_url_rss }" />
+  -->
   #{ javascript_include_tag "cookies" }
   #{ javascript_include_tag "prototype" }
   #{ javascript_include_tag "effects" }
@@ -111,10 +113,12 @@ module ArticlesHelper
   end
 
   def render_sidebars
-    render_component(:controller => 'sidebars/sidebar',
-                     :action => 'display_plugins',
-                     :params => {:contents => contents,
-                                 :request_params => params})
+    # ugly ugly hack to fix the extremely verbose sidebar logging
+    options = { :controller => SidebarController,
+                :action => 'display_plugins',
+                :params => {:contents => contents,
+                            :request_params => params} }
+    render_component(options)
   end
 
   # Generate the image tag for a commenters gravatar based on their email address
@@ -128,8 +132,34 @@ module ArticlesHelper
       options.map { |key,value| "#{key}=#{value}" }.sort.join("&"), :class => "gravatar")
   end
 
-  def calc_distributed_class(articles, max_articles, prefix, min_class, max_class)
-    return prefix + min_class.to_s if max_articles == 0 #exit early, otherwise div by zero
-    prefix + (min_class + ((max_class-min_class) * articles.to_f / max_articles).to_i).to_s
+  def calc_distributed_class(articles, max_articles, grp_class, min_class, max_class)
+    (grp_class.to_prefix rescue grp_class.to_s) +
+      ((max_articles == 0) ?
+           min_class.to_s :
+         (min_class + ((max_class-min_class) * articles.to_f / max_articles).to_i).to_s)
+  end
+
+  def link_to_grouping(grp)
+    link_to( grp.display_name, urlspec_for_grouping(grp),
+             :rel => "tag", :title => title_for_grouping(grp) )
+  end
+
+  def urlspec_for_grouping(grouping)
+    { :controller => "articles", :action => grouping.class.to_prefix, :id => grouping.permalink }
+  end
+
+  def title_for_grouping(grouping)
+    "#{pluralize(grouping.article_counter, 'post')} with #{grouping.class.to_s.underscore} '#{grouping.display_name}'"
+  end
+
+  def ul_tag_for(grouping_class)
+    case grouping_class
+    when Tag
+      %{<ul id="taglist" class="tags">}
+    when Category
+      %{<ul class="categorylist">}
+    else
+      '<ul>'
+    end
   end
 end

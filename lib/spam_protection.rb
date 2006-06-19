@@ -1,10 +1,14 @@
-require_dependency 'blacklist_pattern'
-
 class SpamProtection
 
   IP_RBLS = [ 'opm.blitzed.us', 'bsb.empty.us' ]
   HOST_RBLS = [ 'multi.surbl.org', 'bsb.empty.us' ]
   SECOND_LEVEL = [ 'co', 'com', 'net', 'org', 'gov' ]
+
+  attr_accessor :this_blog
+
+  def initialize(a_blog)
+    self.this_blog = a_blog
+  end
 
   def article_closed?(record)
     return false if this_blog.sp_article_auto_close.zero? or not record.new_record?
@@ -57,11 +61,7 @@ class SpamProtection
     BlacklistPattern.find_all.each do |pattern|
       logger.info("[SP] Scanning for #{pattern.class} #{pattern.pattern}")
 
-      if pattern.kind_of?(RegexPattern)
-        throw :hit, "Regex #{pattern.pattern} matched" if string.match(/#{pattern.pattern}/)
-      else
-        throw :hit, "String #{pattern.pattern} matched" if string.match(/\b#{Regexp.quote(pattern.pattern)}\b/)
-      end
+      throw :hit, "#{pattern} matched" if pattern.matches?(string)
     end
 
     return false
@@ -87,7 +87,7 @@ class SpamProtection
       subdomains.uniq.each do |d|
         begin
           response = IPSocket.getaddress([d, rbl].join('.'))
-          throw :hit, "#{rbl} positively resolved subdomain #{d} => #{response}"
+          throw :hit, "#{rbl} positively resolved subdomain #{d} => #{response}" if response =~ /^127\.0\.0\./
         rescue SocketError
           # NXDOMAIN response => negative:  d is not in RBL
         end
@@ -109,16 +109,16 @@ module ActiveRecord
         configuration.update(attr_names.pop) if attr_names.last.is_a?(Hash)
 
         validates_each(attr_names, configuration) do |record, attr_name, value|
-          record.errors.add(attr_name, configuration[:message]) if SpamProtection.new.is_spam?(value)
+          record.errors.add(attr_name, configuration[:message]) if SpamProtection.new(record.blog).is_spam?(value)
         end
       end
       def validates_age_of(*attr_names)
-        configuration = { :message => "points to an item that is no longer available for interaction"}
+        configuration = { :on => :create, :message => "points to an item that is no longer available for interaction"}
         configuration.update(attr_names.pop) if attr_names.last.is_a?(Hash)
 
         validates_each(attr_names, configuration) do |record, attr_name, value|
           next unless value.to_i > 0
-          record.errors.add(attr_name, configuration[:message]) if SpamProtection.new.article_closed?(record)
+          record.errors.add(attr_name, configuration[:message]) if SpamProtection.new(record.blog).article_closed?(record)
         end
       end
     end

@@ -14,6 +14,7 @@ class Article < Content
   has_and_belongs_to_many :categories, :foreign_key => 'article_id'
   has_and_belongs_to_many :tags, :foreign_key => 'article_id'
   belongs_to :user
+  has_many :triggers, :as => :pending_item
 
   after_destroy :fix_resources
 
@@ -21,10 +22,13 @@ class Article < Content
     self.title.gsub(/<[^>]*>/,'').to_url
   end
 
+  def location(anchor=nil, only_path=true)
+    blog.article_url(self, only_path, anchor)
+  end
+
   def html_urls
     urls = Array.new
-
-    html(:all).gsub(/<a [^>]*>/) do |tag|
+    (body_html.to_s + extended_html.to_s).gsub(/<a [^>]*>/) do |tag|
       if(tag =~ /href="([^"]+)"/)
         urls.push($1)
       end
@@ -33,14 +37,13 @@ class Article < Content
     urls
   end
 
-  def send_pings(serverurl, articleurl, urllist)
-    return unless this_blog.send_outbound_pings
+  def really_send_pings(serverurl = blog.server_url, articleurl = location(nil, false))
+    return unless blog.send_outbound_pings
 
-    weblogupdatesping_urls = this_blog.ping_urls.gsub(/ +/,'').split(/[\n\r]+/)
-    pingback_or_tracback_urls = self.html_urls
-    trackback_urls = urllist.to_a
+    weblogupdatesping_urls = blog.ping_urls.gsub(/ +/,'').split(/[\n\r]+/)
+    pingback_or_trackback_urls = self.html_urls
 
-    ping_urls = weblogupdatesping_urls + pingback_or_tracback_urls + trackback_urls
+    ping_urls = weblogupdatesping_urls + pingback_or_trackback_urls
 
     ping_urls.uniq.each do |url|
       begin
@@ -49,15 +52,10 @@ class Article < Content
 
           if weblogupdatesping_urls.include?(url)
             ping.send_weblogupdatesping(serverurl, articleurl)
-          elsif pingback_or_tracback_urls.include?(url)
+          else pingback_or_trackback_urls.include?(url)
             ping.send_pingback_or_trackback(articleurl)
-          else
-            ping.send_trackback(articleurl)
           end
-
-          ping.save
         end
-
       rescue
         # in case the remote server doesn't respond or gives an error,
         # we should throw an xmlrpc error here.
@@ -65,26 +63,32 @@ class Article < Content
     end
   end
 
+  def send_pings
+    state.send_pings(self)
+  end
+
   def next
-    Article.find(:first, :conditions => ['created_at > ?', created_at], :order => 'created_at asc')
+    Article.find(:first, :conditions => ['published_at > ?', published_at],
+                 :order => 'published_at asc')
   end
 
   def previous
-    Article.find(:first, :conditions => ['created_at < ?', created_at], :order => 'created_at desc')
+    Article.find(:first, :conditions => ['published_at < ?', published_at],
+                 :order => 'published_at desc')
   end
 
   # Count articles on a certain date
   def self.count_by_date(year, month = nil, day = nil, limit = nil)
     from, to = self.time_delta(year, month, day)
-    Article.count(["created_at BETWEEN ? AND ? AND published = ?", from, to, true])
+    Article.count(["published_at BETWEEN ? AND ? AND published = ?",
+                   from, to, true])
   end
 
   # Find all articles on a certain date
   def self.find_all_by_date(year, month = nil, day = nil)
     from, to = self.time_delta(year, month, day)
-    Article.find_published(:all, :conditions => ["created_at BETWEEN ? AND ?",
-                                                 from, to],
-                           :order => "#{Article.table_name}.created_at DESC")
+    Article.find_published(:all, :conditions => ["published_at BETWEEN ? AND ?",
+                                                 from, to])
   end
 
   # Find one article on a certain date
@@ -96,47 +100,49 @@ class Article < Content
   # Finds one article which was posted on a certain date and matches the supplied dashed-title
   def self.find_by_permalink(year, month, day, title)
     from, to = self.time_delta(year, month, day)
-    find_published(:first, :conditions => [ %{permalink = ?
-      AND  #{Article.table_name}.created_at BETWEEN ? AND ?
-    }, title, from, to ])
+    find_published(:first,
+                   :conditions => ['permalink = ? AND ' +
+                                   'published_at BETWEEN ? AND ?',
+                                   title, from, to ])
   end
 
   # Fulltext searches the body of published articles
   def self.search(query)
     if !query.to_s.strip.empty?
       tokens = query.split.collect {|c| "%#{c.downcase}%"}
-     find_published(:all,
-                     :conditions => [(["(LOWER(body) LIKE ? OR LOWER(extended) LIKE ? OR LOWER(title) LIKE ?)"] * tokens.size).join(" AND "), *tokens.collect { |token| [token] * 3 }.flatten],
-                     :order => 'created_at DESC')
+      find_published(:all,
+                     :conditions => [(["(LOWER(body) LIKE ? OR LOWER(extended) LIKE ? OR LOWER(title) LIKE ?)"] * tokens.size).join(" AND "), *tokens.collect { |token| [token] * 3 }.flatten])
     else
       []
     end
   end
 
   def keywords_to_tags
-    return unless schema_version >= 10
-
     Article.transaction do
       tags.clear
-      keywords.to_s.scan(/((['"]).*?\2|[[:alnum:]]+)/).collect { |x| x.first.tr(%{'"}, '') }.uniq.each do |tagword|
+      keywords.to_s.scan(/((['"]).*?\2|\w+)/).collect do |x|
+        x.first.tr("\"'", '')
+      end.uniq.each do |tagword|
         tags << Tag.get(tagword)
       end
     end
   end
 
-  def send_notifications(controller)
-    User.find_boolean(:all, :notify_on_new_articles).each do |u|
-      send_notification_to_user(controller, u)
-    end
+  def interested_users
+    User.find_boolean(:all, :notify_on_new_articles)
   end
 
-  def send_notification_to_user(controller, user)
+  def notify_user_via_email(controller, user)
     if user.notify_via_email?
       EmailNotify.send_article(controller, self, user)
     end
+  end
 
+  def notify_user_via_jabber(controller, user)
     if user.notify_via_jabber?
-      JabberNotify.send_message(user, "New post", "A new message was posted to #{this_blog.blog_name}",body_html)
+      JabberNotify.send_message(user, "New post",
+                                "A new message was posted to #{blog.blog_name}",
+                                content.body_html)
     end
   end
 
@@ -151,15 +157,18 @@ class Article < Content
   end
 
   def set_defaults
-#    self.published = true if self.published.nil?
-
-    if schema_version >= 7
-      self.permalink = self.stripped_title if self.attributes.include?("permalink") and self.permalink.blank?
+    if self.attributes.include?("permalink") and self.permalink.blank?
+      self.permalink = self.stripped_title
+    end
+    correct_counts
+    if blog && self.allow_comments.nil?
+      self.allow_comments = blog.default_allow_comments
     end
 
-    if schema_version >= 29
-      correct_counts
+    if blog && self.allow_pings.nil?
+      self.allow_pings = blog.default_allow_pings
     end
+    true
   end
 
   def add_notifications
@@ -197,16 +206,6 @@ class Article < Content
     Resource.find(:all, :conditions => "article_id = #{id}").each do |fu|
       fu.article_id = nil
       fu.save
-    end
-  end
-
-  def schema_version
-    @schema_version ||= begin
-      schema_info=Article.connection.select_one("select * from schema_info limit 1")
-      schema_info["version"].to_i
-    rescue
-      # The test DB doesn't currently support schema_info.
-      25
     end
   end
 end

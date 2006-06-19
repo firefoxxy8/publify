@@ -4,10 +4,10 @@ xm.entry do
 
   xm.published item.created_at.xmlschema
   xm.updated item.updated_at.xmlschema
-  xm.title "Comment on #{item.article.title} by #{item.author}"
+  xm.title "Comment on #{item.article.title} by #{item.author}", "type"=>"html"
 
   xm.link "rel" => "alternate", "type" => "text/html", "href" => comment_link(item)
 
-  content = comment_html(item)
+  content = item.full_html
   xm.content content, "type"=>"html"
 end

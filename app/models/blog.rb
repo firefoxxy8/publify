@@ -1,6 +1,22 @@
-require 'config_manager'
 class Blog < ActiveRecord::Base
   include ConfigManager
+
+  has_many :contents
+  has_many :trackbacks
+  has_many :articles
+  has_many :comments
+  has_many :pages, :order => "id DESC"
+  has_many(:published_articles, :class_name => "Article",
+           :conditions => ["published = ?", true],
+           :include => [:categories, :tags],
+           :order => "contents.created_at DESC") do
+    def before(date = Time.now)
+      find(:all, :conditions => ["contents.created_at < ?", date])
+    end
+  end
+
+  has_many :pages
+  has_many :comments
 
   serialize :settings, Hash
 
@@ -8,6 +24,7 @@ class Blog < ActiveRecord::Base
   setting :blog_name,                  :string, 'My Shiny Weblog!'
   setting :blog_subtitle,              :string, ''
   setting :geourl_location,            :string, ''
+  setting :canonical_server_url,       :string, ''
 
   # Spam
   setting :sp_global,                  :boolean, false
@@ -38,11 +55,22 @@ class Blog < ActiveRecord::Base
   setting :use_gravatar,               :boolean, false
   setting :ping_urls,                  :string, "http://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
   setting :send_outbound_pings,        :boolean, true
-  setting :email_from,                 :string, 'scott@sigkill.org'
+  setting :email_from,                 :string, 'typo@example.com'
 
   # Jabber config
   setting :jabber_address,             :string, ''
   setting :jabber_password,            :string, ''
+
+  def find_already_published(content_type)
+    self.send(content_type).find_already_published
+  end
+
+  def ping_article!(settings)
+    settings[:blog_id] = self.id
+    article_id = settings[:id]
+    settings.delete(:id)
+    published_articles.find(article_id).trackbacks.create!(settings)
+  end
 
 
   def is_ok?
@@ -65,14 +93,70 @@ class Blog < ActiveRecord::Base
     super
     self.settings ||= { }
   end
+
+  def self.default
+    find(:first, :order => 'id')
+  end
+
+  @@controller_stack = []
+  cattr_accessor :controller_stack
+
+  def self.before(controller)
+    controller_stack << controller
+  end
+
+  def self.after(controller)
+    unless controller_stack.last == controller
+      raise "Controller stack got out of kilter!"
+    end
+    controller_stack.pop
+  end
+
+  def controller
+    controller_stack.last
+  end
+
+  def current_theme_path
+    Theme.themes_root + "/" + theme
+  end
+
+  def current_theme
+    Theme.theme_from_path(current_theme_path)
+  end
+
+  def url_for(options = {}, *extra_params)
+    case options
+    when String then options
+    when Hash
+      options.reverse_merge!(:only_path => true, :controller => '/articles',
+                             :action => 'permalink')
+      url = ActionController::UrlRewriter.new(request, {})
+      url.rewrite(options)
+    else
+      options.location(*extra_params)
+    end
+  end
+
+  def article_url(article, only_path = true, anchor = nil)
+    url_for(:year => article.created_at.year,
+            :month => sprintf("%.2d", article.created_at.month),
+            :day => sprintf("%.2d", article.created_at.day),
+            :title => article.permalink, :anchor => anchor,
+            :only_path => only_path)
+  end
+
+  def server_url
+    if controller
+      controller.send :url_for, :only_path => false, :controller => "/"
+    else
+      settings[:canonical_server_url]
+    end
+  end
+
+  private
+
+  def request
+    controller.request rescue ActionController::TestRequest.new
+  end
 end
 
-
-
-def config
-  this_blog
-end
-
-def this_blog
-  $blog || (Blog.find(DEFAULT_BLOG_ID) rescue nil) || Blog.find(:first) || Blog.create!
-end

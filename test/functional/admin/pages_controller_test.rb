@@ -57,10 +57,6 @@ class Admin::PagesControllerTest < Test::Unit::TestCase
 
     assert_equal "new_page", new_page.name
 
-    # XXX: Should we be testing this here -- makes assumptions about the workings of
-    # the model that aren't necessarily always going to be valid.
-    assert_nil new_page.body_html
-
     assert_redirected_to :action => "show", :id => new_page.id
 
     # XXX: The flash is currently being made available improperly to tests (scoop)
@@ -95,18 +91,13 @@ class Admin::PagesControllerTest < Test::Unit::TestCase
 
   def test_preview
     get :preview, :page => { :name => "preview-page", :title => "Preview Page",
-      :text_filter_id => text_filters(:markdown_filter).id, :body => "testing the *preview*" }
+      :text_filter_id => text_filters(:markdown_filter).id,
+      :body => "testing the *preview*" }
     assert_response :success
     assert_not_nil assigns(:page)
     assert_template "preview"
 
-#    assert_equal "<p>testing the <em>preview</em></p>", assigns(:page).body_html
-
-    assert_tag :tag => "p",
-        :children => { :count => 1,
-          :only => { :tag => "p",
-            :children => { :count => 1,
-              :only => { :tag => "em",
-                :content => "preview" } } } }
+    assert_dom_equal "<div><p>testing the <em>preview</em></p></div>\n",
+                     @response.body
   end
 end

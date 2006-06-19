@@ -41,10 +41,11 @@ Rails::Initializer.run do |config|
 
   # Enable page/fragment caching by setting a file-based store
   # (remember to create the caching directory and make it readable to the application)
-  config.action_controller.fragment_cache_store = :file_store, "#{RAILS_ROOT}/cache"
+  config.action_controller.fragment_cache_store = :file_store, "#{RAILS_ROOT}/tmp/cache"
 
   # Activate observers that should always be running
   # config.active_record.observers = :cacher, :garbage_collector
+  config.active_record.observers = :content_observer, :email_notifier, :web_notifier
 
   # Make Active Record use UTC-base instead of local time
   # config.active_record.default_timezone = :utc
@@ -74,14 +75,12 @@ require 'rubypants'
 require 'flickr'
 require 'uuidtools'
 
+require_dependency 'spam_protection'
 require_dependency 'migrator'
 require_dependency 'rails_patch/components'
 require_dependency 'rails_patch/active_record'
-require_dependency 'theme'
 require_dependency 'login_system'
 require_dependency 'typo_version'
-require_dependency 'jabber'
-require_dependency 'email'
 require_dependency 'metafragment'
 require_dependency 'actionparamcache'
 $KCODE = 'u'
@@ -93,18 +92,40 @@ require_dependency 'aggregations/flickr'
 require_dependency 'aggregations/fortythree'
 require_dependency 'aggregations/magnolia'
 require_dependency 'aggregations/upcoming'
-require_dependency 'config_manager'
-require_dependency 'blog'
-require_dependency 'spam_protection'
 require_dependency 'xmlrpc_fix'
-require_dependency 'guid'
 require_dependency 'transforms'
+require_dependency 'builder'
+
+unless Builder::XmlMarkup.methods.include? '_attr_value'
+  # Builder 2.0 has many important fixes, but for now we will only backport
+  # this one...
+  class Builder::XmlMarkup
+    # Insert the attributes (given in the hash).
+    def _insert_attributes(attrs, order=[])
+      return if attrs.nil?
+      order.each do |k|
+        v = attrs[k]
+        @target << %{ #{k}="#{_attr_value(v)}"} if v # " WART
+      end
+      attrs.each do |k, v|
+        @target << %{ #{k}="#{_attr_value(v)}"} unless order.member?(k) # " WART
+      end
+    end
+
+   def _attr_value(value)
+      case value
+      when Symbol
+        value.to_s
+      else
+        _escape(value.to_s).gsub(%r{"}, '&quot;')  # " WART
+      end
+    end
+  end
+end
 
 ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.merge!(
   :long_weekday => '%a %B %e, %Y %H:%M'
 )
-
-ActionController::Base.enable_upload_progress
 
 ActionMailer::Base.default_charset = 'utf-8'
 
@@ -121,4 +142,3 @@ if RAILS_ENV != 'test'
 end
 
 FLICKR_KEY='84f652422f05b96b29b9a960e0081c50'
-DEFAULT_BLOG_ID=1

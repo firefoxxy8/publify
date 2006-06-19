@@ -2,6 +2,9 @@ require File.dirname(__FILE__) + '/../test_helper'
 require 'articles_controller'
 require 'dns_mock'
 require 'http_mock'
+
+require 'content'
+
 #
 # Re-raise errors caught by the controller.
 class ArticlesController; def rescue_action(e) raise e end; end
@@ -34,6 +37,24 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     assert_response :success
     assert_rendered_file "index"
+
+    # Check it works when permalink != name. Ticket #736
+    get :category, :id => "weird-permalink"
+
+    assert_response :success
+    assert_rendered_file "index"
+  end
+
+  def test_empty_category
+    get :category, :id => "life-on-mars"
+    assert_response :success
+    assert_rendered_file "error"
+  end
+
+  def test_nonexistent_category
+    get :category, :id => 'nonexistent-category'
+    assert_response :success
+    assert_rendered_file "error"
   end
 
   def test_tag
@@ -44,6 +65,12 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     assert_tag :tag => 'h2', :content => 'Article 2!'
     assert_tag :tag => 'h2', :content => 'Article 1!'
+  end
+
+  def test_nonexistent_tag
+    get :tag, :id => "nonexistent"
+    assert_response :success
+    assert_rendered_file "error"
   end
 
   def test_tag_routes
@@ -190,6 +217,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     comment = Article.find(2).comments.last
     assert comment
+    assert comment.published?
     assert_nil comment.user_id
 
     get :read, {:id => 2}
@@ -214,6 +242,15 @@ class ArticlesControllerTest < Test::Unit::TestCase
        :attributes => { :class => "author_comment"}
   end
 
+  def test_trackback
+    num_trackbacks = Article.find(2).trackbacks.count
+    post :trackback, { :id => 2, :url => "http://www.google.com", :title => "My Trackback", :excerpt => "This is a test" }
+    assert_response :success
+    assert_not_xpath(%{/response/error[text()="1"]}, "Error: " + get_xpath("/response/message/text()").first.to_s)
+
+    assert_equal num_trackbacks+1, Article.find(2).trackbacks.count
+  end
+
   def test_trackback_nuking
     num_comments = Trackback.count
 
@@ -234,7 +271,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     get :index
 
     assert_redirect
-    assert_redirected_to :controller => "admin/general", :action => "index"
+    assert_redirected_to :controller => "admin/general", :action => "redirect"
 
   end
 
@@ -346,6 +383,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
   end
 
   def test_autodiscovery_default
+
     get :index
     assert_response :success
     assert_tag :tag => 'link', :attributes =>
@@ -353,7 +391,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
         :href => 'http://test.host/xml/rss20/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/xml/atom10/feed.xml'}
+        :href => 'http://test.host/xml/atom/feed.xml'}
   end
 
 
@@ -365,7 +403,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
         :href => 'http://test.host/xml/rss20/article/1/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/xml/atom10/article/1/feed.xml'}
+        :href => 'http://test.host/xml/atom/article/1/feed.xml'}
   end
 
   def test_autodiscovery_category
@@ -376,7 +414,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
         :href => 'http://test.host/xml/rss20/category/hardware/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/xml/atom10/category/hardware/feed.xml'}
+        :href => 'http://test.host/xml/atom/category/hardware/feed.xml'}
   end
 
   def test_autodiscovery_tag
@@ -387,7 +425,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
         :href => 'http://test.host/xml/rss20/tag/hardware/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/xml/atom10/tag/hardware/feed.xml'}
+        :href => 'http://test.host/xml/atom/tag/hardware/feed.xml'}
   end
 
   def test_disabled_ajax_comments
@@ -436,12 +474,52 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_hide_future_article
     @article = Article.find_last_posted
 
-    Article.create!(:title => "News from the future!",
-                    :body => "The future is cool!",
-                    :keywords => "future",
+    Article.create!(:title      => "News from the future!",
+                    :body       => "The future is cool!",
+                    :keywords   => "future",
+                    :published  => true,
                     :created_at => Time.now + 12.minutes)
     get :index
     assert_equal @article, assigns(:articles).first
     assert @response.lifetime <= 12.minutes
+  end
+
+  def test_search
+    get :search, :q => "search target"
+    assert_equal 1, assigns(:articles).size
+  end
+
+  def test_author
+    get :author, :id => 'tobi'
+
+    assert_success
+    assert_rendered_file 'index'
+    assert assigns(:articles)
+    assert_equal users(:tobi).articles.published, assigns(:articles)
+    # This is until we write a proper author feed
+    assert_equal('http://test.host/xml/rss20/feed.xml',
+                 assigns(:auto_discovery_url_rss))
+  end
+
+  def test_nonexistent_author
+    get :author, :id => 'nonexistent-chap'
+
+    assert_success
+    assert_rendered_file 'error'
+    assert assigns(:message)
+    assert_equal "Can't find posts with author 'nonexistent-chap'", assigns(:message)
+  end
+
+  def test_author_list
+    get :author
+
+    assert_success
+    assert_rendered_file 'groupings'
+
+    assert_tag(:tag => 'ul',
+               :descendant => {\
+                 :tag => 'a',
+                 :attributes => { :href => '/articles/author/tobi' },
+               })
   end
 end

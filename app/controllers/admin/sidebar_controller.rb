@@ -1,97 +1,74 @@
-require_dependency 'sidebars/sidebar_controller'
-
 class Admin::SidebarController < Admin::BaseController
   def index
-    @sidebars = Sidebars::SidebarController.available_sidebars.inject({}) do |hash,sidebar|
-      hash[sidebar.short_name]=sidebar
-      hash
+    @sidebars = ::SidebarController.available_sidebars.inject({}) do |hash,sb|
+      hash.merge({ sb.short_name => sb })
     end
-
-    @active = Sidebar.find_all_staged.select {|s| @sidebars[s.controller] }
+    # Reset the staged position based on the active position.
+    Sidebar.delete_all('active_position is null')
+    @active = Sidebar.find(:all, :order => 'active_position').select do |sb|
+      @sidebars[sb.controller]
+    end
+    flash[:sidebars] = @active.map {|sb| sb.id }
     @available = @sidebars.values.sort { |a,b| a.name <=> b.name }
   end
 
-  def show_available
-    render :partial => 'availables', :object => available
-  end
-
   def set_active
-
     # Get all available plugins
-    availablemap = available.inject({}) do |hash, item|
-      hash[item.short_name] = item
-      hash
-    end
 
+    defaults_for = available.inject({}) do |hash, item|
+      hash.merge({ item.short_name => item.default_config })
+    end
     # Get all already active plugins
-    activemap = Sidebar.find_all_staged.inject({}) do |hash, item|
-      hash[item.html_id] = item
-      hash
+    activemap = flash[:sidebars].inject({}) do |h, sb_id|
+      sb = Sidebar.find(sb_id.to_i)
+      sb ? h.merge({ sb.html_id => sb_id }) : h
     end
 
     # Figure out which plugins are referenced by the params[:active] array and
-    # lay them out in a easy accessible sequencial array
-    @active = params[:active].inject([]) do |array, name|
-      if availablemap.has_key?(name)
-        newitem = Sidebar.new
-        newitem.controller = name
-        newitem.staged_config= availablemap[name].default_config
-
-        array.push newitem
+    # lay them out in a easy accessible sequential array
+    flash[:sidebars] = params[:active].inject([]) do |array, name|
+      if defaults_for.has_key?(name)
+        @new_item = Sidebar.create!(:controller => name,
+                                    :config => defaults_for[name])
+        @target = name
+        array << @new_item.id
       elsif activemap.has_key?(name)
-        array.push activemap[name]
+        array << activemap[name]
+      else
+        array
       end
-      array
     end
-
-    # Update the staged_position of all the sidebar items in accordance with
-    # the params[:active] array
-    Sidebar.transaction do
-      Sidebar.update_all('staged_position=null')
-      @active.each_index do |i|
-        @active[i].staged_position=i
-        @active[i].save
-      end
-      Sidebar.purge
-    end
-
-    render :partial => 'actives', :object => @active
-  end
-
-  def save_config
-    sidebar = Sidebar.find(params[:id])
-    sidebar.staged_config=params[:configure]
-    sidebar.save
-
-    render :nothing => true
-  end
-
-  def nothing
-    render :nothing => true
   end
 
   def remove
-    sidebar = Sidebar.find(params[:id])
-    sidebar.staged_position = nil
-    sidebar.save
-
-    render :nothing => true
+    flash[:sidebars] = flash[:sidebars].reject do |sb_id|
+      sb_id == params[:id].to_i
+    end
+    @element_to_remove = params[:element]
   end
 
   def publish
     Sidebar.transaction do
-      Sidebar.find(:all).each do |sidebar|
-        sidebar.publish
-        sidebar.save
+      position = 0
+      params[:configure] ||= []
+      Sidebar.update_all('active_position = null')
+      flash[:sidebars].each do |id|
+        Sidebar.find(id).update_attributes(:config => params[:configure][id.to_s],
+                                           :active_position => position)
+        position += 1
       end
-      Sidebar.purge
+      Sidebar.delete_all('active_position is null')
     end
-    render :partial=>'publish'
+    index
   end
 
-  private
+  protected
+  def show_available
+    render :partial => 'availables', :object => available
+  end
 
   def available
-    Sidebars::SidebarController.available_sidebars.sort { |a,b| a.name <=> b.name }
+    ::SidebarController.available_sidebars.sort { |a,b| a.name <=> b.name }
   end
+  helper_method :available
 end

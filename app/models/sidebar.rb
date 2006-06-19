@@ -1,9 +1,6 @@
-require_dependency 'sidebars/sidebar_controller'
-
 class Sidebar < ActiveRecord::Base
 #  acts_as_list
-  serialize :active_config
-  serialize :staged_config
+  serialize :config
 
   def self.find_all_visible
     find :all, :conditions => 'active_position is not null', :order => 'active_position'
@@ -18,16 +15,15 @@ class Sidebar < ActiveRecord::Base
   end
 
   def publish
-    self.active_config=self.staged_config
     self.active_position=self.staged_position
   end
 
   def sidebar_controller
-    @sidebar_controller||=Sidebars::SidebarController.available_sidebars.find { |s| s.short_name == self.controller }
+    @sidebar_controller ||= SidebarController.available_sidebars.find { |s| s.short_name == self.controller }
   end
 
-  def active_config
-    self[:active_config]||{}
+  def config
+    self[:config]||{}
   end
 
   def html_id

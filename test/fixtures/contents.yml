@@ -1,6 +1,7 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 
 article1:
+  blog_id: 1
   id: 1 
   title: Article 1!
   body: body
@@ -9,6 +10,7 @@ article1:
   extended_html: extended content
   created_at: <%= (Time.now - 2.days).strftime("%Y-%m-%d") %>
   updated_at: <%= (Time.now - 2.days).strftime("%Y-%m-%d") %>
+  published_at: <%= (Time.now - 2.days).strftime("%Y-%m-%d") %>
   allow_comments: true
   allow_pings: true
   permalink: article-1
@@ -16,9 +18,11 @@ article1:
   author: Tobi
   guid: a87c4220-18d4-11da-aadd-0002a5d5c51b
   type: Article
+  published: true
   
 article2:
   type: Article
+  blog_id: 1
   id: 2
   title: Article 2!
   body: body
@@ -27,15 +31,19 @@ article2:
   extended_html: extended content
   created_at: <%= (Time.now - 1.days).strftime("%Y-%m-%d") %>
   updated_at: <%= (Time.now - 1.days).strftime("%Y-%m-%d") %>
+  published_at: <%= (Time.now - 1.days).strftime("%Y-%m-%d") %>
   allow_comments: true
   allow_pings: true
   permalink: article-2
   user_id: 2
   author: Bob
   guid: bbbbb
+  published: true
+
 
 article3:
   type: Article
+  blog_id: 1
   id: 3
   title: Article 3!
   body: body
@@ -44,15 +52,18 @@ article3:
   extended_html: extended content
   created_at: 2004-06-01 20:00:02
   updated_at: 2004-06-01 20:00:02
+  published_at: 2004-06-01 20:00:02
   allow_comments: true
   allow_pings: true
   permalink: article-3
   user_id: 1
   author: Tobi
   guid: ccccc
+  published: true
 
 article4:
   type: Article
+  blog_id: 1
   id: 4
   title: Article 4!
   body: I'm not "public":http://www.example.com/public!
@@ -60,6 +71,7 @@ article4:
   published: false
   created_at: 2004-06-01 20:00:01
   updated_at: 2004-06-01 20:00:01
+  published_at: 2004-06-01 20:00:01
   allow_comments: true
   allow_pings: true
   permalink: article-4
@@ -69,6 +81,7 @@ article4:
 
 spam_comment:
   type: Comment
+  blog_id: 1
   id: 5
   published: true
   article_id: 2
@@ -77,10 +90,12 @@ spam_comment:
   body: Test <a href="http://fakeurl.co.uk">body</a>
   created_at: 2005-01-01 02:00:00
   updated_at: 2005-01-01 02:00:00
+  published_at: 2005-01-01 02:00:00
   guid: 12313123123123123
 
 comment2:
   type: Comment
+  blog_id: 1
   id: 6
   published: true
   article_id: 1
@@ -91,10 +106,12 @@ comment2:
   body: Comment body _italic_ *bold*
   created_at: 2005-01-01 02:00:01
   updated_at: 2005-01-01 02:00:01
+  published_at: 2005-01-01 02:00:01
   guid: 453456456456456
 
 comment3:
   type: Comment
+  blog_id: 1
   id: 12
   published: false
   article_id: 1
@@ -106,6 +123,7 @@ comment3:
 
 trackback1:
   type: Trackback
+  blog_id: 1
   id: 7
   article_id: 2
   published: false
@@ -119,6 +137,7 @@ trackback1:
 
 trackback2:
   type: Trackback
+  blog_id: 1
   id: 8
   article_id: 1
   published: true
@@ -128,10 +147,12 @@ trackback2:
   excerpt: This is an excerpt
   created_at: 2005-01-01 03:00:01
   updated_at: 2005-01-01 03:00:01
+  published_at: 2005-01-01 03:00:01
   guid: qweqweqddsfcs
 
 trackback3:
   type: Trackback
+  blog_id: 1
   id: 13
   article_id: 1
   published: true
@@ -141,38 +162,49 @@ trackback3:
   excerpt: This is an excerpt
   created_at: 2005-01-01 03:00:03
   updated_at: 2005-01-01 03:00:03
+  published_at: 2005-01-01 03:00:03
   guid: qweqweqddsfcs3
 
 first_page:
   type: Page
+  blog_id: 1
   id: 9
   name: page_one
   title: Page One Title
   body: ho ho ho
   created_at: 2005-05-05 01:00:00
+  published_at: 2005-05-05 01:00:00
   user_id: 1
+  published: true
 
 another_page:
   type: Page
+  blog_id: 1
   id: 10
   name: page/two
   title: Another Page Title
   body: another body for yet another page
   created_at: 2005-05-05 01:00:00
+  published_at: 2005-05-05 01:00:00
   user_id: 1
+  published: true
 
 markdown_page:
   type: Page
+  blog_id: 1
   id: 11
   name: markdown-page
   title: Markdown Page
   text_filter_id: 1
   body: this is *markdown*.
   created_at: 2005-05-05 01:00:00
+  published_at: 2005-05-05 01:00:00
   user_id: 1
+  published: true
 
 inactive_article:
   type: Article
+  blog_id: 1
   id: 14
   title: Inactive Article
   body: body
@@ -181,15 +213,18 @@ inactive_article:
   extended_html: extended content
   created_at: 2004-05-01 20:00:02
   updated_at: 2004-05-01 20:00:02
+  published_at: 2004-05-01 20:00:02
   allow_comments: true
   allow_pings: true
   permalink: inactive-article
   user_id: 1
   author: Tobi
   guid: i1n2a3c4t5i6v7e
+  published: true
 
 old_comment:
   type: Comment
+  blog_id: 1
   id: 15
   article_id: 14
   author: John Bar
@@ -199,3 +234,64 @@ old_comment:
   body: Comment body _italic_ *bold*
   created_at: 2004-05-02 20:00:02
   updated_at: 2004-05-02 20:00:02
+  published_at: 2004-05-02 20:00:02
+  published: true
+
+second_blog_article:
+  type: Article
+  blog_id: 2
+  id: 16
+  title: Second Blog Article
+  body: body
+  body_html: body
+  extended: extended content
+  extended_html: extended content
+  allow_comments: true
+  allow_pings: true
+  permalink: second-blog-article
+  created_at: 2004-04-01 12:00:00
+  updated_at: 2004-04-01 12:00:00
+  published_at: 2004-04-01 12:00:00
+  user_id: 1
+  author: Tobi
+  guid: 2b1l0o6g4ar7
+  published: true
+
+search_target:
+  type: Article
+  blog_id: 1
+  id: 17
+  title: Find me!
+  body: search target
+  body_html: body
+  extended: extended content
+  extended_html: extended content
+  allow_comments: true
+  allow_pings: true
+  permalink: second-blog-article
+  created_at: 2004-04-01 12:00:00
+  updated_at: 2004-04-01 12:00:00
+  published_at: 2004-04-01 12:00:00
+  user_id: 1
+  author: Tobi
+  guid: 2b1l0o6g4ar7
+  published: true
+
+xmltest:
+  type: Article
+  blog_id: 1
+  id: 18
+  title: Associations aren't :dependent => true anymore
+  body: originally seen on <a href="http://blog.rubyonrails.org/">blog.rubyonrails.org</a>
+  extended: extended content
+  extended_html: extended content
+  allow_comments: true
+  allow_pings: true
+  permalink: associations-arent-dependent-true-anymore
+  created_at: 2003-04-28 05:31:00
+  updated_at: 2003-04-28 05:31:00
+  published_at: 2003-04-28 05:31:00
+  user_id: 1
+  author: Tobi
+  guid: urn:uuid:0d676c66-4135-4a8b-9d65-b6a3248d3032
+  published: true

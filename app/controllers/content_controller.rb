@@ -64,12 +64,18 @@ class ContentController < ApplicationController
 
   def auto_discovery_feed(options)
     options = {:only_path => false, :action => 'feed', :controller => 'xml'}.merge options
+    # Special cased ugliness. Get rid of it when there's a user feed.
+    if options[:type] == 'user'
+      options[:type] = 'feed'
+      options[:id] = nil
+    end
+
     @auto_discovery_url_rss = url_for(({:format => 'rss20'}.merge options))
-    @auto_discovery_url_atom = url_for(({:format => 'atom10'}.merge options))
+    @auto_discovery_url_atom = url_for(({:format => 'atom'}.merge options))
   end
 
   def theme_layout
-    Theme.current.layout
+    this_blog.current_theme.layout
   end
 
   helper_method :contents
@@ -87,20 +93,6 @@ class ContentController < ApplicationController
 
   protected
 
-  def self.include_protected(*modules)
-    modules.reverse.each do |mod|
-      included_methods = mod.public_instance_methods.reject do |meth|
-        self.method_defined?(meth)
-      end
-      self.send(:include, mod)
-      included_methods.each do |meth|
-        protected meth
-      end
-    end
-  end
-
   include_protected ActionView::Helpers::TagHelper, ActionView::Helpers::TextHelper
 
 end
-
-require_dependency 'controllers/textfilter_controller'

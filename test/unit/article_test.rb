@@ -31,13 +31,15 @@ class ArticleTest < Test::Unit::TestCase
   end
 
   def test_permalink
-    assert_equal contents(:article3), Article.find_by_date(2004,06,01)
-    assert_equal [contents(:article2), contents(:article1)], Article.find_all_by_date(2.days.ago.year)
+    assert_equal( contents(:article3), this_blog.articles.find_by_date(2004,06,01) )
+    assert_equal( [contents(:article2), contents(:article1)],
+                  this_blog.articles.find_all_by_date(2.days.ago.year) )
   end
 
   def test_permalink_with_title
-    assert_equal contents(:article3), Article.find_by_permalink(2004, 06, 01, "article-3")
-    assert_nil Article.find_by_permalink(2005, 06, 01, "article-5")
+    assert_equal( contents(:article3),
+                  this_blog.articles.find_by_permalink(2004, 06, 01, "article-3") )
+    assert_nil this_blog.articles.find_by_permalink(2005, 06, 01, "article-5")
   end
 
   def test_strip_title
@@ -113,41 +115,79 @@ class ArticleTest < Test::Unit::TestCase
   end
 
   def test_find_published_by_tag_name
-    @articles = Tag.find_by_name(tags(:foo_tag).name).articles.find_already_published
+    @articles = Tag.find_by_name(tags(:foo_tag).name).published_articles
 
     assert_results_are(:article1, :article2)
   end
 
 
   def test_find_published
-    @articles = Article.find_published
-    assert_results_are  :article1, :article2, :article3, :inactive_article
+    @articles = this_blog.articles.find_published
+    assert_results_are(:search_target, :article1, :article2,
+                       :article3, :inactive_article,:xmltest)
 
-    @articles = Article.find_published(:all,
-                                       :conditions => "title = 'Article 1!'")
+    @articles = this_blog.articles.find_published(:all,
+                                                  :conditions => "title = 'Article 1!'")
     assert_results_are :article1
   end
 
-  def test_find_published_by_category
-    Article.create!(:title => "News from the future!",
-                    :body => "The future is cool!",
-                    :keywords => "future",
-                    :created_at => Time.now + 12.minutes)
+  def test_just_published_flag
+    art = this_blog.articles.build(:title => 'title',
+                                   :body => 'body',
+                                   :published => true)
+    assert art.just_published?
+    assert art.save
+    assert !art.just_published?
 
-    @articles = Category.find_by_permalink('personal').articles.find_already_published
+    art = Article.create!(:title => 'title2',
+                          :body => 'body',
+                          :published => false)
+
+    assert ! art.just_published?
+  end
+
+  def test_future_publishing
+    assert_sets_trigger(Article.create!(:title => 'title', :body => 'body',
+                                        :published => true,
+                                        :published_at => Time.now + 2.seconds))
+  end
+
+  def test_future_publishing_without_published_flag
+    assert_sets_trigger Article.create!(:title => 'title', :body => 'body',
+                                        :published_at => Time.now + 2.seconds)
+  end
+
+  def test_triggers_are_dependent
+    art = Article.create!(:title => 'title', :body => 'body',
+                          :published_at => Time.now + 1.hour)
+    assert_equal 1, Trigger.count
+    art.destroy
+    assert_equal 0, Trigger.count
+  end
+
+  def assert_sets_trigger(art)
+    assert_equal 1, Trigger.count
+    assert Trigger.find(:first, :conditions => ['pending_item_id = ?', art.id])
+    sleep 2
+    Trigger.fire
+    art.reload
+    assert art.published
+  end
+
+  def test_find_published_by_category
+    Article.create!(:title      => "News from the future!",
+                    :body       => "The future is cool!",
+                    :keywords   => "future",
+                    :published_at => Time.now + 12.minutes)
+
+    @articles = Category.find_by_permalink('personal').published_articles
     assert_results_are :article1, :article2, :article3
 
-    @articles = Category.find_by_permalink('foobar').articles.find_already_published
+    @articles = Category.find_by_permalink('foobar').published_articles
     assert @articles.empty?
 
-    @articles = Category.find_by_permalink('software').articles.find_already_published
+    @articles = Category.find_by_permalink('software').published_articles
     assert_results_are :article1
-
-    @articles = Category.find_by_permalink('personal').articles.find_already_published(:limit => 1)
-    assert_results_are :article2
-
-    @articles = Category.find_by_permalink('personal').articles.find_already_published(:limit => 1, :order => 'created_at ASC')
-    assert_results_are :article3
   end
 
   def test_destroy_file_upload_associations
@@ -174,22 +214,25 @@ class ArticleTest < Test::Unit::TestCase
 
   # this also tests time_delta, indirectly
   def test_find_all_by_date
-    feb28 = Article.new
-    mar1 = Article.new
-    mar2 = Article.new
+    feb28 = this_blog.articles.build(:published => true)
+    mar1  = this_blog.articles.build(:published => true)
+    mar2  = this_blog.articles.build(:published => true)
 
     feb28.title = "February 28"
-    mar1.title = "March 1"
-    mar2.title = "March 2"
+    mar1.title  = "March 1"
+    mar2.title  = "March 2"
 
-    feb28.created_at = "2004-02-28"
-    mar1.created_at = "2004-03-01"
-    mar2.created_at = "2004-03-02"
+    feb28.created_at = feb28.published_at = "2004-02-28"
+    mar1.created_at  = mar1.published_at = "2004-03-01"
+    mar2.created_at  = mar2.published_at = "2004-03-02"
 
-    [feb28, mar1, mar2].each {|x| x.save }
+    [feb28, mar1, mar2].each do |x|
+      x.state = ContentState::Published.instance
+      x.save
+    end
+
     assert_equal(1, Article.find_all_by_date(2004,02).size)
     assert_equal(2, Article.find_all_by_date(2004,03).size)
     assert_equal(1, Article.find_all_by_date(2004,03,01).size)
-
   end
 end

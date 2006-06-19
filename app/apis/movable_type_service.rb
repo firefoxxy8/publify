@@ -50,9 +50,11 @@ class MovableTypeApi < ActionWebService::API::Base
     :returns => [:bool]
 
   api_method :supportedMethods,
+    :expects => [],
     :returns => [[:string]]
 
   api_method :supportedTextFilters,
+    :expects => [],
     :returns => [[MovableTypeStructs::TextFilter]]
 
   api_method :getTrackbackPings,
@@ -71,7 +73,7 @@ class MovableTypeService < TypoWebService
   before_invocation :authenticate, :except => [:getTrackbackPings, :supportedMethods, :supportedTextFilters]
 
   def getRecentPostTitles(blogid, username, password, numberOfPosts)
-    Article.find_all(nil,"created_at DESC", numberOfPosts).collect do |article|
+    this_blog.articles.find(:all,:order => "created_at DESC", :limit => numberOfPosts).collect do |article|
       MovableTypeStructs::ArticleTitle.new(
             :dateCreated => article.created_at,
             :userid      => blogid.to_s,
@@ -91,7 +93,7 @@ class MovableTypeService < TypoWebService
   end
 
   def getPostCategories(postid, username, password)
-    Article.find(postid).categories.collect do |c|
+    this_blog.articles.find(postid).categories.collect do |c|
       MovableTypeStructs::CategoryPerPost.new(
           :categoryName => c.name,
           :categoryId   => c.id.to_i,
@@ -101,7 +103,7 @@ class MovableTypeService < TypoWebService
   end
 
   def setPostCategories(postid, username, password, categories)
-    article = Article.find(postid)
+    article = this_blog.articles.find(postid)
     article.categories.clear if categories != nil
 
     for c in categories
@@ -124,7 +126,7 @@ class MovableTypeService < TypoWebService
   end
 
   def getTrackbackPings(postid)
-    article = Article.find(postid)
+    article = this_blog.articles.find(postid)
     article.trackbacks.collect do |t|
       MovableTypeStructs::TrackBack.new(
           :pingTitle  => t.title.to_s,
@@ -135,7 +137,7 @@ class MovableTypeService < TypoWebService
   end
 
   def publishPost(postid, username, password)
-    article = Article.find(postid)
+    article = this_blog.articles.find(postid)
     article.published = true
     article.save
   end
@@ -145,5 +147,4 @@ class MovableTypeService < TypoWebService
   def pub_date(time)
     time.strftime "%a, %e %b %Y %H:%M:%S %Z"
   end
-
 end

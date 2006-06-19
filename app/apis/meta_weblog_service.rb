@@ -72,22 +72,22 @@ class MetaWeblogService < TypoWebService
   end
 
   def getPost(postid, username, password)
-    article = Article.find(postid)
+    article = this_blog.articles.find(postid)
 
     article_dto_from(article)
   end
 
   def getRecentPosts(blogid, username, password, numberOfPosts)
-    Article.find(:all, :order => "created_at DESC", :limit => numberOfPosts).collect{ |c| article_dto_from(c) }
+    this_blog.articles.find(:all, :order => "created_at DESC", :limit => numberOfPosts).collect{ |c| article_dto_from(c) }
   end
 
   def newPost(blogid, username, password, struct, publish)
-    article = Article.new
+    article = this_blog.articles.build
     article.body        = struct['description'] || ''
     article.title       = struct['title'] || ''
     article.published   = publish
     article.author      = username
-    article.created_at = struct['dateCreated'].to_time.getlocal rescue Time.now
+    article.published_at = struct['dateCreated'].to_time.getlocal rescue Time.now
     article.user        = @user
 
     # Movable Type API support
@@ -98,8 +98,6 @@ class MetaWeblogService < TypoWebService
     article.keywords       = struct['mt_keywords'] || ''
     article.text_filter    = TextFilter.find_by_name(struct['mt_convert_breaks'] || this_blog.text_filter)
 
-    article.html(@controller)
-
     if struct['categories']
       article.categories.clear
       Category.find(:all).each do |c|
@@ -108,8 +106,6 @@ class MetaWeblogService < TypoWebService
     end
 
     if article.save
-      article.send_notifications(@controller)
-      article.send_pings(server_url, article_url(article), struct['mt_tb_ping_urls'])
       article.id.to_s
     else
       raise article.errors.full_messages * ", "
@@ -117,18 +113,18 @@ class MetaWeblogService < TypoWebService
   end
 
   def deletePost(appkey, postid, username, password, publish)
-    article = Article.find(postid)
+    article = this_blog.articles.find(postid)
     article.destroy
     true
   end
 
   def editPost(postid, username, password, struct, publish)
-    article = Article.find(postid)
+    article = this_blog.articles.find(postid)
     article.body        = struct['description'] || ''
     article.title       = struct['title'] || ''
     article.published   = publish
     article.author      = username
-    article.created_at  = struct['dateCreated'].to_time.getlocal unless struct['dateCreated'].blank?
+    article.published_at  = struct['dateCreated'].to_time.getlocal unless struct['dateCreated'].blank?
 
     # Movable Type API support
     article.allow_comments = struct['mt_allow_comments'] || this_blog.default_allow_comments
@@ -138,8 +134,6 @@ class MetaWeblogService < TypoWebService
     article.keywords       = struct['mt_keywords']       || ''
     article.text_filter    = TextFilter.find_by_name(struct['mt_convert_breaks'] || this_blog.text_filter)
 
-    article.html(@controller)
-
     if struct['categories']
       article.categories.clear
       Category.find(:all).each do |c|
@@ -147,7 +141,6 @@ class MetaWeblogService < TypoWebService
       end
     end
     RAILS_DEFAULT_LOGGER.info(struct['mt_tb_ping_urls'])
-    article.send_pings(server_url, article_url(article), struct['mt_tb_ping_urls'])
     article.save
     true
   end
@@ -175,7 +168,7 @@ class MetaWeblogService < TypoWebService
       :mt_allow_pings    => article.allow_pings? ? 1 : 0,
       :mt_convert_breaks => (article.text_filter.name.to_s rescue ''),
       :mt_tb_ping_urls   => article.pings.collect { |p| p.url },
-      :dateCreated       => (article.created_at.to_formatted_s(:db) rescue "")
+      :dateCreated       => (article.published_at.to_formatted_s(:db) rescue "")
       )
   end
 
@@ -184,10 +177,10 @@ class MetaWeblogService < TypoWebService
   def article_url(article)
     begin
       controller.url_for :controller=>"articles", :action =>"permalink",
-        :year => article.created_at.year, :month => sprintf("%.2d", article.created_at.month),
-        :day => sprintf("%.2d", article.created_at.day), :title => article.stripped_title
+        :year => article.published_at.year, :month => sprintf("%.2d", article.published_at.month),
+        :day => sprintf("%.2d", article.published_at.day), :title => article.stripped_title
     rescue
-      created = article.created_at
+      created = article.published_at
       sprintf("/articles/%.4d/%.2d/%.2d/#{article.stripped_title}", created.year, created.month, created.day)
       # FIXME: rescue is needed for functional tests as the test framework currently doesn't supply fully
       # fledged controller instances (yet?)

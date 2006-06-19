@@ -1,18 +1,10 @@
 require 'time'
 
-class Plugins::Sidebars::AimpresenceController < Sidebars::Plugin
-	def self.display_name
-		"AIM Presence"
-	end
+class Plugins::Sidebars::AimpresenceController < Sidebars::ComponentPlugin
+  display_name 'AIM Presence'
+  description  %{Displays the Online presence of an AOL Instant Messenger screen name<br/>
+If you don\'t have a key, register <a href="http://www.aim.com/presence">here</a>.}
 
-	def self.description
-		'Displays the <a href="http://www.aim.com/presence">online presence</a> of an AOL Instant Messenger screen name'
-	end
-
-	def self.default_config
-		{'sn' => '', 'devkey' => ''}
-	end
-
-	def configure
-	end
+  setting :sn, '', :label => 'Screen Name'
+  setting :devkey, '', :label => 'Key'
 end

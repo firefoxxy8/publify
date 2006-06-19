@@ -5,7 +5,7 @@ class Admin::ThemesController < Admin::BaseController
     @themes.each do |theme|
       theme.description_html = TextFilter.filter_text(theme.description, self, nil, [:markdown,:smartypants])
     end
-    @active = Theme.current
+    @active = this_blog.current_theme
   end
 
   def preview

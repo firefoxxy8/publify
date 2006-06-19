@@ -1,5 +1,3 @@
-require_dependency 'controllers/textfilter_controller'
-
 class Admin::TextfiltersController < Admin::BaseController
   def index
     list
