@@ -20,6 +20,15 @@ class Content < ActiveRecord::Base
 
   @@content_fields = Hash.new
   @@html_map       = Hash.new
+  
+  def initialize(*args)
+    super(*args)
+    
+    # 
+    if self.blog_id == nil or self.blog_id == 0
+      self.blog_id = Blog.default
+    end
+  end
 
   class << self
     def content_fields(*attribs)
