@@ -22,7 +22,7 @@ class ArticlesController < ContentController
     @frontpage = true;
     @articles = Article.find_published(
       :all, :order => 'created_at DESC',
-      :limit => config[:limit_article_display]
+      :limit => this_blog.limit_article_display
     )
     @page_title   = 'matijs.net'
   end

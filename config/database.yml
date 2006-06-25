@@ -6,10 +6,10 @@ development:
   password: 
 
 test:
-  adapter: mysql
+  adapter: postgresql
   database: typo_tests
-  host: localhost
-  username: root
+  host:
+  username: typo
   password: 
 
 production:

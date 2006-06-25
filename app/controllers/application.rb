@@ -3,7 +3,7 @@
 class ApplicationController < ActionController::Base
   include LoginSystem
 
-  before_filter { $blog = nil; $blog = this_blog }
+  before_filter :get_the_blog_object
   before_filter :fire_triggers
   after_filter :flush_the_blog_object
 
