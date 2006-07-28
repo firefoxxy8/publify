@@ -5,16 +5,24 @@ class Ping < ActiveRecord::Base
 
   class Pinger
     def send_pingback_or_trackback
+      @logger = RAILS_DEFAULT_LOGGER
       begin
-        @response = Net::HTTP.get_response(URI.parse(ping.url))
+        @logger.info "\nAbout to get resource: #{ping.url}"
+        uri = URI.parse(ping.url)
+        @response = Net::HTTP.get_response(uri)
+        @logger.info "\nGot resource"
         send_pingback or send_trackback
+        @logger.info "\nDone pinger."
       rescue Timeout::Error => err
         return
       rescue => err
+        @logger.info "\nHere? Error = #{err}"
         raise err
         # Ignore
       end
     end
+
+    private
 
     def pingback_url
       if @response["X-Pingback"]
@@ -75,10 +83,9 @@ class Ping < ActiveRecord::Base
     end
 
     def send_trackback
+      @logger.info "\nPinger.send_trackback: #{trackback_url}"
       ping.send_trackback(trackback_url, origin_url)
     end
-
-    private
 
     def initialize(origin_url, ping)
       @origin_url = origin_url
@@ -87,14 +94,18 @@ class Ping < ActiveRecord::Base
   end
 
   def send_pingback_or_trackback(origin_url)
-    t = Thread.start do
+    #t = Thread.start do
       Pinger.new(origin_url, self).send_pingback_or_trackback
-    end
-    t.join if defined? $TESTING
+    #end
+    logger.info "\nOla! #{origin_url}, #{self.url}"
+    #t.join if defined? $TESTING
+    #t.join #if defined? $TESTING
+    logger.info "\nTESTING? #{$TESTING}!"
   end
 
   def send_trackback(trackback_url, origin_url)
-    t = Thread.start do
+    RAILS_DEFAULT_LOGGER.info "\nPing.send_trackback: #{trackback_url}"
+    #t = Thread.start do
       trackback_uri = URI.parse(trackback_url)
 
       post = "title=#{CGI.escape(article.title)}"
@@ -107,21 +118,28 @@ class Ping < ActiveRecord::Base
         path += "?#{trackback_uri.query}" if trackback_uri.query
         http.post(path, post, 'Content-type' => 'application/x-www-form-urlencoded; charset=utf-8')
       end
+    #end
+
+    begin
+      RAILS_DEFAULT_LOGGER.info "\nAbout to join"
+      #t.join # if defined? $TESTING
+      RAILS_DEFAULT_LOGGER.info "\nJoined"
+    rescue => e
+      RAILS_DEFAULT_LOGGER.info "\nRescued #{e}"
     end
-    t.join if defined? $TESTING
   end
 
   def send_weblogupdatesping(server_url, origin_url)
-    t = Thread.start do
+    #t = Thread.start do
       send_xml_rpc(self.url, "weblogUpdates.ping", article.blog.blog_name, server_url, origin_url)
-    end
-    t.join if defined? $TESTING
+    #end
+    #t.join # if defined? $TESTING
   end
 
   protected
 
   def send_xml_rpc(xml_rpc_url, name, *args)
-    t = Thread.start do
+    #t = Thread.start do
       begin
         server = XMLRPC::Client.new2(URI.parse(xml_rpc_url).to_s)
 
@@ -133,7 +151,7 @@ class Ping < ActiveRecord::Base
       rescue Exception => e
         logger.error(e)
       end
-    end
-    t.join if defined? $TESTING
+    #end
+    #t.join # if defined? $TESTING
   end
 end
