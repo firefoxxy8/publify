@@ -29,7 +29,7 @@
 
 <% if @article.allow_comments? or @article.comments.size > 0 -%>
   <a name="comments"></a><h4 class="blueblk">Comments</h4>
-  <% if @article.allow_comments? -%>
+  <% unless @article.comments_closed? -%>
     <p class="postmetadata alt">
       <small><a href="#respond">Leave a response</a></small>
     </p>
@@ -38,7 +38,7 @@
   <% if @article.comments.blank? %>
     <li id="dummy_comment" style="display: none"></li>
   <% else %>
-    <%= render(:partial => "comment", :collection => @article.comments.to_a.select {|c| c.published? }) %>
+    <%= render(:partial => "comment", :collection => @article.published_comments) %>
   <% end %>
   </ol>
 <% end -%>
@@ -50,7 +50,7 @@
     <span class="light-bg"><%= server_url_for :controller=>"articles", :action=>"trackback", :id=>@article.id %></span>
     </p>
   <%= content_tag(:ol,
-        render(:partial => "trackback", :collection => @article.trackbacks),
+        render(:partial => "trackback", :collection => @article.published_trackbacks),
         :id => 'trackbackList', :class => 'trackback-list') unless @article.trackbacks.blank? %>
 <% end -%>
 
@@ -63,7 +63,7 @@
   </small>
 </p>
 
-<% if @article.allow_comments? -%>
+<% unless @article.comments_closed? -%>
   <%= render :partial => 'comment_box' %>
 <% else -%>
   <p>Comments are disabled</p>

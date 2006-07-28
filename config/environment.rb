@@ -15,6 +15,7 @@ Rails::Initializer.run do |config|
   # config.load_paths += %W( #{RAILS_ROOT}/app/services )
   config.load_paths += %W(
     vendor/rubypants
+    vendor/akismet
     vendor/redcloth/lib
     vendor/bluecloth/lib
     vendor/flickr
@@ -33,7 +34,7 @@ Rails::Initializer.run do |config|
 
   # Force all environments to use the same logger level
   # (by default production uses :info, the others :debug)
-  # config.log_level = :debug
+  config.log_level = :info
 
   # Use the database for sessions instead of the file system
   # (create the session table with 'rake create_sessions_table')
@@ -46,6 +47,8 @@ Rails::Initializer.run do |config|
   # Activate observers that should always be running
   # config.active_record.observers = :cacher, :garbage_collector
   config.active_record.observers = :content_observer, :email_notifier, :web_notifier
+
+  config.active_record.allow_concurrency = true
 
   # Make Active Record use UTC-base instead of local time
   # config.active_record.default_timezone = :utc

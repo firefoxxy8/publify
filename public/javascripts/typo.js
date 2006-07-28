@@ -68,6 +68,24 @@ function complete(request) {
   if (request.status == 200) { commentAdded() };  
 }
 
+function popup(mylink, windowname)
+{
+  if (! window.focus) return true;
+  var href;
+  window.open(mylink, windowname, 'width=400,height=500,scrollbars=yes');
+  return false;
+}
+
+// From http://www.shawnolson.net/scripts/public_smo_scripts.js
+function check_all(checkbox) {
+ var form = checkbox.form, z = 0;
+ for(z=0; z<form.length;z++){
+  if(form[z].type == 'checkbox' && form[z].name != 'checkall'){
+  form[z].checked = checkbox.checked;
+  }
+ }
+}
+
 register_onload(function() {
   if ($('commentform')) {
 	var _author = getCookie('author');

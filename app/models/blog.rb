@@ -1,3 +1,17 @@
+# BlogRequest is a fake Request object, created so blog.url_for will work.
+# This isn't enabled yet, but it will be soon...
+class BlogRequest
+  include Reloadable
+  
+  attr_accessor :protocol, :host_with_port, :path, :symbolized_path_parameters, :relative_url_root
+  
+  def initialize(root)
+    @protocol = @host_with_port = @path = ''
+    @symbolized_path_parameters = {}
+    @relative_url_root = root.gsub(%r{/^},'')
+  end
+end
+
 class Blog < ActiveRecord::Base
   include ConfigManager
 
@@ -31,6 +45,7 @@ class Blog < ActiveRecord::Base
   setting :sp_article_auto_close,      :integer, 0
   setting :sp_allow_non_ajax_comments, :boolean, true
   setting :sp_url_limit,               :integer, 0
+  setting :sp_akismet_key,             :string, ''
 
   # Podcasting
   setting :itunes_explicit,            :boolean, false
@@ -53,6 +68,7 @@ class Blog < ActiveRecord::Base
   setting :show_extended_on_rss,       :boolean, true
   setting :theme,                      :string, 'azure'
   setting :use_gravatar,               :boolean, false
+  setting :global_pings_disable,       :boolean, false
   setting :ping_urls,                  :string, "http://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
   setting :send_outbound_pings,        :boolean, true
   setting :email_from,                 :string, 'typo@example.com'
@@ -69,7 +85,14 @@ class Blog < ActiveRecord::Base
     settings[:blog_id] = self.id
     article_id = settings[:id]
     settings.delete(:id)
-    published_articles.find(article_id).trackbacks.create!(settings)
+    trackback = published_articles.find(article_id).trackbacks.create!(settings)
+
+    if trackback.is_spam?
+      STDERR.puts "Moderating trackback as spam!"
+      trackback.withdraw!
+    end
+    
+    trackback
   end
 
 
@@ -138,9 +161,9 @@ class Blog < ActiveRecord::Base
   end
 
   def article_url(article, only_path = true, anchor = nil)
-    url_for(:year => article.created_at.year,
-            :month => sprintf("%.2d", article.created_at.month),
-            :day => sprintf("%.2d", article.created_at.day),
+		url_for(:year => article.published_at.year,
+            :month => sprintf("%.2d", article.published_at.month),
+            :day => sprintf("%.2d", article.published_at.day),
             :title => article.permalink, :anchor => anchor,
             :only_path => only_path)
   end
@@ -156,6 +179,7 @@ class Blog < ActiveRecord::Base
   private
 
   def request
+    #BlogRequest.new(self.canonical_server_url)
     controller.request rescue ActionController::TestRequest.new
   end
 end

@@ -37,6 +37,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     assert_response :success
     assert_rendered_file "index"
+    assert_tag :tag => 'title', :content => 'test blog - category software'
 
     # Check it works when permalink != name. Ticket #736
     get :category, :id => "weird-permalink"
@@ -63,6 +64,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_rendered_file "index"
 
+    assert_tag :tag => 'title', :content => 'test blog - tag foo'
     assert_tag :tag => 'h2', :content => 'Article 2!'
     assert_tag :tag => 'h2', :content => 'Article 1!'
   end
@@ -171,7 +173,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
   end
 
   def test_comment_spam1
-    comment_template_test "<p>Link to <a href='http://spammer.example.com' rel=\"nofollow\">spammy goodness</a></p>", 'Link to <a href="http://spammer.example.com">spammy goodness</a>'
+    comment_template_test "<p>Link to <a href=\"http://spammer.example.com\" rel=\"nofollow\">spammy goodness</a></p>", 'Link to <a href="http://spammer.example.com">spammy goodness</a>'
   end
 
   def test_comment_spam2
@@ -180,17 +182,17 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
   def test_comment_xss1
     this_blog.comment_text_filter = "none"
-    comment_template_test %{Have you ever &lt;script lang='javascript'>alert("foo");&lt;/script> been hacked?},
+    comment_template_test %{Have you ever alert("foo"); been hacked?},
     %{Have you ever <script lang="javascript">alert("foo");</script> been hacked?}
   end
 
   def test_comment_xss2
     this_blog.comment_text_filter = "none"
-    comment_template_test "Have you ever <a href='#' rel=\"nofollow\">been hacked?</a>", 'Have you ever <a href="#" onclick="javascript">been hacked?</a>'
+    comment_template_test "Have you ever <a href=\"#\" rel=\"nofollow\">been hacked?</a>", 'Have you ever <a href="#" onclick="javascript">been hacked?</a>'
   end
 
   def test_comment_autolink
-    comment_template_test "<p>What&#8217;s up with <a href='http://slashdot.org' rel=\"nofollow\">http://slashdot.org</a> these days?</p>", "What's up with http://slashdot.org these days?"
+    comment_template_test "<p>What&#8217;s up with <a href=\"http://slashdot.org\" rel=\"nofollow\">http://slashdot.org</a> these days?</p>", "What's up with http://slashdot.org these days?"
   end #"
 
   ### TODO -- there's a bug in Rails with auto_links
@@ -352,6 +354,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
     get :read, :id => contents(:article1).id
     assert_response :success
     assert_template "read"
+    
+    assert_equal contents(:article1).comments.to_a.select{|c| c.published?}, contents(:article1).published_comments
 
     assert_tag :tag => "ol",
       :attributes => { :id => "commentList"},
@@ -478,10 +482,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
                     :body       => "The future is cool!",
                     :keywords   => "future",
                     :published  => true,
-                    :created_at => Time.now + 12.minutes)
+                    :published_at => Time.now + 12.minutes)
     get :index
     assert_equal @article, assigns(:articles).first
-    assert @response.lifetime <= 12.minutes
+    assert @response.lifetime.to_i <= 12.minutes
   end
 
   def test_search

@@ -1,11 +1,15 @@
 require 'observer'
 require 'set'
+
 class Content < ActiveRecord::Base
   include Observable
 
   belongs_to :text_filter
   belongs_to :blog
   validates_presence_of :blog_id
+
+  composed_of :state, :class_name => 'ContentState::Factory',
+    :mapping => %w{ state memento }
 
   has_and_belongs_to_many :notify_users, :class_name => 'User',
     :join_table => 'notifications', :foreign_key => 'notify_content_id',
@@ -20,13 +24,15 @@ class Content < ActiveRecord::Base
 
   @@content_fields = Hash.new
   @@html_map       = Hash.new
-  
+
   def initialize(*args)
     super(*args)
-    
-    # 
+    set_default_blog
+  end
+
+  def set_default_blog
     if self.blog_id == nil or self.blog_id == 0
-      self.blog_id = Blog.default
+      self.blog = Blog.default
     end
   end
 
@@ -77,6 +83,8 @@ class Content < ActiveRecord::Base
       options.reverse_merge!(:order => default_order)
       options[:conditions] = merge_conditions(['published = ?', true],
                                               options[:conditions])
+      options[:include] ||= []
+      options[:include] += [:blog]
       find(what, options)
     end
 
@@ -101,14 +109,6 @@ class Content < ActiveRecord::Base
         '(' + sanitize_sql(cond) + ')'
       end.join(' AND ')
     end
-  end
-
-  def state
-    @state ||= ContentState::Factory.derived_from(self)
-  end
-
-  def state=(new_state)
-    @state = new_state
   end
 
   def state_before_save
@@ -168,15 +168,34 @@ class Content < ActiveRecord::Base
   end
 
   def text_filter=(filter)
-    self[:text_filter] = filter.to_text_filter
+    self[:text_filter_id] = filter.to_text_filter.id
   end
 
   def blog
     self[:blog] ||= blog_id.to_i.zero? ? Blog.default : Blog.find(blog_id)
   end
 
+  def state=(newstate)
+    if state
+      state.exit_hook(self, newstate)
+    end
+    @state = newstate
+    self[:state] = newstate.memento
+    newstate.enter_hook(self)
+  end
+
   def publish!
     self.published = true
+    self.save!
+  end
+
+  def withdraw
+    self.published    = false
+    self.published_at = nil
+  end
+
+  def withdraw!
+    self.withdraw
     self.save!
   end
 
@@ -195,6 +214,10 @@ class Content < ActiveRecord::Base
 
   def just_published?
     state.just_published?
+  end
+
+  def withdrawn?
+    state.withdrawn?
   end
 
   def publication_pending?

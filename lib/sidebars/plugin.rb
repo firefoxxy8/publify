@@ -38,7 +38,7 @@ module Sidebars
     class TextAreaField < self
       def input_html(sidebar)
         html_options = { "rows" => "10", "cols" => "30", "style" => "width:255px"}.update(options.stringify_keys)
-        text_area_tag(input_name(sidebar), sidebar.config[key], html_options)
+        text_area_tag(input_name(sidebar), h(sidebar.config[key]), html_options)
       end
     end
 
@@ -63,7 +63,8 @@ module Sidebars
 
     class CheckBoxField < self
       def input_html(sidebar)
-        check_box_tag(input_name(sidebar), 1, !sidebar.config[key].blank?, options)
+        check_box_tag(input_name(sidebar), 1, sidebar.config[key]=="1", options)+
+        hidden_field_tag(input_name(sidebar),0)
       end
 
       def line_html(sidebar)
@@ -100,11 +101,7 @@ module Sidebars
 
   class Sidebars::Plugin < ApplicationController
     include ApplicationHelper
-
     helper :theme
-
-    #  skip_before_filter :get_the_blog_object
-    #  skip_after_filter :flush_the_blog_object
 
     @@subclasses = { }
 
@@ -126,7 +123,6 @@ module Sidebars
           sidebar.subclasses.empty?
         end
       end
-
 
       # The name that needs to be used when refering to the plugin's
       # controller in render statements
@@ -197,17 +193,18 @@ module Sidebars
       def default_helper_module!
       end
     end
-
+    
     def index
       @sidebar=params['sidebar']
-      @sb_config = @sidebar.config || self.class.default_config
+      set_config
+      @sb_config = @sidebar.config
       content
       render :action=>'content' unless performed?
     end
 
     def configure_wrapper
       @sidebar=params['sidebar']
-      @sidebar.config ||= (self.class.default_config)
+      set_config
       configure
       render :action=>'configure' unless performed?
     end
@@ -222,6 +219,12 @@ module Sidebars
     end
 
     private
+    def set_config
+      @sidebar.config ||= {}
+      @sidebar.config = self.class.default_config.dup.merge(@sidebar.config)
+      @sidebar.config ||= (self.class.default_config)
+    end
+    
     def sb_config(key)
       config = @sidebar.class.default_config
       config.merge!(@sidebar.config || {})

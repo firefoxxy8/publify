@@ -66,7 +66,8 @@ CREATE TABLE contents (
   "allow_pings" boolean,
   "allow_comments" boolean,
   "blog_id" integer NOT NULL,
-  "published_at" timestamp
+  "published_at" timestamp,
+  "state" text
 );
 
 CREATE TABLE notifications (
@@ -170,13 +171,13 @@ CREATE TABLE users (
 
 -- indexes 
 
-CREATE  INDEX blacklist_patterns_pattern_index ON blacklist_patterns (pattern);
-CREATE  INDEX categories_permalink_index ON categories (permalink);
-CREATE  INDEX contents_blog_id_index ON contents (blog_id);
-CREATE  INDEX contents_article_id_index ON contents (article_id);
-CREATE  INDEX page_caches_name_index ON page_caches (name);
-CREATE  INDEX pings_article_id_index ON pings (article_id);
-CREATE  INDEX sessions_sessid_index ON sessions (sessid);
+CREATE  INDEX "blacklist_patterns_pattern_index" ON blacklist_patterns ("pattern");
+CREATE  INDEX "categories_permalink_index" ON categories ("permalink");
+CREATE  INDEX "contents_blog_id_index" ON contents ("blog_id");
+CREATE  INDEX "contents_article_id_index" ON contents ("article_id");
+CREATE  INDEX "page_caches_name_index" ON page_caches ("name");
+CREATE  INDEX "pings_article_id_index" ON pings ("article_id");
+CREATE  INDEX "sessions_sessid_index" ON sessions ("sessid");
 
 -- data 
 
@@ -215,4 +216,4 @@ CREATE TABLE schema_info (
   "version" integer
 );
 
-insert into schema_info (version) values (46);
+insert into schema_info (version) values (47);

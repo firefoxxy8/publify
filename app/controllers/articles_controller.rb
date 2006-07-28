@@ -1,6 +1,5 @@
 class ArticlesController < ContentController
   before_filter :verify_config
-  before_filter :check_page_query_param_for_missing_routes
 
   layout :theme_layout, :except => [:comment_preview, :trackback]
 
@@ -28,13 +27,23 @@ class ArticlesController < ContentController
   end
 
   def index
-    @pages, @articles =
-      paginate(:article, :per_page => this_blog.limit_article_display,
-               :conditions =>
-                 ['published = ? AND contents.created_at < ? AND blog_id = ?',
-                             true,            Time.now,     this_blog.id],
-               :order_by => "contents.created_at DESC",
-               :include => [:categories, :tags])
+    # On Postgresql, paginate's default count is *SLOW*, because it does a join against
+    # all of the eager-loaded tables.  I've seen it take up to 7 seconds on my test box.
+    #
+    # So, we're going to use the older Paginator class and manually provide a count.
+    # This is a 100x speedup on my box.
+    count = Article.count(:conditions => ['published = ? AND contents.published_at < ? AND blog_id = ?',
+      true, Time.now, this_blog.id])
+    @pages = Paginator.new self, count, this_blog.limit_article_display, @params[:page]
+    @articles = Article.find( :all,
+      :offset => @pages.current.offset,
+      :limit => @pages.items_per_page,
+      :order => "contents.published_at DESC", 
+      :include => [:categories, :tags, :user, :blog],
+      :conditions =>
+         ['published = ? AND contents.published_at < ? AND blog_id = ?',
+          true, Time.now, this_blog.id]
+    )  
   end
 
   def search
@@ -106,6 +115,17 @@ class ArticlesController < ContentController
         @article = this_blog.published_articles.find(params[:id])
         @comment = @article.comments.build(params[:comment])
         @comment.user = session[:user]
+        
+        spam_options = {
+          :user_agent => request.env['HTTP_USER_AGENT'], 
+          :referrer => request.env['HTTP_REFERER'], 
+          :permalink => this_blog.article_url(@article, false)}
+          
+        if @comment.is_spam? spam_options
+          STDERR.puts "Moderating comment as spam!"
+          @comment.withdraw
+        end
+        
         @comment.save!
         add_to_cookies(:author, @comment.author)
         add_to_cookies(:url, @comment.url)
@@ -161,18 +181,16 @@ class ArticlesController < ContentController
       render :nothing => true, :status => 404
     end
   end
+  
+  def markup_help
+    render :text => TextFilter.find(params[:id]).commenthelp
+  end
 
   private
 
   def add_to_cookies(name, value, path=nil, expires=nil)
     cookies[name] = { :value => value, :path => path || "/#{controller_name}",
                        :expires => 6.weeks.from_now }
-  end
-
-  def check_page_query_param_for_missing_routes
-    unless request.path =~ /\/page\//
-      raise "Page param problem" unless params[:page].nil?
-    end
   end
 
   def verify_config
@@ -216,6 +234,7 @@ class ArticlesController < ContentController
   def render_grouping(klass)
     return list_groupings(klass) unless params[:id]
 
+    @page_title = "#{this_blog.blog_name} - #{klass.to_s.underscore} #{params[:id]}"
     @articles = klass.find_by_permalink(params[:id]).articles.find_already_published rescue []
     auto_discovery_feed :type => klass.to_s.underscore, :id => params[:id]
     render_paginated_index("Can't find posts with #{klass.to_prefix} '#{h(params[:id])}'")

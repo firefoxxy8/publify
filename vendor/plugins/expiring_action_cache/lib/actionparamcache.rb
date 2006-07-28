@@ -38,7 +38,7 @@ module ActionController
       module ClassMethods #:nodoc:
         def caches_action_with_params(*actions)
           return unless perform_caching
-          around_filter(ActionParamCacheFilter.new(*actions))
+          prepend_around_filter(ActionParamCacheFilter.new(*actions))
         end
       end
 
@@ -71,6 +71,7 @@ module ActionController
         def before(controller)
           return unless @actions.include?(controller.action_name.intern)
           meta, cache = controller.read_meta_fragment_expire(cache_key(controller))
+          
           if cache
             # 304 handling from Tom Fakes,
             # http://craz8.com/svn/trunk/plugins/action_cache/lib/action_cache.rb
@@ -78,6 +79,7 @@ module ActionController
             cached_time = meta[:cached_at] rescue nil
             controller.response.headers['Cache-Control'] = 'max-age=1'
             controller.response.headers['Last-Modified'] = meta[:cached_at].httpdate rescue nil
+            controller.response.headers['Content-Type'] = meta[:content_type]
                         
             if request_time and cached_time <= (request_time + 1)
               controller.render(:text => "", :status => 304)
@@ -93,7 +95,7 @@ module ActionController
         end
 
         def after(controller)
-          return true if not @actions.include?(controller.action_name.intern) || controller.rendered_action_cache
+          return true if !@actions.include?(controller.action_name.intern) || controller.rendered_action_cache
           return true if controller.response.headers['Status'] != "200 OK" # without this, we cache errors.  grr
 
           meta = Hash.new
@@ -101,6 +103,7 @@ module ActionController
             meta[:expires] = Time.now + controller.response.lifetime
           end
           meta[:cached_at] = Time.now.utc
+          meta[:content_type] = controller.response.headers['Content-Type']
           controller.response.headers['Cache-Control'] = 'max-age=1'
           controller.response.headers['Last-Modified'] = meta[:cached_at].httpdate
           controller.write_meta_fragment(cache_key(controller), meta, controller.response.body)

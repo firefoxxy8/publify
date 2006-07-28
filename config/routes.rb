@@ -26,7 +26,8 @@ ActionController::Routing::Routes.draw do |map|
   map.xml 'blog/xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
   map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
   map.xml 'blog/xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
-
+  map.xml 'sitemap.xml', :controller => 'xml', :action => 'feed', :format => 'googlesitemap', :type => 'sitemap'
+ 
   # allow neat perma urls
   map.connect 'blog',
     :controller => 'articles', :action => 'index'

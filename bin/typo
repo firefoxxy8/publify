@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require 'installer/rails-installer'
+
+class TypoInstaller < RailsInstaller
+  application_name 'typo'
+  support_location 'the Typo mailing list'
+  rails_version '1.1.4'
+  
+  def install_post_hook
+    sweep_cache
+  end
+  
+  # Sweep the cache
+  def sweep_cache
+    Dir.chdir(install_directory)
+    message "Cleaning out #{@@app_name.capitalize}'s cache"
+    status = system("rake -s sweep_cache > /dev/null 2> /dev/null")
+  end
+end
+
+class SweepCache < RailsInstaller::Command
+  help "Sweep Typo's cache"
+  
+  def self.command(installer, *args)
+    installer.sweep_cache
+  end
+end
+
+# Installer program
+directory = ARGV[1]
+
+typo = TypoInstaller.new(directory)
+typo.message_proc = Proc.new do |msg|
+  STDERR.puts " #{msg}"
+end
+typo.execute_command(*ARGV)

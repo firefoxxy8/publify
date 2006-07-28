@@ -1,21 +1,15 @@
 require_dependency 'spam_protection'
+require 'sanitize'
+require 'timeout'
 
-class Comment < Content
-  include TypoGuid
+class Comment < Feedback
+  belongs_to :article
 
   content_fields :body
 
-  belongs_to :article, :counter_cache => true
   belongs_to :user
 
   validates_presence_of :author, :body
-  validates_against_spamdb :body, :url, :ip
-  validates_age_of :article_id
-  validate_on_create :check_article_is_open_to_comments
-
-  def self.default_order
-    'created_at ASC'
-  end
 
   def notify_user_via_email(controller, user)
     if user.notify_via_email?
@@ -35,42 +29,28 @@ class Comment < Content
     users
   end
 
-  def location(anchor=:ignored, only_path=true)
-    blog.url_for(article, "comment-#{id}", only_path)
-  end
-
   protected
 
-  def check_article_is_open_to_comments
-    return unless article
-    unless article.allow_comments?
-      errors.add(:article, "Article is not open to comments")
-    end
+  def article_allows_feedback?
+    return true if article.allow_comments?
+    errors.add(:article, "Article is not open to comments")
+    false
   end
 
-
-
   def body_html_postprocess(value, controller)
-    controller.send(:sanitize, controller.send(:auto_link, value))
+    sanitize(controller.send(:auto_link, value),'a href, b, br, i, p, em, strong, pre, code, ol, ul, li')
   end
 
   def default_text_filter_config_key
     'comment_text_filter'
   end
 
-  before_create :create_guid
-  before_save :correct_url, :make_nofollow
-
-  def correct_url
-    unless url.to_s.empty?
-      unless url =~ /^http\:\/\//
-        self.url = "http://#{url}"
-      end
-    end
-  end
-
   def make_nofollow
     self.author    = author.nofollowify
     self.body_html = body_html.to_s.nofollowify
+  end
+
+  def originator
+    author
   end
 end

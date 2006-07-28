@@ -1,19 +1,11 @@
 require_dependency 'spam_protection'
 
-class Trackback < Content
-  include TypoGuid
-  belongs_to :article, :counter_cache => true
+class Trackback < Feedback
+  belongs_to :article
 
   content_fields :excerpt
 
-  validates_age_of :article_id
-  validates_against_spamdb :title, :excerpt, :ip, :url
   validates_presence_of :title, :excerpt, :url
-  validate_on_create :article_is_pingable
-
-  def self.default_order
-    'created_at ASC'
-  end
 
   def initialize(*args, &block)
     super(*args, &block)
@@ -21,12 +13,7 @@ class Trackback < Content
     self.blog_name ||= ""
   end
 
-  def location(anchor=:ignored, only_path=true)
-    blog.url_for(article, "trackback-#{id}", only_path)
-  end
-
-  protected
-  before_create :make_nofollow, :process_trackback, :create_guid
+  before_create :process_trackback
 
   def make_nofollow
     self.blog_name = blog_name.strip_html
@@ -41,11 +28,28 @@ class Trackback < Content
     end
   end
 
-  def article_is_pingable
-    return if article.nil?
-    unless article.allow_pings?
-      errors.add(:article, "Article is not pingable")
-    end
+  def article_allows_feedback?
+    return true if article.allow_pings?
+    errors.add(:article, 'Article is not pingable')
+    false
+  end
+
+  def blog_allows_feedback?
+    return true unless blog.global_pings_disable
+    errors.add(:article, "Pings are disabled")
+    false
+  end
+
+  def originator
+    blog_name
+  end
+
+  def body
+    excerpt
+  end
+
+  def body=(newval)
+    self.excerpt = newval
   end
 end
 

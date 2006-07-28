@@ -40,12 +40,12 @@ module ApplicationHelper
   end
 
   def comments_link(article)
-    article_link(pluralize(article.comments.size, "comment"),
+    article_link(pluralize(article.published_comments.size, "comment"),
                  article, 'comments')
   end
 
   def trackbacks_link(article)
-    article_link(pluralize(article.trackbacks.size, "trackback"),
+    article_link(pluralize(article.published_trackbacks.size, "trackback"),
                  article, 'trackbacks')
   end
 
@@ -88,5 +88,15 @@ module ApplicationHelper
     page.html(@controller,:body)
   end
 
-  def strip_html(text) text.strip_html end
+  def strip_html(text) 
+    text.strip_html
+  end
+    
+  def markup_help_popup(markup, text)
+    if markup and markup.commenthelp.size > 1
+      "<a href=\"#{url_for :controller => '/articles', :action => 'markup_help', :id => markup.id}\" onClick=\"return popup(this, 'Typo Markup Help')\">#{text}</a>"
+    else
+      ''
+    end
+  end
 end

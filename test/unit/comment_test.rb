@@ -33,10 +33,7 @@ class CommentTest < Test::Unit::TestCase
     c.url = "http://buy-computer.us"
     c.ip = "212.42.230.206"
 
-    assert ! c.save
-    assert c.errors.invalid?('body')
-    assert c.errors.invalid?('url')
-    assert c.errors.invalid?('ip')
+    assert_equal true, c.is_spam?
   end
 
   def test_not_spam_but_rbl_lookup_succeeds
@@ -46,7 +43,7 @@ class CommentTest < Test::Unit::TestCase
     c.url    = "http://www.bofh.org.uk"
     c.ip     = "10.10.10.10"
 
-    assert c.save
+    assert_equal false, c.is_spam?
   end
 
   def test_reject_spam_pattern
@@ -55,8 +52,7 @@ class CommentTest < Test::Unit::TestCase
     c.body = "Texas hold-em poker crap"
     c.url = "http://texas.hold-em.us"
 
-    assert ! c.save
-    assert c.errors.invalid?('body')
+    assert_equal true, c.is_spam?
   end
 
   def test_reject_spam_uri_limit
@@ -66,8 +62,7 @@ class CommentTest < Test::Unit::TestCase
     c.url = "http://www.uri-limit.com"
     c.ip = "123.123.123.123"
 
-    assert ! c.save
-    assert c.errors.invalid?('body')
+    assert_equal true, c.is_spam?
   end
 
   def test_reject_article_age
@@ -113,5 +108,30 @@ class CommentTest < Test::Unit::TestCase
 
       assert c.body_html !~ /<script>/
     end
+  end
+
+  def test_withdraw
+    c = Comment.find(contents(:comment2).id)
+    assert c.withdraw!
+    assert ! c.published?
+    assert c.reload
+    assert ! c.published?
+  end
+  
+  def test_published
+    a = Article.new(:title => 'foo', :blog_id => 1)
+    assert a.save
+    
+    assert_equal 0, a.published_comments.size
+    c = Comment.new(:body => 'foo', :author => 'bob', :article_id => a.id, :published => true, :published_at => Time.now)
+    assert c.save
+    assert c.published?
+    a.reload
+
+    assert_equal 1, a.published_comments.size
+    c.withdraw!
+
+    a = Article.new(:title => 'foo', :blog_id => 1)
+    assert_equal 0, a.published_comments.size
   end
 end

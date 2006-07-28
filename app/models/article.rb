@@ -52,7 +52,7 @@ class Article < Content
 
           if weblogupdatesping_urls.include?(url)
             ping.send_weblogupdatesping(serverurl, articleurl)
-          else pingback_or_trackback_urls.include?(url)
+          elsif pingback_or_trackback_urls.include?(url)
             ping.send_pingback_or_trackback(articleurl)
           end
         end
@@ -120,7 +120,7 @@ class Article < Content
   def keywords_to_tags
     Article.transaction do
       tags.clear
-      keywords.to_s.scan(/((['"]).*?\2|\w+)/).collect do |x|
+      keywords.to_s.scan(/((['"]).*?\2|[\.\w]+)/).collect do |x|
         x.first.tr("\"'", '')
       end.uniq.each do |tagword|
         tags << Tag.get(tagword)
@@ -146,21 +146,42 @@ class Article < Content
     end
   end
 
+  def comments_closed?
+    if self.allow_comments?
+      if !self.blog.sp_article_auto_close.zero? and self.created_at.to_i < self.blog.sp_article_auto_close.days.ago.to_i
+        return true
+      else
+        return false
+      end
+    else
+      return true
+    end
+  end
+  
+  def published_comments
+    comments.select {|c| c.published?}
+  end
+
+  def published_trackbacks
+    trackbacks.select {|c| c.published?}
+  end
+
   protected
 
   before_create :set_defaults, :create_guid, :add_notifications
+  before_save :set_published_at
   after_save :keywords_to_tags
 
-  def correct_counts
-    self.comments_count = self.comments_count
-    self.trackbacks_count = self.trackbacks_count
+  def set_published_at
+    if self.published and self[:published_at].nil?
+      self[:published_at] = self.created_at || Time.now
+    end
   end
 
   def set_defaults
     if self.attributes.include?("permalink") and self.permalink.blank?
       self.permalink = self.stripped_title
     end
-    correct_counts
     if blog && self.allow_comments.nil?
       self.allow_comments = blog.default_allow_comments
     end
@@ -168,6 +189,7 @@ class Article < Content
     if blog && self.allow_pings.nil?
       self.allow_pings = blog.default_allow_pings
     end
+
     true
   end
 
@@ -196,6 +218,11 @@ class Article < Content
     return [from, to]
   end
 
+  def find_published(what = :all, options = {})
+    options[:include] ||= []
+    options[:include] += [:user]
+    super(what, options)
+  end
 
   validates_uniqueness_of :guid
   validates_presence_of :title
