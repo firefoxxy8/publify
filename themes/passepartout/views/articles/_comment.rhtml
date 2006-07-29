@@ -8,4 +8,7 @@
   <div>
   <%= comment.full_html %>
   </div>
+  <% unless comment.published -%>
+    <div class="spamwarning">This comment has been flagged for moderator approval.  It won't appear on this blog until the author approves it.</div>
+  <% end -%>
 </li>

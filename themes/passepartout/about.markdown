@@ -1,5 +1,4 @@
-Passepartout
-=====
+### Passepartout
 
 Theme for www.matijs.net's instance of Typo by [Matijs van Zuijlen][1]
 
