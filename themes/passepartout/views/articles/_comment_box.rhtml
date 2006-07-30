@@ -30,14 +30,13 @@
       <p>
         <%= text_area "comment", "body" %>
       </p>
-    <p>
     <p id="frm-btns">
 
       <span id="comment_loading" style="display:none;"><%= image_tag "spinner.gif" %></span>
       <%= markup_help_popup TextFilter.find_by_name(config[:comment_text_filter]), "Comment Markup Help" %>
       <a href="#" onclick="new Ajax.Updater('preview', '<%= url_for :action => 'comment_preview' %>',  {asynchronous:true, evalScripts:true, parameters:Form.serialize('commentform'), onComplete:function(request){Element.show('preview')}}); return false;">Preview comment</a>      
       <input type="submit" name="submit" id="form-submit-button" value="submit" class="button" />&nbsp;&nbsp;
-      </p>
+    </p>
 
 
 </div>
