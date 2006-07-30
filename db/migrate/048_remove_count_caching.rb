@@ -1,5 +1,6 @@
 class RemoveCountCaching < ActiveRecord::Migration
   class Content < ActiveRecord::Base
+    include BareMigration
     def count_children_of_type(type)
       self.class.find(:all,
                       :conditions => ["article_id = ? and type = ?",
