@@ -71,15 +71,10 @@ class ArticlesController < ContentController
   end
 
   def permalink
-    if params[:bryarid].nil?
-      if are_date_params_valid?(*params.values_at(:year, :month, :day))
-        display_article(this_blog.published_articles.find_by_permalink(*params.values_at(:year, :month, :day, :title)))
-      else
-        render :text => "Page not found", :status => 404
-      end
+    if are_date_params_valid?(*params.values_at(:year, :month, :day))
+      display_article(this_blog.published_articles.find_by_permalink(*params.values_at(:year, :month, :day, :title)))
     else
-      /id_(\d+)/.match(params[:bryarid])
-      display_article(this_blog.published_articles.find($1))
+      render :text => "Page not found", :status => 404
     end
   end
 
@@ -192,6 +187,11 @@ class ArticlesController < ContentController
   
   def markup_help
     render :text => TextFilter.find(params[:id]).commenthelp
+  end
+
+  def bryarlink
+    /id_(\d+)/.match(params[:bryarid])
+    display_article { this_blog.published_articles.find($1) }
   end
 
   private
