@@ -135,6 +135,7 @@ class TextfilterControllerTest < Test::Unit::TestCase
     tag = filter_text('<typo:sparkline foo="bar"/>',[:macropre,:macropost])
     # url_for returns query params in hash order, which isn't stable, so we can't just compare
     # with a static string.  Yuck.
+    STDERR.puts tag
     assert tag =~ %r{^<img  src="http://test.host/plugins/filters/sparkline/plot\?(data=|foo=bar|&)+"/>$}
 
     assert_equal "<img  title=\"aaa\" src=\"http://test.host/plugins/filters/sparkline/plot?data=\"/>",

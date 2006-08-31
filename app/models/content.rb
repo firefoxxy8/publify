@@ -7,6 +7,7 @@ class Content < ActiveRecord::Base
   belongs_to :text_filter
   belongs_to :blog
   validates_presence_of :blog_id
+  validates_length_of :author, :maximum => 20, :allow_nil => true
 
   composed_of :state, :class_name => 'ContentState::Factory',
     :mapping => %w{ state memento }

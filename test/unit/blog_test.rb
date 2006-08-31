@@ -51,16 +51,16 @@ class BlogTest < Test::Unit::TestCase
   end
 
   def test_url_for
-    assert_equal('/articles/read/1',
+    assert_equal('/blog/articles/read/1',
                  @blog.url_for(:controller => 'articles',
                                :action     => 'read',
                                :id         => 1))
   end
 
   def test_url_for_article
-    assert_equal('/articles/2004/06/01/article-3',
+    assert_equal('/blog/2004/06/01/article-3',
                  @blog.url_for(contents(:article3)))
-    assert_equal('/articles/2004/06/01/article-3#foo',
+    assert_equal('/blog/2004/06/01/article-3#foo',
                  @blog.url_for(contents(:article3), 'foo'))
   end
 
