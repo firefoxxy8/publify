@@ -72,7 +72,11 @@ class ArticlesController < ContentController
 
   def permalink
     if params[:bryarid].nil?
-      display_article(this_blog.published_articles.find_by_permalink(*params.values_at(:year, :month, :day, :title)))
+      if are_date_params_valid?(*params.values_at(:year, :month, :day))
+        display_article(this_blog.published_articles.find_by_permalink(*params.values_at(:year, :month, :day, :title)))
+      else
+        render :text => "Page not found", :status => 404
+      end
     else
       /id_(\d+)/.match(params[:bryarid])
       display_article(this_blog.published_articles.find($1))
@@ -80,8 +84,12 @@ class ArticlesController < ContentController
   end
 
   def find_by_date
-    @articles = this_blog.published_articles.find_all_by_date(params[:year], params[:month], params[:day])
-    render_paginated_index
+    if are_date_params_valid?(*params.values_at(:year, :month, :day))
+      @articles = this_blog.published_articles.find_all_by_date(params[:year], params[:month], params[:day])
+      render_paginated_index
+    else
+      render :text => "Page not found", :status => 404
+    end
   end
 
   def error(message = "Record not found...")
@@ -187,6 +195,15 @@ class ArticlesController < ContentController
   end
 
   private
+
+  def are_date_params_valid?(year, month = nil, day = nil)
+    begin
+      test = Time.mktime(year, month || 1, day || 1)
+    rescue ArgumentError
+      return false
+    end
+    return true
+  end
 
   def add_to_cookies(name, value, path=nil, expires=nil)
     cookies[name] = { :value => value, :path => path || "/#{controller_name}",
