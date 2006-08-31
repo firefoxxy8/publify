@@ -191,7 +191,16 @@ class ArticlesController < ContentController
 
   def bryarlink
     /id_(\d+)/.match(params[:bryarid])
-    display_article { this_blog.published_articles.find($1) }
+    begin
+      article = this_blog.published_articles.find($1)
+      headers["Status"] = "301 Moved Permanently"
+      redirect_to article.location
+      return
+    rescue ActiveRecord::RecordNotFound
+      render :text => "Page not found", :status => 404
+    rescue
+      render :text => "Internal server error", :status => 500
+    end
   end
 
   private
