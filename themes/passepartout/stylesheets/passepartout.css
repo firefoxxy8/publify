@@ -223,6 +223,14 @@ a {
   color: black;
 }
 
+/* Make sure this doesn't overflow to the sides */
+pre {
+  overflow: auto;
+  border: solid #a5945a;
+  border-width: 1px 0px;
+  padding: 1em 0em;
+}
+
 /* Blog-specific styles */
 
 /*
