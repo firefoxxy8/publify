@@ -1,5 +1,7 @@
 # BlogRequest is a fake Request object, created so blog.url_for will work.
 # This isn't enabled yet, but it will be soon...
+require 'action_controller/test_process'
+
 class BlogRequest
   include Reloadable
   
@@ -161,7 +163,7 @@ class Blog < ActiveRecord::Base
   end
 
   def article_url(article, only_path = true, anchor = nil)
-		url_for(:year => article.published_at.year,
+    url_for(:year => article.published_at.year,
             :month => sprintf("%.2d", article.published_at.month),
             :day => sprintf("%.2d", article.published_at.day),
             :title => article.permalink, :anchor => anchor,
