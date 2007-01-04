@@ -72,7 +72,7 @@ class Admin::TextfiltersController < Admin::BaseController
   end
 
   def preview
-    @headers["Content-Type"] = "text/html; charset=utf-8"
+    headers["Content-Type"] = "text/html; charset=utf-8"
     @textfilter = params[:textfilter]
     render :layout => false
   end
@@ -90,12 +90,14 @@ class Admin::TextfiltersController < Admin::BaseController
     @filterparams = Hash.new
     @filterdescriptions = Hash.new
     @filterhelp = Hash.new
+    @filteroptions = Hash.new
 
     (types['macropre']+types['macropost']+types['postprocess']).each do |f|
       f.default_config.each do |key,value|
         @filterparams[key] = value[:default]
         @filterdescriptions[key] = value[:description]
         @filterhelp[key] = value[:help]
+        @filteroptions[key] = value[:options]
       end
     end
 

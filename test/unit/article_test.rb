@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 require 'http_mock'
 
 class ArticleTest < Test::Unit::TestCase
-  fixtures :blogs, :contents, :articles_tags, :tags, :resources, :categories, :articles_categories, :users, :notifications
+  fixtures :blogs, :contents, :articles_tags, :tags, :resources, :categories, :categorizations, :users, :notifications, :text_filters
 
   def setup
     @articles = []
@@ -14,6 +14,32 @@ class ArticleTest < Test::Unit::TestCase
     expected.each do |i|
       assert @articles.include?(i.is_a?(Symbol) ? contents(i) : i)
     end
+  end
+
+  def test_content_fields
+    a = Article.new
+    assert_equal [:body, :extended], a.content_fields
+  end
+
+  def test_permalink_url
+    a = contents(:article3)
+    assert_equal 'http://myblog.net/articles/2004/06/01/article-3', a.permalink_url
+  end
+
+  def test_edit_url
+    a = contents(:article3)
+    assert_equal 'http://myblog.net/admin/content/edit/3', a.edit_url
+  end
+
+  def test_delete_url
+    a = contents(:article3)
+    assert_equal 'http://myblog.net/admin/content/destroy/3', a.delete_url
+  end
+
+  def test_feed_url
+    a = contents(:article3)
+    assert_equal 'http://myblog.net/xml/atom10/article/3/feed.xml', a.feed_url(:atom10)
+    assert_equal 'http://myblog.net/xml/rss20/article/3/feed.xml', a.feed_url(:rss20)
   end
 
   def test_blog
@@ -137,7 +163,8 @@ class ArticleTest < Test::Unit::TestCase
   def test_find_published
     @articles = this_blog.articles.find_published
     assert_results_are(:search_target, :article1, :article2,
-                       :article3, :inactive_article,:xmltest)
+                       :article3, :inactive_article,:xmltest,
+                       :spammed_article)
 
     @articles = this_blog.articles.find_published(:all,
                                                   :conditions => "title = 'Article 1!'")
@@ -150,6 +177,7 @@ class ArticleTest < Test::Unit::TestCase
                                    :published => true)
     assert art.just_published?
     assert art.save
+    art.reload
     assert !art.just_published?
 
     art = Article.create!(:title => 'title2',
@@ -162,12 +190,12 @@ class ArticleTest < Test::Unit::TestCase
   def test_future_publishing
     assert_sets_trigger(Article.create!(:title => 'title', :body => 'body',
                                         :published => true,
-                                        :published_at => Time.now + 2.seconds))
+                                        :published_at => Time.now + 4.seconds))
   end
 
   def test_future_publishing_without_published_flag
     assert_sets_trigger Article.create!(:title => 'title', :body => 'body',
-                                        :published_at => Time.now + 2.seconds)
+                                        :published_at => Time.now + 4.seconds)
   end
 
   def test_triggers_are_dependent
@@ -181,7 +209,7 @@ class ArticleTest < Test::Unit::TestCase
   def assert_sets_trigger(art)
     assert_equal 1, Trigger.count
     assert Trigger.find(:first, :conditions => ['pending_item_id = ?', art.id])
-    sleep 2
+    sleep 4
     Trigger.fire
     art.reload
     assert art.published
@@ -259,5 +287,10 @@ class ArticleTest < Test::Unit::TestCase
     art.reload
     assert ! art.published?
     assert   art.withdrawn?
+  end
+
+  def test_default_filter
+    a = Article.find(1)
+    assert_equal 'textile', a.default_text_filter.name
   end
 end

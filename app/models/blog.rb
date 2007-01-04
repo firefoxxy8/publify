@@ -1,12 +1,10 @@
 # BlogRequest is a fake Request object, created so blog.url_for will work.
-# This isn't enabled yet, but it will be soon...
 require 'action_controller/test_process'
 
 class BlogRequest
-  include Reloadable
-  
+
   attr_accessor :protocol, :host_with_port, :path, :symbolized_path_parameters, :relative_url_root
-  
+
   def initialize(root)
     @protocol = @host_with_port = @path = ''
     @symbolized_path_parameters = {}
@@ -14,7 +12,12 @@ class BlogRequest
   end
 end
 
-class Blog < ActiveRecord::Base
+# The Blog class represents one blog.  It stores most configuration settings
+# and is linked to most of the assorted content classes via has_many.
+#
+# Typo decides which Blog object to use by searching for a Blog base_url that
+# matches the base_url computed for each request.
+class Blog < CachedModel
   include ConfigManager
 
   has_many :contents
@@ -23,9 +26,9 @@ class Blog < ActiveRecord::Base
   has_many :comments
   has_many :pages, :order => "id DESC"
   has_many(:published_articles, :class_name => "Article",
-           :conditions => ["published = ?", true],
+           :conditions => {:published => true},
            :include => [:categories, :tags],
-           :order => "contents.created_at DESC") do
+           :order => "contents.published_at DESC") do
     def before(date = Time.now)
       find(:all, :conditions => ["contents.created_at < ?", date])
     end
@@ -33,14 +36,16 @@ class Blog < ActiveRecord::Base
 
   has_many :pages
   has_many :comments
+  has_many :sidebars, :order => 'active_position ASC'
 
   serialize :settings, Hash
 
   # Description
   setting :blog_name,                  :string, 'My Shiny Weblog!'
   setting :blog_subtitle,              :string, ''
+  setting :title_prefix,               :integer, 0
   setting :geourl_location,            :string, ''
-  setting :canonical_server_url,       :string, ''
+  setting :canonical_server_url,       :string, ''  # Deprecated
 
   # Spam
   setting :sp_global,                  :boolean, false
@@ -79,8 +84,26 @@ class Blog < ActiveRecord::Base
   setting :jabber_address,             :string, ''
   setting :jabber_password,            :string, ''
 
-  def find_already_published(content_type)
-    self.send(content_type).find_already_published
+  def initialize(*args)
+    super
+    # Yes, this is weird - PDC
+    begin
+      self.settings ||= {}
+    rescue Exception => e
+      self.settings = {}
+    end
+  end
+
+  # Find the Blog that matches a specific base URL.  If no Blog object is found
+  # that matches, then grab the default blog.  If *that* fails, then create a new
+  # Blog.  The last case should only be used when Typo is first installed.
+  def self.find_blog(base_url)
+    (Blog.find_by_base_url(base_url) rescue nil)|| Blog.default || Blog.new
+  end
+
+  # The default Blog.  This is the lowest-numbered blog, almost always id==1.
+  def self.default
+    find(:first, :order => 'id')
   end
 
   def ping_article!(settings)
@@ -88,101 +111,80 @@ class Blog < ActiveRecord::Base
     article_id = settings[:id]
     settings.delete(:id)
     trackback = published_articles.find(article_id).trackbacks.create!(settings)
-
-    if trackback.is_spam?
-      STDERR.puts "Moderating trackback as spam!"
-      trackback.withdraw!
-    end
-    
-    trackback
   end
 
-
+  # Check that all required blog settings have a value.
   def is_ok?
     settings.has_key?('blog_name')
   end
 
-  def [](key)
+  # The +Theme+ object for the current theme.
+  def current_theme
+    @cached_theme ||= Theme.find(theme)
+  end
+
+  # Generate a URL based on the +base_url+.  This allows us to generate URLs
+  # without needing a controller handy, so we can produce URLs from within models
+  # where appropriate.
+  #
+  # It also uses our new RouteCache, so repeated URL generation requests should be
+  # fast, as they bypass all of Rails' route logic.
+  def url_for(options = {}, *extra_params)
+    case options
+    when String then options # They asked for 'url_for "/some/path"', so return it unedited.
+    when Hash
+      unless RouteCache[options]
+        options.reverse_merge!(:only_path => true, :controller => '/articles',
+                               :action => 'permalink')
+        @url ||= ActionController::UrlRewriter.new(BlogRequest.new(self.base_url), {})
+        RouteCache[options] = @url.rewrite(options)
+      end
+
+      return RouteCache[options]
+    else
+      raise "Invalid URL in url_for: #{options.inspect}"
+    end
+  end
+
+  # The URL for a static file.
+  def file_url(filename)
+    "#{base_url}/files/#{filename}"
+  end
+
+  # The base server URL.
+  def server_url
+    base_url
+  end
+
+  # Deprecated
+  def canonical_server_url
+    typo_deprecated "Use base_url instead"
+    base_url
+  end
+
+  def [](key)  # :nodoc:
+    typo_deprecated "Use blog.#{key}"
     self.send(key)
   end
 
-  def []=(key, value)
+  def []=(key, value)  # :nodoc:
+    typo_deprecated "Use blog.#{key}="
     self.send("#{key}=", value)
   end
 
-  def has_key?(key)
+  def has_key?(key)  # :nodoc:
+    typo_deprecated "Why?"
     self.class.fields.has_key?(key.to_s)
   end
 
-  def initialize(*args)
-    super
-    self.settings ||= { }
+  def find_already_published(content_type)  # :nodoc:
+    typo_deprecated "Use #{content_type}.find_already_published"
+    self.send(content_type).find_already_published
   end
 
-  def self.default
-    find(:first, :order => 'id')
-  end
-
-  @@controller_stack = []
-  cattr_accessor :controller_stack
-
-  def self.before(controller)
-    controller_stack << controller
-  end
-
-  def self.after(controller)
-    unless controller_stack.last == controller
-      raise "Controller stack got out of kilter!"
-    end
-    controller_stack.pop
-  end
-
-  def controller
-    controller_stack.last
-  end
-
-  def current_theme_path
+  def current_theme_path  # :nodoc:
+    typo_deprecated "use current_theme.path"
     Theme.themes_root + "/" + theme
-  end
-
-  def current_theme
-    Theme.theme_from_path(current_theme_path)
-  end
-
-  def url_for(options = {}, *extra_params)
-    case options
-    when String then options
-    when Hash
-      options.reverse_merge!(:only_path => true, :controller => '/articles',
-                             :action => 'permalink')
-      url = ActionController::UrlRewriter.new(request, {})
-      url.rewrite(options)
-    else
-      options.location(*extra_params)
-    end
-  end
-
-  def article_url(article, only_path = true, anchor = nil)
-    url_for(:year => article.published_at.year,
-            :month => sprintf("%.2d", article.published_at.month),
-            :day => sprintf("%.2d", article.published_at.day),
-            :title => article.permalink, :anchor => anchor,
-            :only_path => only_path)
-  end
-
-  def server_url
-    if controller
-      controller.send :url_for, :only_path => false, :controller => "/"
-    else
-      settings[:canonical_server_url]
-    end
-  end
-
-  private
-
-  def request
-    #BlogRequest.new(self.canonical_server_url)
-    controller.request rescue ActionController::TestRequest.new
   end
 end
 

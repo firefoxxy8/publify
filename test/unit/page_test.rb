@@ -6,6 +6,21 @@ class PageTest < Test::Unit::TestCase
   def setup
     @page = Page.find(9)
   end
+  
+  def test_permalink_url
+    p = contents(:first_page)
+    assert_equal 'http://myblog.net/pages/page_one', p.permalink_url
+  end
+  
+  def test_edit_url
+    p = contents(:first_page)
+    assert_equal 'http://myblog.net/admin/pages/edit/9', p.edit_url
+  end
+  
+  def test_delete_url
+    p = contents(:first_page)
+    assert_equal 'http://myblog.net/admin/pages/destroy/9', p.delete_url
+  end
 
   def test_validate
     a = Page.new
@@ -21,5 +36,10 @@ class PageTest < Test::Unit::TestCase
     b.title = a.title
 
     assert !b.save
+  end
+  
+  def test_default_filter
+    a = Page.find(:first)
+    assert_equal 'textile', a.default_text_filter.name
   end
 end

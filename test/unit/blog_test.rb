@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class BlogTest < Test::Unit::TestCase
-  fixtures :blogs, :contents
+  fixtures :blogs, :contents, :sidebars
 
   def setup
     @blog = Blog.find(:first)
@@ -31,19 +31,8 @@ class BlogTest < Test::Unit::TestCase
     end
   end
 
-  def test_find_already_published
-    assert articles = @blog.find_already_published(:articles)
-    assert_kind_of Array, articles
-    assert articles.all? { |a| a.is_a?(Article) }
-    assert_equal 6, articles.size
-
-    assert comments = @blog.find_already_published(:comments)
-    assert_kind_of Array, comments
-    assert comments.all? { |c| c.is_a?(Comment) }
-  end
-
   def test_current_theme_path
-    assert_equal Theme.themes_root + "/azure", @blog.current_theme_path
+    assert_equal Theme.themes_root + "/azure", @blog.current_theme.path
   end
 
   def test_current_theme
@@ -51,33 +40,13 @@ class BlogTest < Test::Unit::TestCase
   end
 
   def test_url_for
-    assert_equal('/blog/articles/read/1',
+    assert_equal('http://myblog.net/blog/articles/read/1',
                  @blog.url_for(:controller => 'articles',
                                :action     => 'read',
                                :id         => 1))
   end
 
-  def test_url_for_article
-    assert_equal('/blog/2004/06/01/article-3',
-                 @blog.url_for(contents(:article3)))
-    assert_equal('/blog/2004/06/01/article-3#foo',
-                 @blog.url_for(contents(:article3), 'foo'))
-  end
-
-  def test_url_for_page
-    assert_equal('/pages/page_one',
-                 @blog.url_for(contents(:first_page)))
-  end
-
-  def test_url_for_comment
-    comment = contents(:comment2)
-    assert_equal(@blog.url_for(comment.article, "comment-#{comment.id}"),
-                 @blog.url_for(comment))
-  end
-
-  def test_url_for_trackback
-    tb = contents(:trackback1)
-    assert_equal(@blog.url_for(tb.article, "trackback-#{tb.id}"),
-                 @blog.url_for(tb))
+  def test_blog_has_sidebars
+    assert_equal 1, @blog.sidebars.size
   end
 end

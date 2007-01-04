@@ -1,9 +1,8 @@
 module ContentState
   class Published < Base
-    include Reloadable
     include Singleton
 
-    def published?
+    def published?(content)
       true
     end
 
@@ -14,18 +13,22 @@ module ContentState
     end
 
     def change_published_state(content, boolean)
-      content[:published] = boolean
-      if ! content.published
+      if ! boolean
+        content[:published] = false
         content[:published_at] = nil
-        content.state = Withdrawn.instance
+        content.state = Factory.new(:just_withdrawn)
       end
+    end
+
+    def withdraw(content)
+      content.state = Factory.new(:just_withdrawn)
     end
 
     def set_published_at(content, new_time)
       content[:published_at] = new_time
-      return if content.published_at.nil?
-      if content.published_at > Time.now
-        content.state = JustPublished.instance
+      return if new_time.nil?
+      if new_time > Time.now
+        content.state = PublicationPending.instance
       end
     end
   end

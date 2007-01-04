@@ -1,6 +1,10 @@
+require 'comment'
+require 'trackback'
+
 class Admin::FeedbackController < Admin::BaseController
+
   def index
-    conditions = ['1=1', {}]
+    conditions = ['blog_id = :blog_id', {:blog_id => Blog.default.id}]
 
     if params[:search]
       conditions.first << ' and (url like :pattern or author like :pattern or title like :pattern or ip like :pattern or email like :pattern)'
@@ -12,8 +16,13 @@ class Admin::FeedbackController < Admin::BaseController
       conditions.last.merge!(:published => false)
     end
 
+    if params[:confirmed] == 'f'
+      conditions.first << ' AND (status_confirmed = :status_confirmed)'
+      conditions.last.merge!(:status_confirmed => false)
+    end
+
     @pages, @feedback = paginate(:feedback,
-      :order => 'contents.created_at desc',
+      :order => 'feedback.created_at desc',
       :conditions => conditions,
       :per_page => 40)
 
@@ -33,8 +42,6 @@ class Admin::FeedbackController < Admin::BaseController
   end
 
   def bulkops
-    STDERR.puts "Bulkops: #{params.inspect}"
-
     ids = (params[:feedback_check]||{}).keys.map(&:to_i)
 
     case params[:commit]
@@ -44,22 +51,27 @@ class Admin::FeedbackController < Admin::BaseController
         count += Feedback.delete(id) ## XXX Should this be #destroy?
       end
       flash[:notice] = "Deleted #{count} item(s)"
-    when 'Publish Checked Items'
+
+      # Sweep cache
+      PageCache.sweep_all
+      expire_fragment(/.*/)
+    when 'Mark Checked Items as Ham'
       ids.each do |id|
         feedback = Feedback.find(id)
-        feedback.published = true
-        feedback.set_spam(false)
-        feedback.save
+        feedback.mark_as_ham!
       end
-      flash[:notice]= "Published #{ids.size} item(s)"
-    when 'Unpublish Checked Items'
+      flash[:notice]= "Marked #{ids.size} item(s) as Ham"
+    when 'Mark Checked Items as Spam'
       ids.each do |id|
         feedback = Feedback.find(id)
-        feedback.withdraw!
-        feedback.set_spam(true)
-        feedback.save
+        feedback.mark_as_spam!
       end
-      flash[:notice]= "Unpublished #{ids.size} item(s)"
+      flash[:notice]= "Marked #{ids.size} item(s) as Spam"
+    when 'Confirm Classification of Checked Items'
+      ids.each do |id|
+        Feedback.find(id).confirm_classification!
+      end
+      flash[:notice] = "Confirmed classification of #{ids.size} item(s)"
     else
       flash[:notice] = "Not implemented"
     end

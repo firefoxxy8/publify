@@ -1,7 +1,7 @@
 #require 'rake/gempackagetask'
 #require 'rake/contrib/rubyforgepublisher'
 
-PKG_VERSION = "4.0.1"
+PKG_VERSION = "4.0.3"
 PKG_NAME = "typo"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 RUBY_FORGE_PROJECT = 'typo'
@@ -16,7 +16,8 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc = false
   
   s.files = Dir.glob('**/*', File::FNM_DOTMATCH).reject do |f| 
-     [ /\.$/, /config\/database.yml$/, /config\database.yml-/, 
+     [ /\.$/, /config\/database.yml$/, /config\/database.yml-/, 
+     /database\.sqlite/,
      /\.log$/, /^pkg/, /\.svn/, /^vendor\/rails/, 
      /^public\/(files|xml|articles|pages|index.html)/, 
      /^public\/(stylesheets|javascripts|images)\/theme/, /\~$/, 
@@ -30,10 +31,11 @@ spec = Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY 
   s.executables = ['typo']
   
-  s.add_dependency("rails", "= 1.1.4")
+  s.add_dependency("rails", "= 1.1.6")
   s.add_dependency("mongrel", ">= 0.3.13.3")
   s.add_dependency("mongrel_cluster", ">= 0.2.0")
   s.add_dependency("sqlite3-ruby", ">= 1.1.0")
+  s.add_dependency("rails-app-installer", ">= 0.2.0")
 end
 
 Rake::GemPackageTask.new(spec) do |p|
@@ -41,7 +43,6 @@ Rake::GemPackageTask.new(spec) do |p|
   p.need_tar = true
   p.need_zip = true
 end
-
 
 desc "Publish the zip/tgz"
 task :leetsoft_upload => [:package] do

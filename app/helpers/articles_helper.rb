@@ -1,4 +1,6 @@
 module ArticlesHelper
+  include SidebarHelper
+
   def admin_tools_for(model)
     type = model.class.to_s.downcase
     tag = []
@@ -9,7 +11,8 @@ module ArticlesHelper
           :confirm => "Are you sure you want to delete this #{type}?"
         }, :class => "admintools") <<
       link_to('edit', {
-        :controller => "admin/#{type.pluralize}/article/#{model.article.id}",
+        :controller => "admin/#{type.pluralize}",
+        :article_id => model.article.id,
         :action => "edit", :id => model
         }, :class => "admintools"),
       :id => "admin_#{type}_#{model.id}", :style => "display: none")
@@ -41,20 +44,30 @@ module ArticlesHelper
   end
 
   def page_title
+    blog_name = this_blog.blog_name || "Typo"
     if @page_title
-      @page_title
+      # this is where the page title prefix (string) should go
+      (this_blog.title_prefix == 1 ? blog_name + " : " : '') + @page_title + (this_blog.title_prefix == 2 ? " : " + blog_name : '')
     else
-      this_blog.blog_name || "Typo"
+      blog_name
     end
   end
 
   def page_header
-    page_header_includes = contents.collect { |c| c.whiteboard }.collect { |w| w.select {|k,v| k =~ /^page_header_/}.collect {|(k,v)| v} }.flatten.uniq
+    page_header_includes = contents.collect { |c| c.whiteboard }.collect do |w|
+      w.select {|k,v| k =~ /^page_header_/}.collect do |(k,v)|
+        v = v.chomp
+        # trim the same number of spaces from the beginning of each line
+        # this way plugins can indent nicely without making ugly source output
+        spaces = /\A[ \t]*/.match(v)[0].gsub(/\t/, "  ")
+        v.gsub!(/^#{spaces}/, '  ') # add 2 spaces to line up with the assumed position of the surrounding tags
+      end
+    end.flatten.uniq
     (
     <<-HTML
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   #{ meta_tag 'ICBM', this_blog.geourl_location unless this_blog.geourl_location.empty? }
-  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ server_url_for :controller => 'xml', :action => 'rsd' }" />
+  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => 'xml', :action => 'rsd' }" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ @auto_discovery_url_atom }" />
   <!--
   <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ @auto_discovery_url_rss }" />
@@ -63,7 +76,7 @@ module ArticlesHelper
   #{ javascript_include_tag "prototype" }
   #{ javascript_include_tag "effects" }
   #{ javascript_include_tag "typo" }
-  #{ page_header_includes.join("\n") }
+#{ page_header_includes.join("\n") }
   <script type="text/javascript">#{ @content_for_script }</script>
     HTML
     ).chomp
@@ -79,17 +92,11 @@ module ArticlesHelper
   end
 
   def category_links(article)
-    "Posted in " + article.categories.collect { |c| link_to h(c.name),
-    { :controller => "articles", :action => "category", :id => c.permalink },
-      :rel => "tag"
-    }.join(", ")
+    "Posted in " + article.categories.map { |c| link_to h(c.name), c.permalink_url, :rel => 'tag'}.join(", ")
   end
 
   def tag_links(article)
-    "Tags " + article.tags.collect { |tag| link_to tag.display_name,
-      { :controller => "articles", :action => "tag", :id => tag.name },
-      :rel => "tag"
-    }.sort.join(", ")
+    "Tags " + article.tags.map { |tag| link_to tag.display_name, tag.permalink_url, :rel => "tag"}.sort.join(", ")
   end
 
   def author_link(article)
@@ -104,21 +111,16 @@ module ArticlesHelper
 
   def next_link(article)
     n = article.next
-    return  n ? article_link("#{n.title} &raquo;", n) : ''
+    return  n ? n.link_to_permalink("#{n.title} &raquo;") : ''
   end
 
   def prev_link(article)
     p = article.previous
-    return p ? article_link("&laquo; #{p.title}", p) : ''
+    return p ? n.link_to_permalink("&laquo; #{p.title}") : ''
   end
 
-  def render_sidebars
-    # ugly ugly hack to fix the extremely verbose sidebar logging
-    options = { :controller => SidebarController,
-                :action => 'display_plugins',
-                :params => {:contents => contents,
-                            :request_params => params} }
-    render_component(options)
+  def render_to_string(*args, &block)
+    controller.send(:render_to_string, *args, &block)
   end
 
   # Generate the image tag for a commenters gravatar based on their email address
@@ -145,7 +147,7 @@ module ArticlesHelper
   end
 
   def urlspec_for_grouping(grouping)
-    { :controller => "articles", :action => grouping.class.to_prefix, :id => grouping.permalink }
+    { :controller => "/articles", :action => grouping.class.to_prefix, :id => grouping.permalink }
   end
 
   def title_for_grouping(grouping)

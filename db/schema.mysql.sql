@@ -26,7 +26,8 @@ CREATE TABLE blacklist_patterns (
 
 CREATE TABLE blogs (
   `id` int(11) DEFAULT NULL auto_increment PRIMARY KEY,
-  `settings` text
+  `settings` text,
+  `base_url` varchar(255)
 ) ENGINE=InnoDB;
 
 CREATE TABLE categories (
@@ -42,13 +43,11 @@ CREATE TABLE contents (
   `title` varchar(255),
   `author` varchar(255),
   `body` text,
-  `body_html` text,
   `extended` text,
   `excerpt` text,
   `keywords` varchar(255),
   `created_at` datetime,
   `updated_at` datetime,
-  `extended_html` text,
   `user_id` int(11),
   `permalink` varchar(255),
   `guid` varchar(255),
@@ -60,14 +59,13 @@ CREATE TABLE contents (
   `ip` varchar(40),
   `blog_name` varchar(255),
   `name` varchar(255),
-  `comments_count` int(11),
-  `trackbacks_count` int(11),
   `published` tinyint(1) DEFAULT 0,
   `allow_pings` tinyint(1),
   `allow_comments` tinyint(1),
   `blog_id` int(11) NOT NULL,
   `published_at` datetime,
-  `state` text
+  `state` text,
+  `status_confirmed` tinyint(1)
 ) ENGINE=InnoDB;
 
 CREATE TABLE notifications (
@@ -216,4 +214,4 @@ CREATE TABLE schema_info (
   `version` int(11)
 ) ENGINE=InnoDB;
 
-insert into schema_info (version) values (47);
+insert into schema_info (version) values (53);

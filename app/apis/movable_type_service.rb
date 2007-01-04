@@ -84,7 +84,7 @@ class MovableTypeService < TypoWebService
   end
 
   def getCategoryList(blogid, username, password)
-    Category.find_all.collect do |c|
+    Category.find(:all).collect do |c|
       MovableTypeStructs::CategoryList.new(
           :categoryId   => c.id,
           :categoryName => c.name
@@ -93,10 +93,10 @@ class MovableTypeService < TypoWebService
   end
 
   def getPostCategories(postid, username, password)
-    this_blog.articles.find(postid).categories.collect do |c|
+    this_blog.articles.find(postid).categorizations.collect do |c|
       MovableTypeStructs::CategoryPerPost.new(
-          :categoryName => c.name,
-          :categoryId   => c.id.to_i,
+          :categoryName => c.category.name,
+          :categoryId   => c.category_id.to_i,
           :isPrimary    => c.is_primary.to_i
         )
     end
@@ -108,7 +108,7 @@ class MovableTypeService < TypoWebService
 
     for c in categories
       category = Category.find(c['categoryId'])
-      article.categories.push_with_attributes(category, :is_primary => c['isPrimary'])
+      article.categories.push_with_attributes(category, :is_primary => c['isPrimary'] || 0)
     end
     article.save
   end

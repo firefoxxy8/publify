@@ -32,18 +32,14 @@ class ArticlesController < ContentController
     #
     # So, we're going to use the older Paginator class and manually provide a count.
     # This is a 100x speedup on my box.
-    count = Article.count(:conditions => ['published = ? AND contents.published_at < ? AND blog_id = ?',
-      true, Time.now, this_blog.id])
-    @pages = Paginator.new self, count, this_blog.limit_article_display, @params[:page]
-    @articles = Article.find( :all,
-      :offset => @pages.current.offset,
-      :limit => @pages.items_per_page,
-      :order => "contents.published_at DESC", 
-      :include => [:categories, :tags, :user, :blog],
-      :conditions =>
-         ['published = ? AND contents.published_at < ? AND blog_id = ?',
-          true, Time.now, this_blog.id]
-    )  
+    now = Time.now
+    count = this_blog.articles.count(:conditions => ['published = ? AND contents.published_at < ?',
+                                                     true, now])
+    @pages = Paginator.new self, count, this_blog.limit_article_display, params[:page]
+    @articles = this_blog.published_articles.find( :all,
+                                                   :offset => @pages.current.offset,
+                                                   :limit => @pages.items_per_page,
+                                                   :conditions => ['contents.published_at < ?', now] )
   end
 
   def search
@@ -106,29 +102,22 @@ class ArticlesController < ContentController
 
   # Receive comments to articles
   def comment
-    unless @request.xhr? || this_blog.sp_allow_non_ajax_comments
+    unless request.xhr? || this_blog.sp_allow_non_ajax_comments
       render_error("non-ajax commenting is disabled")
       return
     end
 
     if request.post?
       begin
-        params[:comment].merge!({:ip => request.remote_ip,
-                                :published => true })
         @article = this_blog.published_articles.find(params[:id])
+        params[:comment].merge!({:ip => request.remote_ip,
+                                :published => true,
+                                :user => session[:user],
+                                :user_agent => request.env['HTTP_USER_AGENT'],
+                                :referrer => request.env['HTTP_REFERER'],
+                                :permalink => @article.permalink_url})
         @comment = @article.comments.build(params[:comment])
-        @comment.user = session[:user]
-        
-        spam_options = {
-          :user_agent => request.env['HTTP_USER_AGENT'], 
-          :referrer => request.env['HTTP_REFERER'], 
-          :permalink => this_blog.article_url(@article, false)}
-          
-        if @comment.is_spam? spam_options
-          STDERR.puts "Moderating comment as spam!"
-          @comment.withdraw
-        end
-        
+        @comment.author ||= 'Anonymous'
         @comment.save!
         add_to_cookies(:author, @comment.author)
         add_to_cookies(:url, @comment.url)
@@ -184,7 +173,7 @@ class ArticlesController < ContentController
       render :nothing => true, :status => 404
     end
   end
-  
+
   def markup_help
     render :text => TextFilter.find(params[:id]).commenthelp
   end
@@ -248,7 +237,7 @@ class ArticlesController < ContentController
   end
 
   def set_headers
-    @headers["Content-Type"] = "text/html; charset=utf-8"
+    headers["Content-Type"] = "text/html; charset=utf-8"
   end
 
   def list_groupings(klass)
@@ -260,7 +249,7 @@ class ArticlesController < ContentController
   def render_grouping(klass)
     return list_groupings(klass) unless params[:id]
 
-    @page_title = "#{this_blog.blog_name} - #{klass.to_s.underscore} #{params[:id]}"
+    @page_title = "#{klass.to_s.underscore} #{params[:id]}"
     @articles = klass.find_by_permalink(params[:id]).articles.find_already_published rescue []
     auto_discovery_feed :type => klass.to_s.underscore, :id => params[:id]
     render_paginated_index("Can't find posts with #{klass.to_prefix} '#{h(params[:id])}'")
@@ -269,7 +258,7 @@ class ArticlesController < ContentController
   def render_paginated_index(on_empty = "No posts found...")
     return error(on_empty) if @articles.empty?
 
-    @pages = Paginator.new self, @articles.size, this_blog.limit_article_display, @params[:page]
+    @pages = Paginator.new self, @articles.size, this_blog.limit_article_display, params[:page]
     start = @pages.current.offset
     stop  = (@pages.current.next.offset - 1) rescue @articles.size
     # Why won't this work? @articles.slice!(start..stop)

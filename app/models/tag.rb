@@ -50,7 +50,7 @@ class Tag < ActiveRecord::Base
   end
 
   def self.to_prefix
-    'tags'
+    'tag'
   end
 
   def published_articles
@@ -60,4 +60,15 @@ class Tag < ActiveRecord::Base
   def permalink
     self.name
   end
+  
+  def permalink_url(anchor=nil, only_path=true)
+    blog = Blog.find(1) # remove me...
+    
+    blog.url_for(
+      :controller => '/articles',
+      :action => 'tag',
+      :id => permalink
+    )
+  end
+  
 end

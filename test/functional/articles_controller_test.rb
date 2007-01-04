@@ -17,7 +17,7 @@ class Content
 end
 
 class ArticlesControllerTest < Test::Unit::TestCase
-  fixtures :contents, :categories, :blogs, :users, :articles_categories, :text_filters, :articles_tags, :tags
+  fixtures :contents, :feedback, :categories, :blogs, :users, :categorizations, :text_filters, :articles_tags, :tags
   include ArticlesHelper
 
   def setup
@@ -28,7 +28,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
                     :body => "The future is cool!",
                     :keywords => "future",
                     :created_at => Time.now + 12.minutes)
-
+    Sidebar.delete_all
   end
 
   # Category subpages
@@ -36,35 +36,35 @@ class ArticlesControllerTest < Test::Unit::TestCase
     get :category, :id => "software"
 
     assert_response :success
-    assert_rendered_file "index"
-    assert_tag :tag => 'title', :content => 'test blog - category software'
+    assert_template "index"
+    assert_tag :tag => 'title', :content => 'test blog : category software'
 
     # Check it works when permalink != name. Ticket #736
     get :category, :id => "weird-permalink"
 
     assert_response :success
-    assert_rendered_file "index"
+    assert_template "index"
   end
 
   def test_empty_category
     get :category, :id => "life-on-mars"
     assert_response :success
-    assert_rendered_file "error"
+    assert_template "error"
   end
 
   def test_nonexistent_category
     get :category, :id => 'nonexistent-category'
     assert_response :success
-    assert_rendered_file "error"
+    assert_template "error"
   end
 
   def test_tag
     get :tag, :id => "foo"
 
     assert_response :success
-    assert_rendered_file "index"
+    assert_template "index"
 
-    assert_tag :tag => 'title', :content => 'test blog - tag foo'
+    assert_tag :tag => 'title', :content => 'test blog : tag foo'
     assert_tag :tag => 'h2', :content => 'Article 2!'
     assert_tag :tag => 'h2', :content => 'Article 1!'
   end
@@ -72,7 +72,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_nonexistent_tag
     get :tag, :id => "nonexistent"
     assert_response :success
-    assert_rendered_file "error"
+    assert_template "error"
   end
 
   def test_tag_routes
@@ -85,9 +85,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
     get :tag, :id => "foo"
     assert_equal 1, assigns(:articles).size
     assert_tag(:tag => 'p',
-               :attributes =>{
-                  :id => 'pagination'},
-               :content => 'Older posts: 1',
+               :attributes =>{ :id => 'pagination' },
+               :content => %r{Older posts: 1},
                :descendant => {:tag => 'a',
                                :attributes =>{
                                   :href => "/blog/tag/foo/page/2"},
@@ -98,14 +97,28 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_index
     get :index
     assert_response :success
-    assert_rendered_file "index"
+    assert_template "index"
   end
 
   # Archives page
   def test_archives
     get :archives
     assert_response :success
-    assert_rendered_file "archives"
+    assert_template "archives"
+  end
+
+  def test_blog_title
+    blogs(:default).title_prefix = 1
+    get :permalink, :year => 2004, :month => 06, :day => 01, :title => "article-3"
+    assert_response :success
+    assert_tag :tag => 'title', :content => /^test blog : Article 3!$/
+
+    blogs(:default).title_prefix = 0
+    @controller = ArticlesController.new
+    assert_equal 0, blogs(:default).title_prefix
+    get :permalink, :year => 2004, :month => 06, :day => 01, :title => "article-3"
+    assert_response :success
+    assert_tag :tag => 'title', :content => /^Article 3!$/
   end
 
   # Permalinks
@@ -121,7 +134,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_find_by_date
     get :find_by_date, :year => 2004, :month => 06, :day => 01
     assert_response :success
-    assert_rendered_file "index"
+    assert_template "index"
   end
 
   def test_comment_posting
@@ -132,18 +145,19 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     Article.find(1).notify_users << users(:tobi)
 
-    post :comment, { :id => 1, :comment => {'body' => 'This is *textile*', 'author' => 'bob' }}
+    post :comment, { :id => 1, :comment => {'body' => 'This is *markdown*', 'author' => 'bob' }}
 
     assert_response :success
-    assert_tag :tag => 'strong', :content => 'textile'
+    assert_tag :tag => 'em', :content => 'markdown'
 
     comment = Article.find(1).comments.last
     assert comment
 
     assert_not_nil cookies["author"]
 
-    assert_equal "<p>This is <strong>textile</strong></p>", comment.html(@controller).to_s
+    assert_equal "<p>This is <em>markdown</em></p>", comment.html.to_s
 
+    assert_equal 2, emails.size
     assert_equal User.find(:all,
                            :conditions => ['(notify_via_email = ?) and (notify_on_comments = ?)', true, true],
                            :order => 'email').collect { |each| each.email },
@@ -168,7 +182,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     comment = Article.find(art_id).comments.last
     assert comment
 
-    assert_match expected_html, comment.html(@controller).to_s
+    assert_match expected_html, comment.html.to_s
     $do_breakpoints
   end
 
@@ -177,7 +191,22 @@ class ArticlesControllerTest < Test::Unit::TestCase
   end
 
   def test_comment_spam2
-    comment_template_test %r{<p>Link to <a href=["']http://spammer.example.com['"] rel=["']nofollow['"]>spammy goodness</a></p>}, 'Link to "spammy goodness":http://spammer.example.com'
+    comment_template_test %r{<p>Link to <a href=["']http://spammer.example.com['"] rel=["']nofollow['"]>spammy goodness</a></p>}, 'Link to [spammy goodness](http://spammer.example.com)'
+  end
+
+  def test_comment_spam3
+    post :comment, :id => 1, :comment => {:body => '<a href="http://spam.org">spam</a>', :author => '<a href="spamme.com">spamme</a>', :email => '<a href="http://morespam.net">foo</a>'}
+
+    assert_response :success
+    comment = Article.find(1).comments.last
+    assert comment
+
+    get :read, :id => 1
+    assert_response 200
+
+    assert ! (@response.body =~ %r{<a href="http://spamme.com">}), "Author leaks"
+    assert ! (@response.body =~ %r{<a href="http://spam.org">}), "Body leaks <a>"
+    assert ! (@response.body =~ %r{<a href="http://morespam.net">}), "Email leaks"
   end
 
   def test_comment_xss1
@@ -192,8 +221,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
   end
 
   def test_comment_autolink
-    comment_template_test "<p>What&#8217;s up with <a href=\"http://slashdot.org\" rel=\"nofollow\">http://slashdot.org</a> these days?</p>", "What's up with http://slashdot.org these days?"
-  end #"
+    comment_template_test "<p>What's up with <a href=\"http://slashdot.org\" rel=\"nofollow\">http://slashdot.org</a> these days?</p>", "What's up with http://slashdot.org these days\?"
+  end
 
   ### TODO -- there's a bug in Rails with auto_links
 #   def test_comment_autolink2
@@ -202,13 +231,13 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
   def test_comment_nuking
     num_comments = Comment.count
-    post :nuke_comment, { :id => 5 }, {}
+    post :nuke_comment, { :id => feedback(:spam_comment).id }, {}
     assert_response 403
 
-    get :nuke_comment, { :id => 5 }, { :user => users(:bob)}
+    get :nuke_comment, { :id => feedback(:spam_comment).id }, { :user => users(:bob)}
     assert_response 403
 
-    post :nuke_comment, { :id => 5 }, { :user => users(:bob)}
+    post :nuke_comment, { :id => feedback(:spam_comment).id }, { :user => users(:bob)}
     assert_response :success
     assert_equal num_comments -1, Comment.count
   end
@@ -248,7 +277,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
     num_trackbacks = Article.find(2).trackbacks.count
     post :trackback, { :id => 2, :url => "http://www.google.com", :title => "My Trackback", :excerpt => "This is a test" }
     assert_response :success
-    assert_not_xpath(%{/response/error[text()="1"]}, "Error: " + get_xpath("/response/message/text()").first.to_s)
+    assert_no_tag :tag => "response",
+                  :child => {:tag => "error", :content => "1"}
 
     assert_equal num_trackbacks+1, Article.find(2).trackbacks.count
   end
@@ -272,9 +302,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     get :index
 
-    assert_redirect
-    assert_redirected_to :controller => "admin/general", :action => "redirect"
-
+    assert_response :redirect,
+                    :controller => "admin/general", :action => "redirect"
   end
 
   def test_no_users_exist
@@ -284,15 +313,14 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert User.count.zero?
 
     get :index
-    assert_redirect
-    assert_redirected_to :controller => "accounts", :action => "signup"
+    assert_response :redirect, :controller => "accounts", :action => "signup"
 
   end
 
   def test_pages_static
     get :view_page, :name => 'page_one'
     assert_response :success
-    assert_rendered_file "view_page"
+    assert_template "view_page"
 
     get :view_page, :name => 'page one'
     assert_response 404
@@ -321,6 +349,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     # Switch gravatar integration to on
     this_blog.use_gravatar = true
+    @controller = ArticlesController.new
     assert this_blog.use_gravatar
     get :read, :id => 1
     assert_response :success
@@ -354,7 +383,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     get :read, :id => contents(:article1).id
     assert_response :success
     assert_template "read"
-    
+
     assert_equal contents(:article1).comments.to_a.select{|c| c.published?}, contents(:article1).published_comments
 
     assert_tag :tag => "ol",
@@ -500,8 +529,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_author
     get :author, :id => 'tobi'
 
-    assert_success
-    assert_rendered_file 'index'
+    assert_response :success
+    assert_template 'index'
     assert assigns(:articles)
     assert_equal users(:tobi).articles.published, assigns(:articles)
     # This is until we write a proper author feed
@@ -512,8 +541,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_nonexistent_author
     get :author, :id => 'nonexistent-chap'
 
-    assert_success
-    assert_rendered_file 'error'
+    assert_response :success
+    assert_template 'error'
     assert assigns(:message)
     assert_equal "Can't find posts with author 'nonexistent-chap'", assigns(:message)
   end
@@ -521,8 +550,8 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_author_list
     get :author
 
-    assert_success
-    assert_rendered_file 'groupings'
+    assert_response :success
+    assert_template 'groupings'
 
     assert_tag(:tag => 'ul',
                :descendant => {\

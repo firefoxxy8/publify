@@ -1,33 +1,36 @@
 <% @page_heading = "Comments and Trackbacks for #{ this_blog.settings['blog_name'] }" %>
 
 <% content_for('tasks') do %>
-  <%= task_showmod 'Show only unpublished feedback' %>
-<% end %> 
+  <%= task_showmod 'Limit to spam' %>
+  <%= task_showmod 'Limit to unconfirmed' %>
+  <%= task_showmod 'Limit to unconfirmed spam' %>
+<% end %>
 
-<div clas="search">
-  <form>
-    <label for="search">Feedback Search:</label><input type="text" id="search" name="search" value="<%=h params[:search] %>" size="15" />
-  </form>
+<div class="search">
+  <% form_tag({:action => 'index'}, :method => :get) do %>
+    <label for="search">Feedback Search:</label><input type="text" id="feedback_search" name="search" value="<%=h params[:search] %>" size="15" />
+  <% end %>
 </div>
 
-<div class="list">	
-  <%= form_tag({:action => 'bulkops'}, :method => :post) %>
+<div class="list">
+  <% form_tag({:action => 'bulkops'}, :method => :post) do %>
   <br/>
   <%= submit_tag "Delete Checked Items" %> &nbsp;
-  <%= submit_tag "Publish Checked Items" %>
-  <%= submit_tag "Unpublish Checked Items" %>
+  <%= submit_tag "Mark Checked Items as Ham" %>
+  <%= submit_tag "Mark Checked Items as Spam" %>
+  <%= submit_tag "Confirm Classification of Checked Items" %>
 
   <%= hidden_field_tag "search", params[:search]%>
   <%= hidden_field_tag "page", params[:page]%>
 
   <table>
   <tr>
-	<th><input class="feedback_check" type="checkbox" name="checkall" id="checkall" onclick="check_all(this);"/></th>
-	<th>Pub</th>
-	<th>Type</th>
-	<th>Article</th>
+        <th><input class="feedback_check" type="checkbox" name="checkall" id="checkall" onclick="check_all(this);"/></th>
+        <th>State</th>
+        <th>Type</th>
+        <th>Article</th>
     <th>Author</th>
-	<th>Body</th>
+        <th>Body</th>
     <th>IP</th>
     <th>Posted date</th>
     <th>Delete</th>
@@ -35,9 +38,10 @@
   <%= render :partial => 'item', :collection => @feedback %>
   </table>
   <%= submit_tag "Delete Checked Items" %> &nbsp;
-  <%= submit_tag "Publish Checked Items" %>
-  <%= submit_tag "Unpublish Checked Items" %>
-  </form>
+  <%= submit_tag "Mark Checked Items as Ham" %>
+  <%= submit_tag "Mark Checked Items as Spam" %>
+  <%= submit_tag "Confirm Classification of Checked Items" %>
+  <% end %>
 </div>
 
 <%= link_to "Previous page", { :page => @pages.current.previous, :search => params[:search] } if @pages.current.previous %>

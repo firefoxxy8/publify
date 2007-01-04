@@ -1,6 +1,5 @@
 module ContentState
   class PublicationPending < Base
-    include Reloadable
     include Singleton
 
     def enter_hook(content)
@@ -8,9 +7,10 @@ module ContentState
       content[:published] = false if content.new_record?
     end
 
-    def change_published_state(content, boolean)
-      content[:published] = boolean
-      if content.published && content.published_at <= Time.now
+    def change_published_state(content, published)
+      content[:published] = published
+
+      if published && content.published_at <= Time.now
         content.state = JustPublished.instance
       end
     end
@@ -31,6 +31,11 @@ module ContentState
 
     def post_trigger(content)
       Trigger.post_action(content.published_at, content, 'publish!')
+    end
+
+    def withdraw(content)
+      content[:published_at] = nil
+      content.state = Draft.instance
     end
   end
 end

@@ -1,21 +1,22 @@
 #!/usr/bin/env ruby
 
-require 'installer/rails-installer'
+require 'rubygems'
+require 'rails-installer'
 
 class TypoInstaller < RailsInstaller
   application_name 'typo'
   support_location 'the Typo mailing list'
-  rails_version '1.1.4'
   
   def install_post_hook
     sweep_cache
   end
-  
+
   # Sweep the cache
   def sweep_cache
-    Dir.chdir(install_directory)
-    message "Cleaning out #{@@app_name.capitalize}'s cache"
-    status = system("rake -s sweep_cache > /dev/null 2> /dev/null")
+    in_directory install_directory do
+      message "Cleaning out #{@@app_name.capitalize}'s cache"
+      status = system_silently("rake -s sweep_cache")
+    end
   end
 end
 

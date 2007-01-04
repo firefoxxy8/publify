@@ -6,12 +6,17 @@ class Article < Content
 
   content_fields :body, :extended
 
-  has_many :pings, :dependent => true, :order => "created_at ASC"
-  has_many :comments, :dependent => true, :order => "created_at ASC"
-  has_many :trackbacks, :dependent => true, :order => "created_at ASC"
+  has_many :pings,      :dependent => :destroy, :order => "created_at ASC"
+  has_many :comments,   :dependent => :destroy, :order => "created_at ASC"
+  has_many :trackbacks, :dependent => :destroy, :order => "created_at ASC"
   has_many :resources, :order => "created_at DESC",
            :class_name => "Resource", :foreign_key => 'article_id'
-  has_and_belongs_to_many :categories, :foreign_key => 'article_id'
+  has_many :categorizations
+  has_many :categories, :through => :categorizations, :uniq => true do
+    def push_with_attributes(cat, join_attrs = { :is_primary => false })
+      Categorization.with_scope(:create => join_attrs) { self << cat }
+    end
+  end
   has_and_belongs_to_many :tags, :foreign_key => 'article_id'
   belongs_to :user
   has_many :triggers, :as => :pending_item
@@ -22,25 +27,50 @@ class Article < Content
     self.title.gsub(/<[^>]*>/,'').to_url
   end
 
-  def location(anchor=nil, only_path=true)
-    blog.article_url(self, only_path, anchor)
+  def permalink_url(anchor=nil, only_path=true)
+    @cached_permalink_url ||= {}
+    @cached_permalink_url["#{anchor}#{only_path}"] ||= blog.url_for(
+      :year => published_at.year,
+      :month => sprintf("%.2d", published_at.month),
+      :day => sprintf("%.2d", published_at.day),
+      :title => permalink,
+      :anchor => anchor,
+      :only_path => only_path,
+      :controller => '/articles'
+    )
+  end
+
+  def trackback_url
+    blog.url_for(:controller => "articles", :action =>"trackback", :id => id)
+  end
+
+  def feed_url(format = :rss20)
+    blog.url_for(:controller => 'xml', :action => 'feed', :type => 'article', :format => format, :id => id)
+  end
+
+  def edit_url
+    blog.url_for(:controller => "/admin/content", :action =>"edit", :id => id)
+  end
+
+  def delete_url
+    blog.url_for(:controller => "/admin/content", :action =>"destroy", :id => id)
   end
 
   def html_urls
     urls = Array.new
-    (body_html.to_s + extended_html.to_s).gsub(/<a [^>]*>/) do |tag|
+    html.gsub(/<a [^>]*>/) do |tag|
       if(tag =~ /href="([^"]+)"/)
         urls.push($1)
       end
     end
 
-    urls
+    urls.uniq
   end
 
-  def really_send_pings(serverurl = blog.server_url, articleurl = nil)
+  def really_send_pings(serverurl = blog.base_url, articleurl = nil)
     return unless blog.send_outbound_pings
 
-    articleurl ||= location(nil, false)
+    articleurl ||= permalink_url(nil, false)
 
     weblogupdatesping_urls = blog.ping_urls.gsub(/ +/,'').split(/[\n\r]+/)
     pingback_or_trackback_urls = self.html_urls
@@ -67,7 +97,8 @@ class Article < Content
           end
         #end
         logger.info "\nThere! #{url}"
-      rescue
+      rescue Exception => e
+        logger.error(e)
         # in case the remote server doesn't respond or gives an error,
         # we should throw an xmlrpc error here.
       end
@@ -82,13 +113,13 @@ class Article < Content
   end
 
   def next
-    Article.find(:first, :conditions => ['published_at > ?', published_at],
-                 :order => 'published_at asc')
+    blog.articles.find(:first, :conditions => ['published_at > ?', published_at],
+                       :order => 'published_at asc')
   end
 
   def previous
-    Article.find(:first, :conditions => ['published_at < ?', published_at],
-                 :order => 'published_at desc')
+    blog.articles.find(:first, :conditions => ['published_at < ?', published_at],
+                       :order => 'published_at desc')
   end
 
   # Count articles on a certain date
@@ -146,17 +177,17 @@ class Article < Content
     User.find_boolean(:all, :notify_on_new_articles)
   end
 
-  def notify_user_via_email(controller, user)
+  def notify_user_via_email(user)
     if user.notify_via_email?
-      EmailNotify.send_article(controller, self, user)
+      EmailNotify.send_article(self, user)
     end
   end
 
-  def notify_user_via_jabber(controller, user)
+  def notify_user_via_jabber(user)
     if user.notify_via_jabber?
       JabberNotify.send_message(user, "New post",
                                 "A new message was posted to #{blog.blog_name}",
-                                content.body_html)
+                                html(:body))
     end
   end
 
@@ -171,13 +202,53 @@ class Article < Content
       return true
     end
   end
-  
+
   def published_comments
     comments.select {|c| c.published?}
   end
 
   def published_trackbacks
     trackbacks.select {|c| c.published?}
+  end
+
+  # Bloody rails reloading. Nasty workaround.
+  def body=(newval)
+    if self[:body] != newval
+      changed
+      self[:body] = newval
+    end
+    self[:body]
+  end
+
+  def body_html
+    typo_deprecated "Use html(:body)"
+    html(:body)
+  end
+
+  def extended=(newval)
+    if self[:extended] != newval
+      changed
+      self[:extended] = newval
+    end
+    self[:extended]
+  end
+
+  def extended_html
+    typo_deprecated "Use html(:extended)"
+    html(:extended)
+  end
+
+  def self.html_map(field=nil)
+    html_map = { :body => true, :extended => true }
+    if field
+      html_map[field.to_sym]
+    else
+      html_map
+    end
+  end
+
+  def content_fields
+    [:body, :extended]
   end
 
   protected
@@ -208,18 +279,9 @@ class Article < Content
   end
 
   def add_notifications
-    # Grr, how do I do :conditions => 'notify_on_new_articles = true' when on MySQL boolean DB tables
-    # are integers, Postgres booleans are booleans, and sqlite is basically just a string?
-    #
-    # I'm punting for now and doing the test in Ruby.  Feel free to rewrite.
-
     self.notify_users = User.find_boolean(:all, :notify_on_new_articles)
     self.notify_users << self.user if (self.user.notify_watch_my_articles? rescue false)
     self.notify_users.uniq!
-  end
-
-  def default_text_filter_config_key
-    'text_filter'
   end
 
   def self.time_delta(year, month = nil, day = nil)
@@ -233,8 +295,6 @@ class Article < Content
   end
 
   def find_published(what = :all, options = {})
-    options[:include] ||= []
-    options[:include] += [:user]
     super(what, options)
   end
 

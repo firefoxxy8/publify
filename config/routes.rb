@@ -1,3 +1,4 @@
+#### TODO MvZ!!!
 ActionController::Routing::Routes.draw do |map|
 
   # front page
@@ -27,7 +28,7 @@ ActionController::Routing::Routes.draw do |map|
   map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
   map.xml 'blog/xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
   #map.xml 'sitemap.xml', :controller => 'xml', :action => 'feed', :format => 'googlesitemap', :type => 'sitemap'
- 
+
   # allow neat perma urls
   map.connect 'blog',
     :controller => 'articles', :action => 'index'
@@ -76,11 +77,14 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
 
   map.connect 'stylesheets/theme/:filename',
-    :controller => 'theme', :action => 'stylesheets'
-  map.connect 'javascript/theme/:filename',
-    :controller => 'theme', :action => 'javascript'
+    :controller => 'theme', :action => 'stylesheets', :filename => /.*/
+  map.connect 'javascripts/theme/:filename',
+    :controller => 'theme', :action => 'javascript', :filename => /.*/
   map.connect 'images/theme/:filename',
-    :controller => 'theme', :action => 'images'
+    :controller => 'theme', :action => 'images', :filename => /.*/
+
+  # For the tests
+  map.connect 'theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
 
   map.connect 'plugins/filters/:filter/:public_action',
     :controller => 'textfilter', :action => 'public_action'
@@ -90,9 +94,19 @@ ActionController::Routing::Routes.draw do |map|
   # but that breaks too many things for Typo 2.5.
   map.connect 'blog/theme/*stuff',
     :controller => 'theme', :action => 'error'
+  # Work around the Bad URI bug
+  %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
+    map.connect "#{i}", :controller => "#{i}", :action => 'index'
+    map.connect "#{i}/:action", :controller => "#{i}"
+    map.connect "#{i}/:action/:id", :controller => i, :id => nil
+  end
 
-  # Allow legacy urls to still work
+  %w{blacklist cache categories comments content feedback general pages
+     resources sidebar textfilters themes trackbacks users}.each do |i|
+    map.connect "/admin/#{i}", :controller => "admin/#{i}", :action => 'index'
+    map.connect "/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
+  end
+
   map.connect 'blog/:controller/:action/:id'
-
   map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

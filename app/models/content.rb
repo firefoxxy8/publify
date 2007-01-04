@@ -12,23 +12,43 @@ class Content < ActiveRecord::Base
   composed_of :state, :class_name => 'ContentState::Factory',
     :mapping => %w{ state memento }
 
-  has_and_belongs_to_many :notify_users, :class_name => 'User',
-    :join_table => 'notifications', :foreign_key => 'notify_content_id',
-    :association_foreign_key => 'notify_user_id', :uniq => true
+  has_many :notifications, :foreign_key => 'content_id'
+  has_many :notify_users, :through => :notifications,
+    :source => 'notify_user',
+    :uniq => true
+
+  def notify_users=(collection)
+    return notify_users.clear if collection.empty?
+    self.class.transaction do
+      self.notifications.clear
+      collection.uniq.each do |u|
+        self.notifications.build(:notify_user => u)
+      end
+      notify_users.target = collection
+    end
+  end
 
   has_many :triggers, :as => :pending_item, :dependent => :delete_all
 
   before_save :state_before_save
-  after_save :post_trigger
+  after_save :post_trigger, :state_after_save
 
   serialize :whiteboard
 
   @@content_fields = Hash.new
   @@html_map       = Hash.new
 
-  def initialize(*args)
-    super(*args)
+  def initialize(*args, &block)
+    super(*args, &block)
     set_default_blog
+  end
+
+  def invalidates_cache?(on_destruction = false)
+    if on_destruction
+      just_changed_published_status? || published?
+    else
+      changed? && published? || just_changed_published_status?
+    end
   end
 
   def set_default_blog
@@ -38,6 +58,7 @@ class Content < ActiveRecord::Base
   end
 
   class << self
+    # Quite a bit of this isn't needed anymore.
     def content_fields(*attribs)
       @@content_fields[self] = ((@@content_fields[self]||[]) + attribs).uniq
       @@html_map[self] = nil
@@ -46,20 +67,13 @@ class Content < ActiveRecord::Base
           if self[field] != newval
             changed
             self[field] = newval
-            if html_map(field)
-              self[html_map(field)] = nil
-            end
-            notify_observers(self, field.to_sym)
           end
           self[field]
         end
         unless self.method_defined?("#{field}_html")
           define_method("#{field}_html") do
-            if blog.controller
-              html(blog.controller, field.to_sym)
-            else
-              self["#{field}_html"]
-            end
+            typo_deprecated "Use html(:#{field})"
+            html(field.to_sym)
           end
         end
       end
@@ -70,7 +84,7 @@ class Content < ActiveRecord::Base
         @@html_map[self] = Hash.new
         instance = self.new
         @@content_fields[self].each do |attrib|
-          @@html_map[self][attrib] = "#{attrib}_html"
+          @@html_map[self][attrib] = true
         end
       end
       if field
@@ -81,12 +95,9 @@ class Content < ActiveRecord::Base
     end
 
     def find_published(what = :all, options = {})
-      options.reverse_merge!(:order => default_order)
-      options[:conditions] = merge_conditions(['published = ?', true],
-                                              options[:conditions])
-      options[:include] ||= []
-      options[:include] += [:blog]
-      find(what, options)
+      with_scope(:find => {:order => default_order, :conditions => {:published => true}}) do
+        find what, options
+      end
     end
 
     def default_order
@@ -104,74 +115,91 @@ class Content < ActiveRecord::Base
         find_published(what, options)
       end
     end
+  end
 
-    def merge_conditions(*conditions)
-      conditions.compact.collect do |cond|
-        '(' + sanitize_sql(cond) + ')'
-      end.join(' AND ')
-    end
+  def content_fields
+    @@content_fields[self.class]
   end
 
   def state_before_save
-    self.state.before_save(self)
+    state.before_save(self)
   end
 
-  def html_map(field=nil); self.class.html_map(field); end
-
-  def full_html
-    unless blog.controller
-      raise "full_html only works with an active controller"
-    end
-    html(blog.controller, :all)
+  def state_after_save
+    state.after_save(self)
   end
 
-  def populate_html_fields(controller)
-    html_map.each do |field, html_field|
-      if !self[field].blank? && self[html_field].blank?
-        html = text_filter.filter_text_for_controller( self[field].to_s, controller, self, false )
-        self[html_field] = self.send("#{html_field}_postprocess",
-                                     html, controller)
-      end
-    end
+  def html_map(field=nil)
+    self.class.html_map(field)
   end
 
-  def html(controller,what = :all)
-    populate_html_fields(controller)
+  def cache_key(field)
+    id ? "contents_html/#{id}/#{field}" : nil
+  end
 
-    if what == :all
-      self[:body_html].to_s + (self[:extended_html].to_s rescue '')
-    elsif self.class.html_map(what)
-      self[html_map(what)]
+  # Return HTML for some part of this object.  It will be fetched from the
+  # cache if possible, or regenerated if needed.
+  def html(field = :all)
+    if field == :all
+      content_fields.map{|f| html(f)}.join("\n")
+    elsif self.class.html_map(field)
+      generate_html(field)
     else
-      raise "Unknown 'what' in article.html"
+      raise "Unknown field: #{field.inspect} in article.html"
     end
   end
 
-  def method_missing(method, *args, &block)
-    if method.to_s =~ /_postprocess$/
-      args[0]
-    else
-      super(method, *args, &block)
-    end
+  # Generate HTML for a specific field using the text_filter in use for this
+  # object.  The HTML is cached in the fragment cache, using the +ContentCache+
+  # object in @@cache.
+  def generate_html(field)
+    html = text_filter.filter_text_for_content(blog, self[field].to_s, self)
+    html ||= self[field].to_s # just in case the filter puked
+    html_postprocess(field,html).to_s
+  end
+
+  # Post-process the HTML.  This is a noop by default, but Comment overrides it
+  # to enforce HTML sanity.
+  def html_postprocess(field,html)
+    html
   end
 
   def whiteboard
     self[:whiteboard] ||= Hash.new
   end
 
+  # The default text filter.  Generally, this is the filter specified by blog.text_filter,
+  # but comments may use a different default.
+  def default_text_filter
+    blog.text_filter.to_text_filter
+  end
 
+  # Grab the text filter for this object.  It's either the filter specified by
+  # self.text_filter_id, or the default specified in the blog object.
   def text_filter
-    self[:text_filter] ||= if self[:text_filter_id]
-                             TextFilter.find(self[:text_filter_id])
-                           else
-                             blog[default_text_filter_config_key].to_text_filter
-                           end
+    if self[:text_filter_id] && !self[:text_filter_id].zero?
+      TextFilter.find(self[:text_filter_id])
+    else
+      default_text_filter
+    end
   end
 
+  # Set the text filter for this object.
   def text_filter=(filter)
-    self[:text_filter_id] = filter.to_text_filter.id
+    returning(filter.to_text_filter) { |tf| self.text_filter_id = tf.id }
   end
 
+  # Changing the title flags the object as changed
+  def title=(new_title)
+    if new_title == self[:title]
+      self[:title]
+    else
+      self.changed
+      self[:title] = new_title
+    end
+  end
+
+  # FIXME -- this feels wrong.
   def blog
     self[:blog] ||= blog_id.to_i.zero? ? Blog.default : Blog.find(blog_id)
   end
@@ -183,6 +211,7 @@ class Content < ActiveRecord::Base
     @state = newstate
     self[:state] = newstate.memento
     newstate.enter_hook(self)
+    @state
   end
 
   def publish!
@@ -191,8 +220,7 @@ class Content < ActiveRecord::Base
   end
 
   def withdraw
-    self.published    = false
-    self.published_at = nil
+    state.withdraw(self)
   end
 
   def withdraw!
@@ -213,8 +241,16 @@ class Content < ActiveRecord::Base
     self[:published_at] || self[:created_at]
   end
 
+  def published?
+    state.published?(self)
+  end
+
   def just_published?
     state.just_published?
+  end
+
+  def just_changed_published_status?
+    state.just_changed_published_status?
   end
 
   def withdrawn?
@@ -233,14 +269,31 @@ class Content < ActiveRecord::Base
     state.after_save(self)
   end
 
-  def send_notification_to_user(controller, user)
-    notify_user_via_email(controller, user)
-    notify_user_via_jabber(controller, user)
+  def send_notification_to_user(user)
+    notify_user_via_email(user)
+    notify_user_via_jabber(user)
   end
 
-  def send_notifications(controller = nil)
-    state.send_notifications(self, controller || blog.controller)
+  def send_notifications()
+    state.send_notifications(self)
+  end
+
+  # deprecated
+  def full_html
+    typo_deprecated "use .html instead"
+    html
+  end
+
+end
+
+class Object
+  def to_text_filter
+    TextFilter.find_by_name(self.to_s) || TextFilter.find_by_name('none')
   end
 end
 
-class Object; def to_text_filter; TextFilter.find_by_name(self.to_s); end; end
+class ContentTextHelpers
+  include ActionView::Helpers::TagHelper
+  include ActionView::Helpers::TextHelper
+end
+

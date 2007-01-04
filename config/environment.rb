@@ -23,6 +23,9 @@ Rails::Initializer.run do |config|
     vendor/sparklines/lib
     vendor/uuidtools/lib
     vendor/jabber4r/lib
+    vendor/mocha/lib
+    vendor/memcache-client/lib
+    vendor/cached_model/lib
     vendor/rails/railties
     vendor/rails/railties/lib
     vendor/rails/actionpack/lib
@@ -46,9 +49,9 @@ Rails::Initializer.run do |config|
 
   # Activate observers that should always be running
   # config.active_record.observers = :cacher, :garbage_collector
-  config.active_record.observers = :content_observer, :email_notifier, :web_notifier
+  config.active_record.observers = :email_notifier, :web_notifier
 
-  config.active_record.allow_concurrency = true
+  config.active_record.allow_concurrency = false
 
   # Make Active Record use UTC-base instead of local time
   # config.active_record.default_timezone = :utc
@@ -69,6 +72,8 @@ end
 #   inflect.uncountable %w( fish sheep )
 # end
 
+Inflector.inflections {|i| i.uncountable %w(feedback)}
+
 # Include your application configuration below
 
 # Load included libraries.
@@ -78,26 +83,21 @@ require 'rubypants'
 require 'flickr'
 require 'uuidtools'
 
-require_dependency 'spam_protection'
-require_dependency 'migrator'
-require_dependency 'rails_patch/components'
-require_dependency 'rails_patch/active_record'
-require_dependency 'login_system'
-require_dependency 'typo_version'
-require_dependency 'metafragment'
-require_dependency 'actionparamcache'
+require 'migrator'
+require 'rails_patch/active_record'
+require 'login_system'
+require 'typo_version'
+require 'metafragment'
+require 'actionparamcache'
 $KCODE = 'u'
-require_dependency 'jcode'
-require_dependency 'aggregations/audioscrobbler'
-require_dependency 'aggregations/delicious'
-require_dependency 'aggregations/tada'
-require_dependency 'aggregations/flickr'
-require_dependency 'aggregations/fortythree'
-require_dependency 'aggregations/magnolia'
-require_dependency 'aggregations/upcoming'
-require_dependency 'xmlrpc_fix'
-require_dependency 'transforms'
-require_dependency 'builder'
+require 'jcode'
+require 'xmlrpc_fix'
+require 'transforms'
+require 'builder'
+
+require 'typo_deprecated'
+
+#MemoryProfiler.start(:delay => 10, :string_debug => false)
 
 unless Builder::XmlMarkup.methods.include? '_attr_value'
   # Builder 2.0 has many important fixes, but for now we will only backport
@@ -145,3 +145,8 @@ if RAILS_ENV != 'test'
 end
 
 FLICKR_KEY='84f652422f05b96b29b9a960e0081c50'
+
+#require 'memcache_util'
+require 'cached_model'
+CachedModel.use_local_cache = true
+CachedModel.use_memcache = false

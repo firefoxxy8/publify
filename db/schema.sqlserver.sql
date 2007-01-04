@@ -28,7 +28,8 @@ CREATE TABLE blacklist_patterns (
 CREATE TABLE blogs (
   [id] int NOT NULL IDENTITY(1,
   1) PRIMARY KEY,
-  [settings] text
+  [settings] text,
+  [base_url] varchar(255)
 );
 
 CREATE TABLE categories (
@@ -46,13 +47,11 @@ CREATE TABLE contents (
   [title] varchar(255),
   [author] varchar(255),
   [body] text,
-  [body_html] text,
   [extended] text,
   [excerpt] text,
   [keywords] varchar(255),
   [created_at] datetime,
   [updated_at] datetime,
-  [extended_html] text,
   [user_id] int,
   [permalink] varchar(255),
   [guid] varchar(255),
@@ -64,14 +63,13 @@ CREATE TABLE contents (
   [ip] varchar(40),
   [blog_name] varchar(255),
   [name] varchar(255),
-  [comments_count] int,
-  [trackbacks_count] int,
   [published] bit DEFAULT 0,
   [allow_pings] bit,
   [allow_comments] bit,
   [blog_id] int NOT NULL,
   [published_at] datetime,
-  [state] text
+  [state] text,
+  [status_confirmed] bit
 );
 
 CREATE TABLE notifications (
@@ -230,4 +228,4 @@ CREATE TABLE schema_info (
   [version] int
 );
 
-insert into schema_info (version) values (47);
+insert into schema_info (version) values (53);

@@ -30,7 +30,7 @@ end
 class XmlController; def rescue_action(e) raise e end; end
 
 class XmlControllerTest < Test::Unit::TestCase
-  fixtures :contents, :categories, :articles_categories, :tags,
+  fixtures :contents, :categories, :categorizations, :tags,
     :articles_tags, :users, :blogs, :resources
 
   def setup
@@ -87,7 +87,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body, :todo
 
-    assert_rss20(6)
+    assert_rss20(7)
   end
 
   def test_feed_rss20_comments
@@ -105,7 +105,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body
 
-    assert_rss20(2)
+    assert_rss20(3)
   end
 
   def test_feed_rss20_article
@@ -145,7 +145,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_equal(assigns(:items).sort { |a, b| b.created_at <=> a.created_at },
                  assigns(:items))
 
-    assert_atom10(6)
+    assert_atom10(7)
   end
 
   def test_feed_atom10_comments
@@ -171,7 +171,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_equal(assigns(:items).sort { |a, b| b.created_at <=> a.created_at },
                  assigns(:items))
 
-    assert_atom10(2)
+    assert_atom10(3)
 
     assert_xpath('//title[@type="html"]')
     assert_xpath('//summary', "Trackback entry has no summaries")
@@ -241,8 +241,8 @@ class XmlControllerTest < Test::Unit::TestCase
   def test_pubdate_conformance
     get :feed, :format => 'rss20', :type => 'feed'
     assert_response :success
-    xml = REXML::Document.new(@response.body)
-    assert_equal contents(:article2).created_at.rfc822, REXML::XPath.match(xml, '/rss/channel/item[title="Article 2!"]/pubDate').first.text
+
+    assert_equal contents(:article2).created_at.rfc822, get_xpath('/rss/channel/item[title="Article 2!"]/pubDate').first.text
   end
 
   def test_rsd
@@ -259,6 +259,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_response :success
     assert_match /extended content/, @response.body
 
+    @controller = XmlController.new
     set_extended_on_rss false
     get :feed, :format => 'rss20', :type => 'feed'
     assert_response :success
@@ -279,6 +280,7 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_not_equal 0, get_xpath(%{//summary]}).size, "Extended feed has no summaries"
     assert_not_equal 0, get_xpath(%{//content]}).size, "Extended feed has no content"
 
+    @controller = XmlController.new
     set_extended_on_rss false
     get :feed, :format => 'atom10', :type => 'feed'
     assert_response :success
@@ -338,11 +340,11 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_xml @response.body
     assert_feedvalidator @response.body, :todo
   end
-  
+
   # TODO(laird): make this more robust
   def test_sitemap
     get :feed, :format => 'googlesitemap', :type => 'sitemap'
-    
+
     assert_response :success
     assert_xml @response.body
   end

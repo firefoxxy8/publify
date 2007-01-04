@@ -1,7 +1,14 @@
 module ContentState
-  class Base
-    include Reloadable
+  class StateError < StandardError
+  end
 
+  class StateNotSerializable < StateError
+  end
+
+  class InvalidMethodForState < StandardError
+  end
+
+  class Base
     class << self
       def instance
         nil
@@ -26,11 +33,30 @@ module ContentState
       true
     end
 
-    def published?
+    def after_save(content)
+      true
+    end
+
+    def withdraw(content)
+    end
+
+    def mark_as_spam(content)
+      content.state = Factory.new(:just_marked_as_spam)
+    end
+
+    def mark_as_ham(content)
+      content.state = Factory.new(:just_marked_as_ham)
+    end
+
+    def published?(content)
       false
     end
 
     def just_published?
+      false
+    end
+
+    def just_changed_published_status?
       false
     end
 
@@ -54,7 +80,7 @@ module ContentState
       true
     end
 
-    def send_notifications(content)
+    def send_notifications(controller)
       true
     end
 
@@ -62,8 +88,23 @@ module ContentState
       true
     end
 
+    def is_spam?(content)
+      false
+    end
+
+    def status_confirmed?(content)
+      false
+    end
+
     def logger
       @logger ||= RAILS_DEFAULT_LOGGER || Logger.new(STDERR)
+    end
+
+    def confirm_classification(content)
+    end
+
+    def ==(other_state)
+      self.class == other_state.class
     end
   end
 end
