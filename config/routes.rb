@@ -1,4 +1,3 @@
-#### TODO MvZ!!!
 ActionController::Routing::Routes.draw do |map|
 
   # front page
@@ -60,7 +59,9 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'articles', :action => 'permalink',
     :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/
 
-  map.connect 'blog/:bryarid', :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/
+  # Old ids from Bryar
+  map.connect 'blog/:bryarid',
+    :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/
 
   map.connect 'blog/category/:id',
     :controller => 'articles', :action => 'category'
@@ -71,11 +72,6 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'blog/tag/:id',
     :controller => 'articles', :action => 'tag'
   map.connect 'blog/tag/:id/page/:page',
-    :controller => 'articles', :action => 'tag',
-    :page => /\d+/
-
-  map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
-
   map.connect 'stylesheets/theme/:filename',
     :controller => 'theme', :action => 'stylesheets', :filename => /.*/
   map.connect 'javascripts/theme/:filename',
@@ -84,29 +80,24 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'theme', :action => 'images', :filename => /.*/
 
   # For the tests
-  map.connect 'theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
+  map.connect 'blog/theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
 
   map.connect 'plugins/filters/:filter/:public_action',
     :controller => 'textfilter', :action => 'public_action'
 
-  # Kill attempts to connect directly to the theme controller.
-  # Ideally we'd disable these by removing the default route (below),
-  # but that breaks too many things for Typo 2.5.
-  map.connect 'blog/theme/*stuff',
-    :controller => 'theme', :action => 'error'
   # Work around the Bad URI bug
   %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
-    map.connect "#{i}", :controller => "#{i}", :action => 'index'
-    map.connect "#{i}/:action", :controller => "#{i}"
-    map.connect "#{i}/:action/:id", :controller => i, :id => nil
+    map.connect "blog/#{i}", :controller => "#{i}", :action => 'index'
+    map.connect "blog/#{i}/:action", :controller => "#{i}"
+    map.connect "blog/#{i}/:action/:id", :controller => i, :id => nil
   end
 
   %w{blacklist cache categories comments content feedback general pages
      resources sidebar textfilters themes trackbacks users}.each do |i|
-    map.connect "/admin/#{i}", :controller => "admin/#{i}", :action => 'index'
-    map.connect "/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
+    map.connect "blog/admin/#{i}", :controller => "admin/#{i}", :action => 'index'
+    map.connect "blog/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
   end
 
-  map.connect 'blog/:controller/:action/:id'
+  # map.connect 'blog/:controller/:action/:id'
   map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

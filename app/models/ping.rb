@@ -107,14 +107,6 @@ class Ping < ActiveRecord::Base
       path = trackback_uri.path
       path += "?#{trackback_uri.query}" if trackback_uri.query
       http.post(path, post, 'Content-type' => 'application/x-www-form-urlencoded; charset=utf-8')
-    #end
-
-    begin
-      RAILS_DEFAULT_LOGGER.info "\nAbout to join"
-      #t.join # if defined? $TESTING
-      RAILS_DEFAULT_LOGGER.info "\nJoined"
-    rescue => e
-      RAILS_DEFAULT_LOGGER.info "\nRescued #{e}"
     end
   end
 

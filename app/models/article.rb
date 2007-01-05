@@ -76,26 +76,21 @@ class Article < Content
     pingback_or_trackback_urls = self.html_urls
 
     ping_urls = weblogupdatesping_urls + pingback_or_trackback_urls
-    old_pings = pings.collect { |p| p.url }
-    ping_urls = ping_urls.collect {|u| u.strip }.uniq.reject do |u|
-      old_pings.include?(u)
-    end
-    threads = []
 
-    ping_urls.each do |url|
+    ping_urls.uniq.each do |url|
       logger.info "\nPinging #{url}"
       begin
-        ping = pings.build("url" => url, "article" => self)
-        logger.info "\nHere! #{url}"
+        unless pings.collect { |p| p.url }.include?(url.strip)
+          ping = pings.build("url" => url)
+          logger.info "\nHere! #{url}"
 
-        #threads << Thread.new do
           if weblogupdatesping_urls.include?(url)
             ping.send_weblogupdatesping(serverurl, articleurl)
           elsif pingback_or_trackback_urls.include?(url)
             logger.info "\nDoing the pingback or trackback! #{url}"
             ping.send_pingback_or_trackback(articleurl)
           end
-        #end
+        end
         logger.info "\nThere! #{url}"
       rescue Exception => e
         logger.error(e)
@@ -105,7 +100,6 @@ class Article < Content
       logger.info "\nDone! #{url}"
     end
     logger.info "\nAll done!"
-    #threads.each { |t| t.join }
   end
 
   def send_pings
