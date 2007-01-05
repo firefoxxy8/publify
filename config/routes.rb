@@ -73,11 +73,11 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'articles', :action => 'tag'
   map.connect 'blog/tag/:id/page/:page',
   map.connect 'stylesheets/theme/:filename',
-    :controller => 'theme', :action => 'stylesheets', :filename => /.*/
-  map.connect 'javascripts/theme/:filename',
-    :controller => 'theme', :action => 'javascript', :filename => /.*/
+    :controller => 'theme', :action => 'stylesheets'
+  map.connect 'javascript/theme/:filename',
+    :controller => 'theme', :action => 'javascript'
   map.connect 'images/theme/:filename',
-    :controller => 'theme', :action => 'images', :filename => /.*/
+    :controller => 'theme', :action => 'images'
 
   # For the tests
   map.connect 'blog/theme/static_view_test', :controller => 'theme', :action => 'static_view_test'

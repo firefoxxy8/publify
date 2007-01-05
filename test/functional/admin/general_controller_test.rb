@@ -16,11 +16,11 @@ class Admin::GeneralControllerTest < Test::Unit::TestCase
 
   def test_index
     get :index
-    assert_template 'index'
+    assert_rendered_file 'index'
   end
 
   def test_redirect
     get :redirect
-    assert_response :redirect, :controller => 'admin/general', :action => 'index'
+    assert_redirected_to :controller => 'admin/general', :action => 'index'
   end
 end

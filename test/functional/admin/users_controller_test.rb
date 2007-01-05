@@ -17,31 +17,31 @@ class Admin::UsersControllerTest < Test::Unit::TestCase
 
   def test_index
     get :index
-    assert_template 'list'
+    assert_rendered_file 'list'
     assert_template_has 'users'
   end
 
   def test_list
     get :list
-    assert_template 'list'
+    assert_rendered_file 'list'
     assert_template_has 'users'
   end
 
   def test_new
     get :new
-    assert_template 'new'
+    assert_rendered_file 'new'
 
     post :new, :user => { :login => 'errand', :email => 'corey@test.com',
       :password => 'testpass', :password_confirmation => 'testpass' }
-    assert_response :redirect, :action => 'list'
+    assert_redirected_to :action => 'list'
     follow_redirect
-    assert_template 'list'
+    assert_rendered_file 'list'
   end
 
   def test_show
     get :show, :id => 1
-    assert_template 'show'
-    assert_valid assigns(:user)
+    assert_rendered_file 'show'
+    assert_valid_record 'user'
 
     assert_template_has 'user'
     assert_template_has 'articles'
@@ -49,30 +49,27 @@ class Admin::UsersControllerTest < Test::Unit::TestCase
 
   def test_edit
     get :edit, :id => 1
-    assert_template 'edit'
-    assert_valid assigns(:user)
+    assert_rendered_file 'edit'
+    assert_valid_record 'user'
 
     post :edit, :id => 1, :user => { :login => 'errand',
       :email => 'corey@test.com', :password => 'testpass',
       :password_confirmation => 'testpass' }
-    assert_response :redirect, :action => 'show'
+    assert_redirected_to :action => 'show'
     follow_redirect
-    assert_template 'show'
-    assert_valid assigns(:user)
+    assert_rendered_file 'show'
+    assert_valid_record 'user'
   end
 
   def test_destroy
-    user_count = User.count
-    get :destroy, :id => users(:bob).id
-    assert_template 'destroy'
-    assert_valid assigns(:user)
+    get :destroy, :id => 1
+    assert_rendered_file 'destroy'
+    assert_valid_record 'user'
 
-    assert_equal user_count, User.count
-    post :destroy, :id => users(:bob).id
-    assert_response :redirect, :action => 'list'
+    post :destroy, :id => 1
+    assert_redirected_to :action => 'list'
     follow_redirect
-    assert_template 'list'
-    assert_equal user_count - 1, User.count
+    assert_rendered_file 'list'
   end
 
 end

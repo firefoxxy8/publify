@@ -5,9 +5,6 @@ module ContentState
   class StateNotSerializable < StateError
   end
 
-  class InvalidMethodForState < StandardError
-  end
-
   class Base
     class << self
       def instance
@@ -101,10 +98,6 @@ module ContentState
     end
 
     def confirm_classification(content)
-    end
-
-    def ==(other_state)
-      self.class == other_state.class
     end
   end
 end

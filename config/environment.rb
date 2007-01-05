@@ -72,8 +72,6 @@ end
 #   inflect.uncountable %w( fish sheep )
 # end
 
-Inflector.inflections {|i| i.uncountable %w(feedback)}
-
 # Include your application configuration below
 
 # Load included libraries.
@@ -83,19 +81,20 @@ require 'rubypants'
 require 'flickr'
 require 'uuidtools'
 
-require 'migrator'
-require 'rails_patch/active_record'
-require 'login_system'
-require 'typo_version'
-require 'metafragment'
-require 'actionparamcache'
+require_dependency 'spam_protection'
+require_dependency 'migrator'
+require_dependency 'rails_patch/active_record'
+require_dependency 'login_system'
+require_dependency 'typo_version'
+require_dependency 'metafragment'
+require_dependency 'actionparamcache'
 $KCODE = 'u'
-require 'jcode'
-require 'xmlrpc_fix'
-require 'transforms'
-require 'builder'
+require_dependency 'jcode'
+require_dependency 'xmlrpc_fix'
+require_dependency 'transforms'
+require_dependency 'builder'
 
-require 'typo_deprecated'
+require_dependency 'typo_deprecated'
 
 #MemoryProfiler.start(:delay => 10, :string_debug => false)
 
@@ -150,3 +149,8 @@ FLICKR_KEY='84f652422f05b96b29b9a960e0081c50'
 require 'cached_model'
 CachedModel.use_local_cache = true
 CachedModel.use_memcache = false
+
+# Populate the $blog_id_for cache
+$blog_id_for = Blog.find(:all).inject({}) do |h, blog|
+  h.merge! blog.base_url => blog.id
+end

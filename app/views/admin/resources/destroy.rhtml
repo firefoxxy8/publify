@@ -2,10 +2,10 @@
 
   <% content_for('tasks') do %>
     <%= task_new 'Upload a new File' %>
-  <% end %>
+  <% end %> 
 
   <p>Are you sure you want to delete this file ( <%= @file.filename -%> )?</p>
-  <% form_tag :action => 'destroy' do %>
+  <%= start_form_tag :action => 'destroy' %>
   <%= hidden_field "file", "id" %>
   <%= confirm_delete("Delete this file from the webserver?") %>
-  <% end %>
+  <%= end_form_tag %>

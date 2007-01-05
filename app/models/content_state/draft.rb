@@ -5,12 +5,12 @@ module ContentState
     def enter_hook(content)
       super
       content[:published] = false
-      content[:published_at] = nil
+      content.published_at = nil
     end
 
     def change_published_state(content, boolean)
       content[:published] = boolean
-      if boolean
+      if content.published
         content.state = JustPublished.instance
       end
     end

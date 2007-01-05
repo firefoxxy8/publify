@@ -1,5 +1,3 @@
-require 'base64'
-
 class Admin::PagesController < Admin::BaseController
   def index
     list
@@ -44,11 +42,9 @@ class Admin::PagesController < Admin::BaseController
   end
 
   def preview
-    headers["Content-Type"] = "text/html; charset=utf-8"
+    @headers["Content-Type"] = "text/html; charset=utf-8"
     @page = this_blog.pages.build(params[:page])
-    data = render_to_string(:layout => "minimal")
-    data = Base64.encode64(data).gsub("\n", '')
-    data = "data:text/html;charset=utf-8;base64,#{data}"
-    render :text => data
+    render :layout => false
   end
+
 end

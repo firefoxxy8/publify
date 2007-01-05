@@ -12,21 +12,9 @@ class Content < ActiveRecord::Base
   composed_of :state, :class_name => 'ContentState::Factory',
     :mapping => %w{ state memento }
 
-  has_many :notifications, :foreign_key => 'content_id'
-  has_many :notify_users, :through => :notifications,
-    :source => 'notify_user',
-    :uniq => true
-
-  def notify_users=(collection)
-    return notify_users.clear if collection.empty?
-    self.class.transaction do
-      self.notifications.clear
-      collection.uniq.each do |u|
-        self.notifications.build(:notify_user => u)
-      end
-      notify_users.target = collection
-    end
-  end
+  has_and_belongs_to_many :notify_users, :class_name => 'User',
+    :join_table => 'notifications', :foreign_key => 'notify_content_id',
+    :association_foreign_key => 'notify_user_id', :uniq => true
 
   has_many :triggers, :as => :pending_item, :dependent => :delete_all
 
@@ -95,9 +83,10 @@ class Content < ActiveRecord::Base
     end
 
     def find_published(what = :all, options = {})
-      with_scope(:find => {:order => default_order, :conditions => {:published => true}}) do
-        find what, options
-      end
+      options.reverse_merge!(:order => default_order)
+      options[:conditions] = merge_conditions(['published = ?', true],
+                                              options[:conditions])
+      find(what, options)
     end
 
     def default_order
@@ -114,6 +103,12 @@ class Content < ActiveRecord::Base
       with_scope(:find => { :conditions => ['published_at < ?', at]}) do
         find_published(what, options)
       end
+    end
+
+    def merge_conditions(*conditions)
+      conditions.compact.collect do |cond|
+        '(' + sanitize_sql(cond) + ')'
+      end.join(' AND ')
     end
   end
 

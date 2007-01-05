@@ -4,7 +4,7 @@
     <%= task_edit 'Edit this category', @category.id %>
   <% end %>
 
-  <% form_tag :action=>"new" do %>
+  <%= start_form_tag :action=>"new" %>
   <div class="list">
     <table cellspacing="1" cellpadding="0">
     <% for article in @category.articles -%>
@@ -16,4 +16,4 @@
     <% end -%>
     </table>
   </div>
-  <% end %>
+  <%= end_form_tag %>

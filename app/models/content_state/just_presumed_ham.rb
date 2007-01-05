@@ -1,4 +1,3 @@
-
 module ContentState
   class JustPresumedHam < PresumedHam
     include Singleton

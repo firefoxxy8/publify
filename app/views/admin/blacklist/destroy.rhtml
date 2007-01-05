@@ -5,6 +5,6 @@
   <% end %>
 
   <p>Are you sure you want to delete this item?</p>
-  <% form_tag :action => "destroy", :id => @blacklist_pattern.id do %>
+  <%= start_form_tag :action => "destroy", :id => @blacklist_pattern.id %>
   <%= confirm_delete %>
-  <% end %>
+  <%= end_form_tag %>

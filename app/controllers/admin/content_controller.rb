@@ -1,5 +1,3 @@
-require 'base64'
-
 class Admin::ContentController < Admin::BaseController
   def index
     list
@@ -7,17 +5,16 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def list
-    now = Time.now
-    count = this_blog.articles.count
-    @articles_pages = Paginator.new(self, count, 15, params[:id])
-    @articles = this_blog.articles.find(:all, :limit => 15, :order => 'id DESC',
-                                        :offset => @articles_pages.current.offset)
+    @articles_pages, @articles = with_blog_scoped_classes do
+      paginate(:article, :per_page => 15, :order_by => "created_at DESC",
+               :parameter => 'id')
+    end
     setup_categories
     @article = this_blog.articles.build(params[:article])
   end
 
   def show
-    @article = this_blog.articles.find(params[:id])
+    @article = Article.find(params[:id])
     setup_categories
     @resources = Resource.find(:all, :order => 'created_at DESC')
   end
@@ -26,7 +23,7 @@ class Admin::ContentController < Admin::BaseController
   def edit; new_or_edit; end
 
   def destroy
-    @article = this_blog.articles.find(params[:id])
+    @article = Article.find(params[:id])
     if request.post?
       @article.destroy
       redirect_to :action => 'list'
@@ -34,35 +31,22 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def category_add; do_add_or_remove_fu; end
+  alias_method :category_remove, :category_add
   alias_method :resource_add,    :category_add
   alias_method :resource_remove, :category_add
 
-  def category_remove
-    @article  = this_blog.articles.find(params[:id])
-    @category = @article.categories.find(params['category_id'])
-    setup_categories
-    @article.categorizations.delete(@article.categorizations.find_by_category_id(params['category_id']))
-    @article.save
-    render :partial => 'show_categories'
-  end
-
   def preview
-    headers["Content-Type"] = "text/html; charset=utf-8"
-    @article = this_blog.articles.new(params[:article])
-    data = render_to_string(:layout => "minimal")
-    data = Base64.encode64(data).gsub("\n", '')
-    data = "data:text/html;charset=utf-8;base64,#{data}"
-    render :text => data
+    @headers["Content-Type"] = "text/html; charset=utf-8"
+    @article = Article.new(params[:article])
+    render :layout => false
   end
 
   def attachment_box_add
-    render :update do |page|
-      page["attachment_add_#{params[:id]}"].remove
-      page.insert_html :bottom, 'attachments',
-          :partial => 'admin/content/attachment',
-          :locals => { :attachment_num => params[:id], :hidden => true }
-      page.visual_effect(:toggle_appear, "attachment_#{params[:id]}")
-    end
+    render :partial => 'admin/content/attachment', :locals => { :attachment_num => params[:id] }
+  end
+
+  def attachment_box_remove
+    render :inline => "<%= javascript_tag 'document.getElementById(\"attachments\").removeChild(document.getElementById(\"attachment_#{params[:id]}\")); return false;' -%>"
   end
 
   def attachment_save(attachment)
@@ -81,7 +65,7 @@ class Admin::ContentController < Admin::BaseController
 
   def do_add_or_remove_fu
     attrib, action = params[:action].split('_')
-    @article = this_blog.articles.find(params[:id])
+    @article = Article.find(params[:id])
     self.send("#{attrib}=", self.class.const_get(attrib.classify).find(params["#{attrib}_id"]))
     send("setup_#{attrib.pluralize}")
     @article.send(attrib.pluralize).send(real_action_for(action), send(attrib))
@@ -135,23 +119,19 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def set_article_categories
-    @article.categorizations.clear
-    if params[:categories]
-      Category.find(params[:categories]).each do |cat|
-        @article.categories << cat
-      end
-    end
+    @article.categories.clear
+    @article.categories = Category.find(params[:categories]) if params[:categories]
     @selected = params[:categories] || []
   end
 
   def get_or_build_article
     @article = case params[:action]
                when 'new'
-                 returning(this_blog.articles.build) do |art|
-                   art.allow_comments = this_blog.default_allow_comments
-                   art.allow_pings    = this_blog.default_allow_pings
-                   art.published      = true
-                 end
+                 art = this_blog.articles.build
+                 art.allow_comments = this_blog.default_allow_comments
+                 art.allow_pings    = this_blog.default_allow_pings
+                 art.published      = true
+                 art
                when 'edit'
                  this_blog.articles.find(params[:id])
                else

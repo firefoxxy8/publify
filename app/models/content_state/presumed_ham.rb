@@ -13,11 +13,11 @@ module ContentState
     end
 
     def withdraw(content)
-      mark_as_spam(content)
+      content.mark_as_spam
     end
 
     def confirm_classification(content)
-      mark_as_ham(content)
+      content.mark_as_ham
     end
 
     def mark_as_ham(content)

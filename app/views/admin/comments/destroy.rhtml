@@ -2,10 +2,10 @@
 
   <% content_for('tasks') do %>
     <%= task_show 'Show this comment', @comment.id %>
-  <% end %>
+  <% end %> 
 
   <p>Are you sure you want to delete this item?</p>
-  <% form_tag do %>
+  <%= start_form_tag %>
   <%= hidden_field "comment", "id" %>
   <%= confirm_delete %>
-  <% end %>
+  <%= end_form_tag %>
