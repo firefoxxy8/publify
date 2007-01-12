@@ -1,10 +1,11 @@
 ActionController::Routing::Routes.draw do |map|
 
-  # front page
+  # front page (this is the index page, that gives this blog its base url)
   map.index '', :controller  => 'articles', :action => 'frontpage'
 
   # default
-  map.index 'blog', :controller  => 'articles', :action => 'index'
+  # MvZ: Old index. also defined below for perma urls
+  # map.index 'blog', :controller  => 'articles', :action => 'index'
   map.admin 'blog/admin', :controller  => 'admin/general', :action => 'index'
 
   # admin/comments controller needs parent article id
@@ -72,6 +73,11 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'blog/tag/:id',
     :controller => 'articles', :action => 'tag'
   map.connect 'blog/tag/:id/page/:page',
+    :controller => 'articles', :action => 'tag',
+    :page => /\d+/
+
+  map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
+
   map.connect 'stylesheets/theme/:filename',
     :controller => 'theme', :action => 'stylesheets'
   map.connect 'javascript/theme/:filename',
@@ -86,6 +92,7 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'textfilter', :action => 'public_action'
 
   # Work around the Bad URI bug
+  ## MvZ: %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
   %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
     map.connect "blog/#{i}", :controller => "#{i}", :action => 'index'
     map.connect "blog/#{i}/:action", :controller => "#{i}"

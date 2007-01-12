@@ -94,6 +94,13 @@ class ArticlesControllerTest < Test::Unit::TestCase
                                :content => "2"})
   end
 
+  # Front page
+  def test_front_page
+    get :frontpage
+    assert_response :success
+    assert_rendered_file "frontpage"
+  end
+
   # Main index
   def test_index
     get :index

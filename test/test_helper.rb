@@ -20,14 +20,14 @@ class Test::Unit::TestCase
       CachedModel.cache_reset
       setup
       __send__(@method_name)
-    rescue AssertionFailedError => e
+    rescue Test::Unit::AssertionFailedError => e
       add_failure(e.message, e.backtrace)
     rescue StandardError, ScriptError
       add_error($!)
     ensure
       begin
         teardown
-      rescue AssertionFailedError => e
+      rescue Test::Unit::AssertionFailedError => e
         add_failure(e.message, e.backtrace)
       rescue StandardError, ScriptError
         add_error($!)

@@ -1,12 +1,12 @@
 <h3>Recent Blog Entries</h3>
 <ul class="navigation">
 <% for article in @articles -%>
-<li><%= article_link h(article.title), article %></li>
+<li><%= link_to_permalink article, h(article.title) %></li>
 <% end -%>
 </ul>
 
 <p id="pagination">You can read
-	<%= link_to 'the rest of my blog here', { :controller => '/' } %>.
+	<%= link_to 'the rest of my blog here', { :controller => '/articles' } %>.
 </p>
 
 <h3>Site</h3>

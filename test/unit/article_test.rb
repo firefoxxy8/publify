@@ -23,23 +23,23 @@ class ArticleTest < Test::Unit::TestCase
 
   def test_permalink_url
     a = contents(:article3)
-    assert_equal 'http://myblog.net/articles/2004/06/01/article-3', a.permalink_url
+    assert_equal 'http://myblog.net/blog/2004/06/01/article-3', a.permalink_url
   end
 
   def test_edit_url
     a = contents(:article3)
-    assert_equal 'http://myblog.net/admin/content/edit/3', a.edit_url
+    assert_equal 'http://myblog.net/blog/admin/content/edit/3', a.edit_url
   end
 
   def test_delete_url
     a = contents(:article3)
-    assert_equal 'http://myblog.net/admin/content/destroy/3', a.delete_url
+    assert_equal 'http://myblog.net/blog/admin/content/destroy/3', a.delete_url
   end
 
   def test_feed_url
     a = contents(:article3)
-    assert_equal 'http://myblog.net/xml/atom10/article/3/feed.xml', a.feed_url(:atom10)
-    assert_equal 'http://myblog.net/xml/rss20/article/3/feed.xml', a.feed_url(:rss20)
+    assert_equal 'http://myblog.net/blog/xml/atom10/article/3/feed.xml', a.feed_url(:atom10)
+    assert_equal 'http://myblog.net/blog/xml/rss20/article/3/feed.xml', a.feed_url(:rss20)
   end
 
   def test_blog

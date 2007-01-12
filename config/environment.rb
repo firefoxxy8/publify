@@ -2,7 +2,7 @@
 
 # Uncomment below to force Rails into production mode
 # (Use only when you can't set environment variables through your web/app server)
-ENV['RAILS_ENV'] = 'production'
+# ENV['RAILS_ENV'] ||= 'production'
 
 # Bootstrap the Rails environment, frameworks, and default configuration
 require File.join(File.dirname(__FILE__), 'boot')
@@ -150,7 +150,8 @@ require 'cached_model'
 CachedModel.use_local_cache = true
 CachedModel.use_memcache = false
 
-# Populate the $blog_id_for cache
-$blog_id_for = Blog.find(:all).inject({}) do |h, blog|
-  h.merge! blog.base_url => blog.id
-end
+$blog_id_for = {}
+## # Populate the $blog_id_for cache
+## $blog_id_for = Blog.find(:all).inject({}) do |h, blog|
+##   h.merge! blog.base_url => blog.id
+## end

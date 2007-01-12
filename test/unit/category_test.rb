@@ -36,7 +36,7 @@ class CategoryTest < Test::Unit::TestCase
   end
   
   def test_permalink
-    assert_equal 'http://myblog.net/articles/category/software', @category.permalink_url
+    assert_equal 'http://myblog.net/blog/category/software', @category.permalink_url
   end
   
 end

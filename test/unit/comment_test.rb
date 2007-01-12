@@ -11,17 +11,17 @@ class CommentTest < Test::Unit::TestCase
 
   def test_permalink_url
     c = contents(:old_comment)
-    assert_equal 'http://myblog.net/articles/2004/05/01/inactive-article#comment-15', c.permalink_url
+    assert_equal 'http://myblog.net/blog/2004/05/01/inactive-article#comment-15', c.permalink_url
   end
 
   def test_edit_url
     c = contents(:old_comment)
-    assert_equal 'http://myblog.net/admin/comments/edit/15', c.edit_url
+    assert_equal 'http://myblog.net/blog/admin/comments/edit/15', c.edit_url
   end
 
   def test_delete_url
     c = contents(:old_comment)
-    assert_equal 'http://myblog.net/admin/comments/destroy/15', c.delete_url
+    assert_equal 'http://myblog.net/blog/admin/comments/destroy/15', c.delete_url
   end
 
   def test_save_regular
