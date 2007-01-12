@@ -51,6 +51,7 @@ class CommentTest < Test::Unit::TestCase
       c.body = %{This is just some random text. &lt;a href="http://chinaaircatering.com"&gt;without any senses.&lt;/a&gt;. Please disregard.}
       c.url = "http://buy-computer.us"
       c.ip = "212.42.230.206"
+      c.article_id = 1
     end
     assert cmt.spam?
     assert !cmt.status_confirmed?
@@ -62,6 +63,7 @@ class CommentTest < Test::Unit::TestCase
       c.body   = "Useful commentary!"
       c.url    = "http://www.bofh.org.uk"
       c.ip     = "10.10.10.10"
+      c.article_id = 1
     end
     assert !cmt.spam?
     assert !cmt.status_confirmed?
@@ -72,6 +74,7 @@ class CommentTest < Test::Unit::TestCase
       c.author = "Another Spammer"
       c.body = "Texas hold-em poker crap"
       c.url = "http://texas.hold-em.us"
+      c.article_id = 1
     end
     assert cmt.spam?
     assert !cmt.status_confirmed?
@@ -83,6 +86,7 @@ class CommentTest < Test::Unit::TestCase
       c.body = %{ <a href="http://www.one.com/">one</a> <a href="http://www.two.com/">two</a> <a href="http://www.three.com/">three</a> <a href="http://www.four.com/">four</a> }
       c.url = "http://www.uri-limit.com"
       c.ip = "123.123.123.123"
+      c.article_id = 1
     end
 
     assert c.spam?

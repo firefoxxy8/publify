@@ -5,6 +5,10 @@ require 'dns_mock'
 class TrackbackTest < Test::Unit::TestCase
   fixtures :contents, :blacklist_patterns, :blogs
 
+  def setup
+    @article = contents(:article1)
+  end
+
   def test_permalink_url
     t = contents(:trackback4)
     assert_equal 'http://myblog.net/blog/2004/04/01/second-blog-article#trackback-23', t.permalink_url
@@ -21,7 +25,7 @@ class TrackbackTest < Test::Unit::TestCase
   end
 
   def test_incomplete
-    tb = Trackback.new
+    tb = @article.trackbacks.build
     tb.blog_name = "Blog name"
     tb.title = "Title"
     tb.excerpt = "Excerpt"
@@ -38,6 +42,7 @@ class TrackbackTest < Test::Unit::TestCase
 
   def test_reject_spam_rbl
     tb = Trackback.new do |tb|
+      tb.article = @article
       tb.blog_name = "Spammer"
       tb.title = "Spammy trackback"
       tb.excerpt = %{This is just some random text. <a href="http://chinaaircatering.com">without any senses.</a>. Please disregard.}
@@ -50,6 +55,7 @@ class TrackbackTest < Test::Unit::TestCase
 
   def test_reject_spam_pattern
     tb = Trackback.new do |tb|
+      tb.article = @article
       tb.blog_name = "Another Spammer"
       tb.title = "Spammy trackback"
       tb.excerpt = "Texas hold-em poker crap"

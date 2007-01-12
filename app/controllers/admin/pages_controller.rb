@@ -16,6 +16,7 @@ class Admin::PagesController < Admin::BaseController
 
   def new
     @page = Page.new(params[:page])
+    @page.blog = this_blog
     @page.user_id = session[:user].id
     @page.text_filter ||= this_blog.text_filter
     if request.post? and @page.save

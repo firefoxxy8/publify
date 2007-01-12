@@ -120,6 +120,7 @@ class ArticlesController < ContentController
                                 :referrer => request.env['HTTP_REFERER'],
                                 :permalink => @article.permalink_url})
         @comment = @article.comments.build(params[:comment])
+        ## @comment.blog = @article.blog
         @comment.author ||= 'Anonymous'
         @comment.save!
         add_to_cookies(:author, @comment.author)

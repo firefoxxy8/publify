@@ -26,6 +26,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     Article.create!(:title => "News from the future!",
                     :body => "The future is cool!",
+                    :blog => this_blog,
                     :keywords => "future",
                     :created_at => Time.now + 12.minutes)
     Sidebar.delete_all
@@ -522,6 +523,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
     Article.create!(:title      => "News from the future!",
                     :body       => "The future is cool!",
+                    :blog       => this_blog,
                     :keywords   => "future",
                     :published  => true,
                     :published_at => Time.now + 12.minutes)

@@ -45,8 +45,8 @@ class ArticleTest < Test::Unit::TestCase
   def test_blog
     a = Article.new
 
-    assert_equal(1, a.blog_id)
-    assert_kind_of(Blog, a.blog)
+    assert_equal(nil, a.blog_id)
+    # assert_kind_of(Blog, a.blog)
   end
 
   def test_create
@@ -54,6 +54,8 @@ class ArticleTest < Test::Unit::TestCase
     a.user_id = 1
     a.body = "Foo"
     a.title = "Zzz"
+    assert ! a.save
+    a.blog = this_blog
     assert a.save
 
     a.categories << Category.find(1)
@@ -92,6 +94,7 @@ class ArticleTest < Test::Unit::TestCase
 
   def test_html_title
     a = Article.new
+    a.blog = this_blog 
     a.title = "This <i>is</i> a <b>test</b>"
     assert a.save
 
@@ -113,6 +116,7 @@ class ArticleTest < Test::Unit::TestCase
 
   def test_tags
     a = Article.new(:title => 'Test tag article',
+                    :blog => this_blog,
                     :keywords => 'test tag tag stuff');
 
     assert_kind_of Article, a
@@ -182,6 +186,7 @@ class ArticleTest < Test::Unit::TestCase
 
     art = Article.create!(:title => 'title2',
                           :body => 'body',
+                          :blog => this_blog,
                           :published => false)
 
     assert ! art.just_published?
@@ -190,16 +195,19 @@ class ArticleTest < Test::Unit::TestCase
   def test_future_publishing
     assert_sets_trigger(Article.create!(:title => 'title', :body => 'body',
                                         :published => true,
+                                        :blog => this_blog,
                                         :published_at => Time.now + 2.seconds))
   end
 
   def test_future_publishing_without_published_flag
     assert_sets_trigger Article.create!(:title => 'title', :body => 'body',
+                                        :blog => this_blog,
                                         :published_at => Time.now + 2.seconds)
   end
 
   def test_triggers_are_dependent
     art = Article.create!(:title => 'title', :body => 'body',
+                          :blog => this_blog,
                           :published_at => Time.now + 1.hour)
     assert_equal 1, Trigger.count
     art.destroy
@@ -219,6 +227,7 @@ class ArticleTest < Test::Unit::TestCase
     Article.create!(:title      => "News from the future!",
                     :body       => "The future is cool!",
                     :keywords   => "future",
+                    :blog       => this_blog,
                     :published_at => Time.now + 12.minutes)
 
     @articles = Category.find_by_permalink('personal').published_articles
@@ -240,7 +249,9 @@ class ArticleTest < Test::Unit::TestCase
   end
 
   def test_notifications
-    a = Article.new(:title => 'New Article', :body => 'Foo', :author => 'Tobi', :user => users(:tobi))
+    a = Article.new(:title => 'New Article', :body => 'Foo',
+                    :blog => this_blog,
+                    :author => 'Tobi', :user => users(:tobi))
     assert a.save
 
     assert_equal 2, a.notify_users.size

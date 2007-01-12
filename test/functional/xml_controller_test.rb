@@ -39,6 +39,7 @@ class XmlControllerTest < Test::Unit::TestCase
 
     Article.create!(:title => "News from the future!",
                     :body => "The future is cool!",
+                    :blog => this_blog,
                     :keywords => "future",
                     :created_at => Time.now + 12.minutes)
   end

@@ -27,6 +27,7 @@ class PageTest < Test::Unit::TestCase
     a.name = 'a-new-name'
     a.title = 'A Fabulous Page yo!'
     a.body = 'x'
+    a.blog = this_blog
 
     assert a.save
 
@@ -34,6 +35,10 @@ class PageTest < Test::Unit::TestCase
     b.name = a.name
     b.body = a.body
     b.title = a.title
+
+    assert !b.save
+
+    b.blog = a.blog
 
     assert !b.save
   end
