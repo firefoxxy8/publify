@@ -38,6 +38,7 @@ class Admin::ContentController < Admin::BaseController
   def preview
     @headers["Content-Type"] = "text/html; charset=utf-8"
     @article = Article.new(params[:article])
+    @article.blog = this_blog
     render :layout => false
   end
 

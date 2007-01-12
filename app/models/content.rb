@@ -196,7 +196,8 @@ class Content < ActiveRecord::Base
 
   # FIXME -- this feels wrong.
   def blog
-    self[:blog] ||= blog_id.to_i.zero? ? Blog.default : Blog.find(blog_id)
+    #self[:blog] ||= blog_id.to_i.zero? ? Blog.default : Blog.find(blog_id)
+    self[:blog] ||= blog_id.to_i.zero? ? nil : Blog.find(blog_id)
   end
 
   def state=(newstate)

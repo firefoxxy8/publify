@@ -147,6 +147,7 @@ class BackendControllerTest < Test::Unit::TestCase
 
   def test_meta_weblog_new_post
     article = Article.new
+    article.blog = this_blog
     article.title = "Posted via Test"
     article.body = "body"
     article.extended = "extend me"

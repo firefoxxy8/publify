@@ -172,13 +172,11 @@ class Feedback < Content
 
   def blog_id
     set_blog_and_blog_id_from_article
-    #self[:blog_id]
     super
   end
 
   def blog
     set_blog_and_blog_id_from_article
-    #self[:blog]
     super
   end
 
@@ -188,8 +186,5 @@ class Feedback < Content
     return if self.article.nil?
     self[:blog_id] ||= self.article.blog_id
     self[:blog] ||= self.article.blog
-    #elsif self[:blog_id]
-    #  self[:blog] ||= Blog.find_by_id(self[:blog_id])
-    #else
   end
 end

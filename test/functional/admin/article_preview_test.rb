@@ -40,6 +40,7 @@ class Admin::ArticlePreviewTest < Test::Unit::TestCase
   end
 
   def test_only_extended
+    # FIXME: use extended, not body!!!!
     post :preview, :article => { :body => 'An extension' }
 
     assert_tag :tag => 'p',
