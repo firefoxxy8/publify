@@ -18,7 +18,7 @@ class ArticlesController < ContentController
 
   def frontpage
     @frontpage = true;
-    @articles = Article.find_published(
+    @articles = this_blog.articles.find_published(
       :all, :order => 'created_at DESC',
       :limit => this_blog.limit_article_display
     )
