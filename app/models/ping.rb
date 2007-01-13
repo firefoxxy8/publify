@@ -13,14 +13,18 @@ class Ping < ActiveRecord::Base
         @logger.info "\nAbout to get resource: #{ping.url}"
         uri = URI.parse(ping.url)
         @response = Net::HTTP.get_response(uri)
-        @logger.info "\nGot resource"
+        #@logger.info "\nAbout to get resource: #{uri}"
+        #test = Resolv.getaddress(uri.host)
+        #conn = Net::HTTP.new(uri.host, uri.port)
+        #@response = conn.get(uri.path)
+        @logger.info "\nGot resource for #{uri}"
         send_pingback or send_trackback
-        @logger.info "\nDone pinger."
+        @logger.info "\nDone pinger for #{uri}"
       rescue Timeout::Error => err
         return
       rescue => err
-        @logger.info "\nHere? Error = #{err}"
-        raise err
+        @logger.info "\nSending pingback or trackback failed with error: #{err}"
+        #raise err
         # Ignore
       end
     end
