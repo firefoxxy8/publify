@@ -186,12 +186,12 @@ class ArticlesController < ContentController
     begin
       article = this_blog.published_articles.find($1)
       headers["Status"] = "301 Moved Permanently"
-      redirect_to article.location
+      redirect_to article.permalink_url
       return
     rescue ActiveRecord::RecordNotFound
       render :text => "Page not found", :status => 404
-    rescue
-      render :text => "Internal server error", :status => 500
+    #rescue
+    #  render :text => "Internal server error", :status => 500
     end
   end
 

@@ -105,6 +105,15 @@ class ArticlesControllerTest < Test::Unit::TestCase
     ### assert ! @response.body
   end
 
+  # Old bryar-style /blog/id_xx links
+  def test_bryarlink
+    get :bryarlink, :bryarid => "id_3"
+    assert_response(301) # Moved permanently
+    assert_redirected_to contents(:article3).permalink_url
+    get :bryarlink, :bryarid => "id_5"
+    assert_response :missing
+  end
+
   # Main index
   def test_index
     get :index
