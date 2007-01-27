@@ -77,24 +77,25 @@ class Article < Content
       begin
         unless pings.collect { |p| p.url }.include?(url.strip)
           ping = pings.build("url" => url)
-          logger.info "\nHere! #{url}"
+          logger.info "Just before deciding what to do with #{url}"
 
           if weblogupdatesping_urls.include?(url)
+            logger.info "About to do send_weblogupdatesping with #{url}"
             ping.send_weblogupdatesping(serverurl, articleurl)
           elsif pingback_or_trackback_urls.include?(url)
-            logger.info "\nDoing the pingback or trackback! #{url}"
+            logger.info "About to do send_pingback_or_trackback with #{url}"
             ping.send_pingback_or_trackback(articleurl)
           end
         end
-        logger.info "\nThere! #{url}"
+        logger.info "Did all without exception with #{url}"
       rescue Exception => e
         logger.error(e)
         # in case the remote server doesn't respond or gives an error,
         # we should throw an xmlrpc error here.
       end
-      logger.info "\nDone! #{url}"
+      logger.info "End of loop for #{url}"
     end
-    logger.info "\nAll done!"
+    logger.info "All done!"
   end
 
   def send_pings

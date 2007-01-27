@@ -86,9 +86,7 @@ class Admin::ContentController < Admin::BaseController
     if request.post?
       set_article_author
       save_attachments
-      logger.info(">>>>>>>>>>>>>> ID before save: #{@article.blog_id}")
       if @article.save
-        logger.info(">>>>>>>>>>>>>> ID after save: #{@article.blog_id}")
         set_article_categories
         set_the_flash
         redirect_to :action => 'show', :id => @article.id

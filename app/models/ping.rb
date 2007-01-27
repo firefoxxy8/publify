@@ -99,6 +99,7 @@ class Ping < ActiveRecord::Base
     t = Thread.start(Pinger.new(origin_url, self)) do |pinger|
       pinger.send_pingback_or_trackback
     end
+    logger.info "About to wait for thread" if defined? $TESTING
     t.join if defined? $TESTING
   end
 
