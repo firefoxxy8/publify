@@ -10,22 +10,21 @@ class Ping < ActiveRecord::Base
     def send_pingback_or_trackback
       @logger = RAILS_DEFAULT_LOGGER
       begin
-        @logger.info "\nAbout to get resource: #{ping.url}"
+        @logger.info "About to get resource: #{ping.url}"
         uri = URI.parse(ping.url)
         @response = Net::HTTP.get_response(uri)
         #@logger.info "\nAbout to get resource: #{uri}"
         #test = Resolv.getaddress(uri.host)
         #conn = Net::HTTP.new(uri.host, uri.port)
         #@response = conn.get(uri.path)
-        @logger.info "\nGot resource for #{uri}"
+        @logger.info "Got resource for #{uri}"
         send_pingback or send_trackback
-        @logger.info "\nDone pinger for #{uri}"
+        @logger.info "Done pinger for #{uri}"
       rescue Timeout::Error => err
+        @logger.info "Sending pingback or trackback timed out"
         return
       rescue => err
-        @logger.info "\nSending pingback or trackback failed with error: #{err}"
-        #raise err
-        # Ignore
+        @logger.info "Sending pingback or trackback failed with error: #{err}"
       end
     end
 
@@ -74,6 +73,7 @@ class Ping < ActiveRecord::Base
 
     def send_pingback
       if pingback_url
+        @logger.info "Pinger.send_pingback: #{pingback_url}"
         send_xml_rpc(pingback_url, "pingback.ping", origin_url, ping.url)
         return true
       else
@@ -82,7 +82,7 @@ class Ping < ActiveRecord::Base
     end
 
     def send_trackback
-      @logger.info "\nPinger.send_trackback: #{trackback_url}"
+      @logger.info "Pinger.send_trackback: #{trackback_url}"
       ping.send_trackback(trackback_url, origin_url)
     end
 
@@ -129,19 +129,16 @@ class Ping < ActiveRecord::Base
   protected
 
   def send_xml_rpc(xml_rpc_url, name, *args)
-    t = Thread.start do
-      begin
-        server = XMLRPC::Client.new2(URI.parse(xml_rpc_url).to_s)
+    begin
+      server = XMLRPC::Client.new2(URI.parse(xml_rpc_url).to_s)
 
-        begin
-          result = server.call(name, *args)
-        rescue XMLRPC::FaultException => e
-          logger.error(e)
-        end
-      rescue Exception => e
+      begin
+        result = server.call(name, *args)
+      rescue XMLRPC::FaultException => e
         logger.error(e)
       end
+    rescue Exception => e
+      logger.error(e)
     end
-    t.join if defined? $TESTING
   end
 end
