@@ -1,4 +1,5 @@
 module Admin::BaseHelper
+  include ActionView::Helpers::DateHelper
 
   def state_class(item)
     item.state.memento.underscore.sub(/.*\//, '')
@@ -53,15 +54,15 @@ module Admin::BaseHelper
   end
 
   def link_to_show(record)
-    link_to image_tag('go'), :action => 'show', :id => record.id
+    link_to image_tag('go.png'), :action => 'show', :id => record.id
   end
 
   def link_to_edit(record)
-    link_to image_tag('go'), :action => 'edit', :id => record.id
+    link_to image_tag('go.png'), :action => 'edit', :id => record.id
   end
 
   def link_to_destroy(record)
-    link_to image_tag('delete'), :action => 'destroy', :id => record.id
+    link_to image_tag('delete.png'), :action => 'destroy', :id => record.id
   end
 
   def text_filter_options
@@ -124,5 +125,9 @@ module Admin::BaseHelper
 
   def task_edit_resource_mime(title,id)
     link_to_function(title, toggle_effect('edit-resource-mime-' + id.to_s, 'Effect.BlindUp', "duration:0.4", "Effect.BlindDown", "duration:0.4"))
+  end
+
+  def time_delta_from_now_in_words(timestamp)
+    distance_of_time_in_words_to_now(timestamp) + ((Time.now < timestamp) ? ' from now' : ' ago')
   end
 end

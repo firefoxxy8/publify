@@ -31,18 +31,14 @@ class ArticlesController < ContentController
     #
     # So, we're going to use the older Paginator class and manually provide a count.
     # This is a 100x speedup on my box.
-    count = Article.count(:conditions => ['published = ? AND contents.published_at < ? AND blog_id = ?',
-      true, Time.now, this_blog.id])
+    now = Time.now
+    count = this_blog.articles.count(:conditions => ['published = ? AND contents.published_at < ?',
+                                                     true, now])
     @pages = Paginator.new self, count, this_blog.limit_article_display, params[:page]
-    @articles = Article.find( :all,
-      :offset => @pages.current.offset,
-      :limit => @pages.items_per_page,
-      :order => "contents.published_at DESC",
-      :include => [:categories, :tags],
-      :conditions =>
-         ['published = ? AND contents.published_at < ? AND blog_id = ?',
-          true, Time.now, this_blog.id]
-    )
+    @articles = this_blog.published_articles.find( :all,
+                                                   :offset => @pages.current.offset,
+                                                   :limit => @pages.items_per_page,
+                                                   :conditions => ['contents.published_at < ?', now] )
   end
 
   def search
@@ -105,7 +101,7 @@ class ArticlesController < ContentController
 
   # Receive comments to articles
   def comment
-    unless @request.xhr? || this_blog.sp_allow_non_ajax_comments
+    unless request.xhr? || this_blog.sp_allow_non_ajax_comments
       render_error("non-ajax commenting is disabled")
       return
     end
@@ -240,7 +236,7 @@ class ArticlesController < ContentController
   end
 
   def set_headers
-    @headers["Content-Type"] = "text/html; charset=utf-8"
+    headers["Content-Type"] = "text/html; charset=utf-8"
   end
 
   def list_groupings(klass)
@@ -252,7 +248,7 @@ class ArticlesController < ContentController
   def render_grouping(klass)
     return list_groupings(klass) unless params[:id]
 
-    @page_title = "#{this_blog.blog_name} - #{klass.to_s.underscore} #{params[:id]}"
+    @page_title = "#{klass.to_s.underscore} #{params[:id]}"
     @articles = klass.find_by_permalink(params[:id]).articles.find_already_published rescue []
     auto_discovery_feed :type => klass.to_s.underscore, :id => params[:id]
     render_paginated_index("Can't find posts with #{klass.to_prefix} '#{h(params[:id])}'")

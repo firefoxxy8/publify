@@ -1,7 +1,7 @@
-
+require 'comment'
+require 'trackback'
 
 class Admin::FeedbackController < Admin::BaseController
-  model :comment, :trackback
 
   def index
     conditions = ['blog_id = :blog_id', {:blog_id => Blog.default.id}]
@@ -22,7 +22,7 @@ class Admin::FeedbackController < Admin::BaseController
     end
 
     @pages, @feedback = paginate(:feedback,
-      :order => 'contents.created_at desc',
+      :order => 'feedback.created_at desc',
       :conditions => conditions,
       :per_page => 40)
 

@@ -1,5 +1,7 @@
 class Feedback < Content
   # Empty, for now, ready to hoist up methods from Comment & Trackback
+  set_table_name "feedback"
+
   include TypoGuid
   validates_age_of :article_id
 
@@ -99,7 +101,7 @@ class Feedback < Content
 
   def sp_is_spam?(options={})
     sp = SpamProtection.new(blog)
-    Timeout.timeout(defined?($TESTING) ? 10 : 3600) do
+    Timeout.timeout(defined?($TESTING) ? 10 : 30) do
       spam_fields.any? do |field|
         sp.is_spam?(self.send(field))
       end
@@ -115,7 +117,7 @@ class Feedback < Content
   def akismet_is_spam?(options={})
     return false if blog.sp_akismet_key.blank?
     begin
-      Timeout.timeout(defined?($TESTING) ? 30 : 3600) do
+      Timeout.timeout(defined?($TESTING) ? 30 : 60) do
         akismet.commentCheck(akismet_options)
       end
     rescue Timeout::Error => e

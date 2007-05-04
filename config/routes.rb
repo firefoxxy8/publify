@@ -79,11 +79,11 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
 
   map.connect 'stylesheets/theme/:filename',
-    :controller => 'theme', :action => 'stylesheets'
-  map.connect 'javascript/theme/:filename',
-    :controller => 'theme', :action => 'javascript'
+    :controller => 'theme', :action => 'stylesheets', :filename => /.*/
+  map.connect 'javascripts/theme/:filename',
+    :controller => 'theme', :action => 'javascript', :filename => /.*/
   map.connect 'images/theme/:filename',
-    :controller => 'theme', :action => 'images'
+    :controller => 'theme', :action => 'images', :filename => /.*/
 
   # For the tests
   map.connect 'blog/theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
@@ -92,7 +92,6 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'textfilter', :action => 'public_action'
 
   # Work around the Bad URI bug
-  ## MvZ: %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
   %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
     map.connect "blog/#{i}", :controller => "#{i}", :action => 'index'
     map.connect "blog/#{i}/:action", :controller => "#{i}"

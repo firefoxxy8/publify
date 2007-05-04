@@ -27,9 +27,9 @@ class Blog < CachedModel
   has_many :comments
   has_many :pages, :order => "id DESC"
   has_many(:published_articles, :class_name => "Article",
-           :conditions => ["published = ?", true],
+           :conditions => {:published => true},
            :include => [:categories, :tags],
-           :order => "contents.created_at DESC") do
+           :order => "contents.published_at DESC") do
     def before(date = Time.now)
       find(:all, :conditions => ["contents.created_at < ?", date])
     end
@@ -44,7 +44,7 @@ class Blog < CachedModel
   # Description
   setting :blog_name,                  :string, 'My Shiny Weblog!'
   setting :blog_subtitle,              :string, ''
-  setting :title_prefix,               :boolean, false
+  setting :title_prefix,               :integer, 0
   setting :geourl_location,            :string, ''
   setting :canonical_server_url,       :string, ''  # Deprecated
 
@@ -87,7 +87,12 @@ class Blog < CachedModel
 
   def initialize(*args)
     super
-    self.settings ||= { }
+    # Yes, this is weird - PDC
+    begin
+      self.settings ||= {}
+    rescue Exception => e
+      self.settings = {}
+    end
   end
 
   # Find the Blog that matches a specific base URL.  If no Blog object is found

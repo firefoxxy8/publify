@@ -6,7 +6,7 @@ development:
   password: 
 
 test:
-  adapter: postgresql
+  adapter: sqlite3
   database: typo_tests
   host:
   username: typo
