@@ -72,6 +72,7 @@ class Blog < CachedModel
   setting :limit_rss_display,          :integer, 10
   setting :default_allow_pings,        :boolean, false
   setting :default_allow_comments,     :boolean, true
+  setting :default_moderate_comments,  :boolean, false
   setting :link_to_author,             :boolean, false
   setting :show_extended_on_rss,       :boolean, true
   setting :theme,                      :string, 'azure'
@@ -80,10 +81,14 @@ class Blog < CachedModel
   setting :ping_urls,                  :string, "http://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
   setting :send_outbound_pings,        :boolean, true
   setting :email_from,                 :string, 'typo@example.com'
+  setting :editor,                     :integer, 1
 
   # Jabber config
   setting :jabber_address,             :string, ''
   setting :jabber_password,            :string, ''
+
+  #deprecation warning for plugins removal
+  setting :deprecation_warning,        :integer, 1
 
   def initialize(*args)
     super
@@ -111,11 +116,15 @@ class Blog < CachedModel
     settings[:blog_id] = self.id
     article_id = settings[:id]
     settings.delete(:id)
-    trackback = published_articles.find(article_id).trackbacks.create!(settings)
+    article = published_articles.find(article_id)
+    unless article.allow_pings?
+      throw :error, "Trackback not saved"
+    end
+    article.trackbacks.create!(settings)
   end
 
   # Check that all required blog settings have a value.
-  def is_ok?
+  def configured?
     settings.has_key?('blog_name')
   end
 

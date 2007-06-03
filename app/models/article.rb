@@ -21,7 +21,21 @@ class Article < Content
   belongs_to :user
   has_many :triggers, :as => :pending_item
 
+  after_save :post_trigger
   after_destroy :fix_resources
+
+  has_state(:state,
+            :valid_states  => [:new, :draft,
+                               :publication_pending, :just_published, :published,
+                               :just_withdrawn, :withdrawn],
+            :initial_state =>  :new,
+            :handles       => [:withdraw,
+                               :post_trigger,
+                               :after_save, :send_pings, :send_notifications,
+                               :published_at=, :published=, :just_published?])
+
+
+  include States
 
   def stripped_title
     self.title.gsub(/<[^>]*>/,'').to_url
@@ -29,15 +43,29 @@ class Article < Content
 
   def permalink_url(anchor=nil, only_path=true)
     @cached_permalink_url ||= {}
-    @cached_permalink_url["#{anchor}#{only_path}"] ||= blog.url_for(
-      :year => published_at.year,
-      :month => sprintf("%.2d", published_at.month),
-      :day => sprintf("%.2d", published_at.day),
-      :title => permalink,
-      :anchor => anchor,
-      :only_path => only_path,
-      :controller => '/articles'
-    )
+    @cached_permalink_url["#{anchor}#{only_path}"] ||= \
+      blog.url_for(:year => published_at.year,
+                   :month => sprintf("%.2d", published_at.month),
+                   :day => sprintf("%.2d", published_at.day),
+                   :id => permalink,
+                   :anchor => anchor,
+                   :only_path => only_path,
+                   :controller => '/articles',
+                   :action => 'show')
+  end
+
+  def param_array
+    @param_array ||=
+      returning([published_at.year, sprintf('%.2d', published_at.month),
+                 sprintf('%.2d', published_at.day), permalink]) do |params|
+      this = self
+      k = class << params; self; end
+      k.send(:define_method, :to_s) { params[-1] }
+    end
+  end
+
+  def to_param
+    param_array
   end
 
   def trackback_url
@@ -103,10 +131,6 @@ class Article < Content
     logger.info "All done!"
   end
 
-  def send_pings
-    state.send_pings(self)
-  end
-
   def next
     blog.articles.find(:first, :conditions => ['published_at > ?', published_at],
                        :order => 'published_at asc')
@@ -119,16 +143,24 @@ class Article < Content
 
   # Count articles on a certain date
   def self.count_by_date(year, month = nil, day = nil, limit = nil)
-    from, to = self.time_delta(year, month, day)
-    Article.count(["published_at BETWEEN ? AND ? AND published = ?",
-                   from, to, true])
+    if !year.blank?
+      from, to = self.time_delta(year, month, day)
+      Article.count(["published_at BETWEEN ? AND ? AND published = ?",
+                     from, to, true])
+    else
+      Article.count(:conditions => { :published => true })
+    end
   end
 
   # Find all articles on a certain date
   def self.find_all_by_date(year, month = nil, day = nil)
-    from, to = self.time_delta(year, month, day)
-    Article.find_published(:all, :conditions => ["published_at BETWEEN ? AND ?",
-                                                 from, to])
+    if !year.blank?
+      from, to = self.time_delta(year, month, day)
+      Article.find_published(:all, :conditions => ["published_at BETWEEN ? AND ?",
+                                                   from, to])
+    else
+      Article.find_published(:all)
+    end
   end
 
   # Find one article on a certain date
@@ -138,12 +170,27 @@ class Article < Content
   end
 
   # Finds one article which was posted on a certain date and matches the supplied dashed-title
-  def self.find_by_permalink(year, month, day, title)
+  def self.find_by_permalink(year, month=nil, day=nil, title=nil)
+    unless month
+      case year
+      when Hash
+        year, month, day, title =
+          year[:article_year] \
+          ? year.values_at(:article_year, :article_month, :article_day, :article_id) \
+          : year.values_at(:year, :month, :day, :id)
+      when Array
+        year, month, day, title = year
+      end
+    end
     from, to = self.time_delta(year, month, day)
     find_published(:first,
                    :conditions => ['permalink = ? AND ' +
                                    'published_at BETWEEN ? AND ?',
                                    title, from, to ])
+  end
+
+  def self.find_by_params_hash(params = {})
+    find_by_permalink(params)
   end
 
   # Fulltext searches the body of published articles
@@ -187,15 +234,12 @@ class Article < Content
   end
 
   def comments_closed?
-    if self.allow_comments?
-      if !self.blog.sp_article_auto_close.zero? and self.created_at.to_i < self.blog.sp_article_auto_close.days.ago.to_i
-        return true
-      else
-        return false
-      end
-    else
-      return true
-    end
+    !(allow_comments? && in_feedback_window?)
+  end
+
+  def in_feedback_window?
+    self.blog.sp_article_auto_close.zero? ||
+      self.created_at.to_i > self.blog.sp_article_auto_close.days.ago.to_i
   end
 
   def published_comments
@@ -248,9 +292,10 @@ class Article < Content
 
   protected
 
-  before_create :set_defaults, :create_guid, :add_notifications
+  before_create :set_defaults, :create_guid
   before_save :set_published_at
   after_save :keywords_to_tags
+  after_create :add_notifications
 
   def set_published_at
     if self.published and self[:published_at].nil?
@@ -287,10 +332,6 @@ class Article < Content
     to = from + 1.day unless day.blank?
     to = to - 1 # pull off 1 second so we don't overlap onto the next day
     return [from, to]
-  end
-
-  def find_published(what = :all, options = {})
-    super(what, options)
   end
 
   validates_uniqueness_of :guid

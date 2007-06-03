@@ -1,31 +1,6 @@
 module ArticlesHelper
   include SidebarHelper
 
-  def admin_tools_for(model)
-    type = model.class.to_s.downcase
-    tag = []
-    tag << content_tag("div",
-      link_to_remote('nuke', {
-          :url => { :action => "nuke_#{type}", :id => model },
-          :complete => visual_effect(:puff, "#{type}-#{model.id}", :duration => 0.6),
-          :confirm => "Are you sure you want to delete this #{type}?"
-        }, :class => "admintools") <<
-      link_to('edit', {
-        :controller => "admin/#{type.pluralize}",
-        :article_id => model.article.id,
-        :action => "edit", :id => model
-        }, :class => "admintools"),
-      :id => "admin_#{type}_#{model.id}", :style => "display: none")
-    tag.join(" | ")
-  end
-
-  def onhover_show_admin_tools(type, id = nil)
-    tag = []
-    tag << %{ onmouseover="if (getCookie('is_admin') == 'yes') { Element.show('admin_#{[type, id].compact.join('_')}'); }" }
-    tag << %{ onmouseout="Element.hide('admin_#{[type, id].compact.join('_')}');" }
-    tag
-  end
-
   def render_errors(obj)
     return "" unless obj
     tag = String.new
@@ -67,7 +42,7 @@ module ArticlesHelper
     <<-HTML
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   #{ meta_tag 'ICBM', this_blog.geourl_location unless this_blog.geourl_location.empty? }
-  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => 'xml', :action => 'rsd' }" />
+  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => '/xml', :action => 'rsd' }" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ @auto_discovery_url_atom }" />
   <!--
   <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ @auto_discovery_url_rss }" />
@@ -123,16 +98,6 @@ module ArticlesHelper
     controller.send(:render_to_string, *args, &block)
   end
 
-  # Generate the image tag for a commenters gravatar based on their email address
-  # Valid options are described at http://www.gravatar.com/implement.php
-  def gravatar_tag(email, options={})
-    options.update(:gravatar_id => Digest::MD5.hexdigest(email.strip))
-    options[:default] = CGI::escape(options[:default]) if options.include?(:default)
-    options[:size] ||= 60
-
-    image_tag("http://www.gravatar.com/avatar.php?" <<
-      options.map { |key,value| "#{key}=#{value}" }.sort.join("&"), :class => "gravatar")
-  end
 
   def calc_distributed_class(articles, max_articles, grp_class, min_class, max_class)
     (grp_class.to_prefix rescue grp_class.to_s) +

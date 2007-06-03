@@ -2,8 +2,10 @@
 # Likewise will all the methods added be available for all controllers.
 class ApplicationController < ActionController::Base
   include LoginSystem
-  before_filter :reset_local_cache, :fire_triggers
+  include Sitealizer
+  before_filter :use_sitealizer, :reset_local_cache, :fire_triggers
   after_filter :reset_local_cache
+
 
   protected
 
@@ -49,6 +51,11 @@ class ApplicationController < ActionController::Base
   def blog_base_url
     #url_for(:controller => '/articles').gsub(%r{/$},'')
     index_url.gsub(%r{/$},'')
+  end
+
+  def add_to_cookies(name, value, path=nil, expires=nil)
+    cookies[name] = { :value => value, :path => path || "/#{controller_name}",
+                       :expires => 6.weeks.from_now }
   end
 
   def self.include_protected(*modules)

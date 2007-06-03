@@ -1,20 +1,20 @@
-  <% @page_heading = "Trackbacks for #{ link_to h(@article.title), :controller => '/admin/content', :action => 'show', :id => @article }" %>
+  <% @page_heading = _("Trackbacks for") + " #{ link_to h(@article.title), :controller => '/admin/content', :action => 'show', :id => @article }" %>
 
   <% content_for('tasks') do %>
     <%= task_new 'Create new trackback' %>
-    <li><%= link_to 'Back to articles', :controller => '/admin/content', :action => 'list' %></li>
+    <li><%= link_to 'Manage Articles', :controller => '/admin/content', :action => 'list' %></li>
   <% end %> 
 
   <div class="list">	
     <table>
     <tr>
-      <th>Blog Name</th>
-      <th>Title</th>
-      <th>Excerpt</th>
-      <th>IP</th>
-      <th>Created at</th>
-      <th>Edit</th>
-      <th>Delete</th>
+      <th><%= _("Blog Name")%></th>
+      <th><%= _("Title")%></th>
+      <th><%= _("Body")%></th>
+      <th><%= _("IP")%></th>
+      <th><%= _("Created at")%></th>
+      <th><%= _("Edit")%></th>
+      <th><%= _("Delete")%></th>
     </tr>
     <% for trackback in @trackbacks -%>
     <tr>

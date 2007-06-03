@@ -2,7 +2,7 @@ module Admin::BaseHelper
   include ActionView::Helpers::DateHelper
 
   def state_class(item)
-    item.state.memento.underscore.sub(/.*\//, '')
+    item.state.to_s
   end
 
   def render_flash
@@ -22,27 +22,27 @@ module Admin::BaseHelper
       output << "<a href=\"#{value}\">#{key}</a>"
     end if @tasks
 
-    output.join("<br/>\n")
+    output.join("<br />\n")
   end
 
   def current_user_notice
     unless session[:user]
       link_to "log in", :controller => "/accounts", :action=>"login"
     else
-      link_to "log out", :controller => "/accounts", :action=>"logout"
+      link_to _("log out"), :controller => "/accounts", :action=>"logout"
     end
   end
 
   def tab(label, options = {})
     if controller.controller_name =~ /#{options[:controller].split('/').last}/
-      content_tag :li, link_to(label, options, {"class"=> "active"}), {"class"=> "active"}
+      content_tag :li, link_to(label, options, {"class"=> ""}), {"class"=> ""}
     else
       content_tag :li, link_to(label, options)
     end
   end
 
   def cancel(url = {:action => 'list'})
-    link_to "Cancel", url
+    link_to _("Cancel"), url
   end
 
   def save(val = "Store")
@@ -54,15 +54,15 @@ module Admin::BaseHelper
   end
 
   def link_to_show(record)
-    link_to image_tag('go.png'), :action => 'show', :id => record.id
+    link_to image_tag('show.png'), :action => 'show', :id => record.id
   end
 
   def link_to_edit(record)
-    link_to image_tag('go.png'), :action => 'edit', :id => record.id
+    link_to image_tag('edit.png', :alt => "edit", :title => "Edit content"), :action => 'edit', :id => record.id
   end
 
   def link_to_destroy(record)
-    link_to image_tag('delete.png'), :action => 'destroy', :id => record.id
+    link_to image_tag('delete.png', :alt => "delete", :title => "Delete content"), :action => 'destroy', :id => record.id
   end
 
   def text_filter_options
@@ -88,7 +88,7 @@ module Admin::BaseHelper
   end
 
   def task_overview
-    task('Back to overview', 'list')
+    task(_('Back to overview'), 'list')
   end
 
   def task_new(title)

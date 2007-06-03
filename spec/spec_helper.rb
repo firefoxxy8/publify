@@ -1,22 +1,23 @@
-ENV["RAILS_ENV"] = "test"
+# This file is copied to ~/spec when you run 'ruby script/generate rspec'
+# from the project root directory.
+ENV["RAILS_ENV"] ||= "test"
 require File.expand_path(File.dirname(__FILE__) + "/../config/environment")
-require 'rspec_on_rails'
+require 'spec/rails'
 
-# Even if you're using RSpec, RSpec on Rails is reusing some of the
-# Rails-specific extensions for fixtures and stubbed requests, response
-# and other things (via RSpec's inherit mechanism). These extensions are
-# tightly coupled to Test::Unit in Rails, which is why you're seeing it here.
-module Spec
-  module Rails
-    class EvalContext < Test::Unit::TestCase
-      cattr_accessor :fixture_path, :use_transactional_fixtures, :use_instantiated_fixtures
-      self.use_transactional_fixtures = true
-      self.use_instantiated_fixtures  = false
-      self.fixture_path = RAILS_ROOT + '/spec/fixtures'
+Spec::Runner.configure do |config|
+  config.use_transactional_fixtures = true
+  config.use_instantiated_fixtures  = false
+  config.fixture_path = RAILS_ROOT + '/spec/fixtures'
 
-      # You can set up your global fixtures here, or you
-      # can do it in individual contexts
-      #fixtures :table_a, :table_b
-    end
-  end
+  # You can declare fixtures for each behaviour like this:
+  #   describe "...." do
+  #     fixtures :table_a, :table_b
+  #
+  # Alternatively, if you prefer to declare them only once, you can
+  # do so here, like so ...
+  #
+  #   config.global_fixtures = :table_a, :table_b
+  #
+  # If you declare global fixtures, be aware that they will be declared
+  # for all of your examples, even those that don't use them.
 end

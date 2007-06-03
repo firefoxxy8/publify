@@ -29,67 +29,96 @@ ActionController::Routing::Routes.draw do |map|
   map.xml 'blog/xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
   #map.xml 'sitemap.xml', :controller => 'xml', :action => 'feed', :format => 'googlesitemap', :type => 'sitemap'
 
+  map.datestamped_resources(:articles,
+                            :collection => {
+                              :search => :get, :comment_preview => :any,
+                              :author => :get, :archives => :get
+                            },
+                            :member => {
+                              :comment => :post, :trackback => :post,
+                              :nuke_comment => :post, :nuke_trackback => :post,
+                              :markup_help => :get
+                            }) do |dated|
+    dated.resources :comments, :new => { :preview => :any }
+    dated.resources :trackbacks
+  end
+
   # allow neat perma urls
-  map.connect 'blog',
-    :controller => 'articles', :action => 'index'
+###   map.connect 'blog',
+###     :controller => 'articles', :action => 'index'
   map.connect 'blog/page/:page',
     :controller => 'articles', :action => 'index',
     :page => /\d+/
 
-  map.connect 'blog/:year/:month/:day',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/
-  map.connect 'blog/:year/:month',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/, :month => /\d{1,2}/
-  map.connect 'blog/:year',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/
+###   map.connect 'blog/:year/:month/:day',
+###     :controller => 'articles', :action => 'find_by_date',
+###     :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/
+###   map.connect 'blog/:year/:month',
+###     :controller => 'articles', :action => 'find_by_date',
+###     :year => /\d{4}/, :month => /\d{1,2}/
+###   map.connect 'blog/:year',
+###     :controller => 'articles', :action => 'find_by_date',
+###     :year => /\d{4}/
+  date_options = { :year => /\d{4}/, :month => /(?:0?[1-9]|1[12])/, :day => /(?:0[1-9]|[12]\d|3[01])/ }
 
-  map.connect 'blog/:year/:month/:day/page/:page',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/, :page => /\d+/
-  map.connect 'blog/:year/:month/page/:page',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/, :month => /\d{1,2}/, :page => /\d+/
-  map.connect 'blog/:year/page/:page',
-    :controller => 'articles', :action => 'find_by_date',
-    :year => /\d{4}/, :page => /\d+/
+###   map.connect 'blog/:year/:month/:day/page/:page',
+###     :controller => 'articles', :action => 'find_by_date',
+###     :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/, :page => /\d+/
+###   map.connect 'blog/:year/:month/page/:page',
+###     :controller => 'articles', :action => 'find_by_date',
+###     :year => /\d{4}/, :month => /\d{1,2}/, :page => /\d+/
+###   map.connect 'blog/:year/page/:page',
+###     :controller => 'articles', :action => 'find_by_date',
+###     :year => /\d{4}/, :page => /\d+/
+#   map.with_options(date_options) do |dated|
+#     dated.resources(:comments, :path_prefix => '/blog/:year/:month/:day/:title',
+#                     :members => { :preview => :get })
+#     dated.resources(:trackbacks, :path_prefix => '/blog/:year/:month/:day/:title')
+#   end
 
-  map.connect 'blog/:year/:month/:day/:title',
-    :controller => 'articles', :action => 'permalink',
-    :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/
+###   map.connect 'blog/:year/:month/:day/:title',
+###     :controller => 'articles', :action => 'permalink',
+###     :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/
+  map.with_options(:conditions => {:method => :get}) do |get|
+    get.with_options(date_options.merge(:controller => 'articles')) do |dated|
+      dated.with_options(:action => 'index') do |finder|
+        finder.connect 'blog/:year/page/:page',
+          :month => nil, :day => nil, :page => /\d+/
+        finder.connect 'blog/:year/:month/page/:page',
+          :day => nil, :page => /\d+/
+        finder.connect 'blog/:year/:month/:day/page/:page', :page => /\d+/
+      end
+    end
 
   # Old ids from Bryar
   map.connect 'blog/:bryarid',
     :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/
 
-  map.connect 'blog/category/:id',
-    :controller => 'articles', :action => 'category'
-  map.connect 'blog/category/:id/page/:page',
-    :controller => 'articles', :action => 'category',
-    :page => /\d+/
+    %w(category tag).each do |value|
+      get.with_options(:action => value, :controller => 'articles') do |m|
+        m.connect "blog/#{value}"
+        m.connect "blog/#{value}/page/:page", :page => /\d+/
+        m.connect "blog/#{value}/:id"
+        m.connect "blog/#{value}/:id/page/:page", :page => /\d+/
+      end
+    end
 
-  map.connect 'blog/tag/:id',
-    :controller => 'articles', :action => 'tag'
-  map.connect 'blog/tag/:id/page/:page',
-    :controller => 'articles', :action => 'tag',
-    :page => /\d+/
+    get.connect 'blog/pages/*name',:controller => 'articles', :action => 'view_page'
 
-  map.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
+    get.with_options(:controller => 'theme', :filename => /.*/, :conditions => {:method => :get}) do |theme|
+      theme.connect 'stylesheets/theme/:filename', :action => 'stylesheets'
+      theme.connect 'javascripts/theme/:filename', :action => 'javascript'
+      theme.connect 'images/theme/:filename',      :action => 'images'
+    end
 
-  map.connect 'stylesheets/theme/:filename',
-    :controller => 'theme', :action => 'stylesheets', :filename => /.*/
-  map.connect 'javascripts/theme/:filename',
-    :controller => 'theme', :action => 'javascript', :filename => /.*/
-  map.connect 'images/theme/:filename',
-    :controller => 'theme', :action => 'images', :filename => /.*/
+    # For the tests
+    get.connect 'blog/theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
+    map.connect 'plugins/filters/:filter/:public_action',
+      :controller => 'textfilter', :action => 'public_action'
+  end
 
-  # For the tests
-  map.connect 'blog/theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
-
-  map.connect 'plugins/filters/:filter/:public_action',
-    :controller => 'textfilter', :action => 'public_action'
+  # Stats plugin
+  map.connect '/stats/:action', :controller => 'sitealizer'
 
   # Work around the Bad URI bug
   %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
@@ -98,12 +127,35 @@ ActionController::Routing::Routes.draw do |map|
     map.connect "blog/#{i}/:action/:id", :controller => i, :id => nil
   end
 
-  %w{blacklist cache categories comments content feedback general pages
+  %w{advanced blacklist cache categories comments content feedback general pages
      resources sidebar textfilters themes trackbacks users}.each do |i|
     map.connect "blog/admin/#{i}", :controller => "admin/#{i}", :action => 'index'
     map.connect "blog/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
   end
 
-  # map.connect 'blog/:controller/:action/:id'
+  returning(map.connect('blog/:controller/:action/:id')) do |default_route|
+    # Ick!
+    default_route.write_generation
+
+    class << default_route
+      def recognize_with_deprecation(path, environment = {})
+        RAILS_DEFAULT_LOGGER.info "#{path} hit the default_route buffer"
+#         if RAILS_ENV=='test'
+#           raise "Don't rely on default routes"
+#         end
+        recognize_without_deprecation(path, environment)
+      end
+      alias_method_chain :recognize, :deprecation
+
+      def generate_with_deprecation(options, hash, expire_on = {})
+        RAILS_DEFAULT_LOGGER.info "generate(#{options.inspect}, #{hash.inspect}, #{expire_on.inspect}) reached the default route"
+#         if RAILS_ENV == 'test'
+#           raise "Don't rely on default route generation"
+#         end
+        generate_without_deprecation(options, hash, expire_on)
+      end
+      alias_method_chain :generate, :deprecation
+    end
+  end
   map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

@@ -20,7 +20,8 @@ class Comment < Feedback
 
   def notify_user_via_jabber(user)
     if user.notify_via_jabber?
-      JabberNotify.send_message(user, "New comment", "A new comment was posted to '#{article.title}' on #{blog.blog_name} by #{author}: #{body}", html(:body))
+      JabberNotify.send_message(user, "New comment", "A new comment was posted to '#{article.title}' on #{blog.blog_name} by #{author}: 
+        #{body}", self.html(:body)) 
     end
   end
 

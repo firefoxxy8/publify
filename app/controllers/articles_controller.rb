@@ -5,13 +5,12 @@ class ArticlesController < ContentController
 
   cache_sweeper :blog_sweeper
 
-  cached_pages = [:index, :read, :permalink, :category, :find_by_date,
-  :archives, :view_page, :tag, :author, :frontpage]
+  cached_pages = [:index, :read, :show, :category, :archives, :view_page, :tag, :author, :frontpage]
   # If you're really memory-constrained, then consider replacing
   # caches_action_with_params with caches_page
   caches_action_with_params *cached_pages
-  session :off, :only => cached_pages
 
+  session :only => %w(nuke_comment nuke_trackback)
   verify(:only => [:nuke_comment, :nuke_trackback],
          :session => :user, :method => :post,
          :render => { :text => 'Forbidden', :status => 403 })
@@ -26,19 +25,16 @@ class ArticlesController < ContentController
   end
 
   def index
-    # On Postgresql, paginate's default count is *SLOW*, because it does a join against
-    # all of the eager-loaded tables.  I've seen it take up to 7 seconds on my test box.
-    #
-    # So, we're going to use the older Paginator class and manually provide a count.
-    # This is a 100x speedup on my box.
-    now = Time.now
-    count = this_blog.articles.count(:conditions => ['published = ? AND contents.published_at < ?',
-                                                     true, now])
-    @pages = Paginator.new self, count, this_blog.limit_article_display, params[:page]
-    @articles = this_blog.published_articles.find( :all,
-                                                   :offset => @pages.current.offset,
-                                                   :limit => @pages.items_per_page,
-                                                   :conditions => ['contents.published_at < ?', now] )
+    @articles = this_blog.published_articles.find_all_by_date(*params.values_at(:year, :month, :day))
+    render_paginated_index
+  end
+
+  def archives
+    @articles = this_blog.published_articles
+  end
+
+  def show
+    display_article(this_blog.published_articles.find_by_permalink(*params.values_at(:year, :month, :day, :id)))
   end
 
   def search
@@ -55,31 +51,6 @@ class ArticlesController < ContentController
     set_headers
     @comment = this_blog.comments.build(params[:comment])
     @controller = self
-  end
-
-  def archives
-    @articles = this_blog.published_articles
-  end
-
-  def read
-    display_article { this_blog.published_articles.find(params[:id]) }
-  end
-
-  def permalink
-    if are_date_params_valid?(*params.values_at(:year, :month, :day))
-      display_article(this_blog.published_articles.find_by_permalink(*params.values_at(:year, :month, :day, :title)))
-    else
-      render :text => "Page not found", :status => 404
-    end
-  end
-
-  def find_by_date
-    if are_date_params_valid?(*params.values_at(:year, :month, :day))
-      @articles = this_blog.published_articles.find_all_by_date(params[:year], params[:month], params[:day])
-      render_paginated_index
-    else
-      render :text => "Page not found", :status => 404
-    end
   end
 
   def error(message = "Record not found...")
@@ -106,45 +77,36 @@ class ArticlesController < ContentController
       return
     end
 
-    if request.post?
-      begin
-        @article = this_blog.published_articles.find(params[:id])
-        params[:comment].merge!({:ip => request.remote_ip,
-                                :published => true,
-                                :user => session[:user],
-                                :user_agent => request.env['HTTP_USER_AGENT'],
-                                :referrer => request.env['HTTP_REFERER'],
-                                :permalink => @article.permalink_url})
-        @comment = @article.comments.build(params[:comment])
-        @comment.author ||= 'Anonymous'
-        @comment.save!
-        add_to_cookies(:author, @comment.author)
-        add_to_cookies(:url, @comment.url)
+    @article = this_blog.published_articles.find_by_permalink(params)
+    params[:comment].merge!({:ip => request.remote_ip,
+                              :published => true,
+                              :user => session[:user],
+                              :user_agent => request.env['HTTP_USER_AGENT'],
+                              :referrer => request.env['HTTP_REFERER'],
+                              :permalink => @article.permalink_url})
+    @comment = @article.comments.build(params[:comment])
+    @comment.author ||= 'Anonymous'
+    @comment.save
+    add_to_cookies(:author, @comment.author)
+    add_to_cookies(:url, @comment.url)
 
-        set_headers
-        render :partial => "comment", :object => @comment
-      rescue ActiveRecord::RecordInvalid
-        STDERR.puts @comment.errors.inspect
-        render_error(@comment)
-      end
-    end
+    set_headers
+    render :partial => "comment", :object => @comment
   end
 
   # Receive trackbacks linked to articles
   def trackback
     @error_message = catch(:error) do
-      if params[:__mode] == "rss"
+      if this_blog.global_pings_disable
+        throw :error, "Trackback not saved"
+      elsif params[:__mode] == "rss"
         # Part of the trackback spec... will implement later
         # XXX. Should this throw an error?
       elsif !(params.has_key?(:url) && params.has_key?(:id))
         throw :error, "A URL is required"
       else
         begin
-          settings = { :id => params[:id],
-                       :url => params[:url],      :blog_name => params[:blog_name],
-                       :title => params[:title],  :excerpt => params[:excerpt],
-                       :ip  => request.remote_ip, :published => true }
-          this_blog.ping_article!(settings)
+          this_blog.ping_article!(params.merge(:ip => request.remote_ip, :published => true))
         rescue ActiveRecord::RecordNotFound, ActiveRecord::StatementInvalid
           throw :error, "Article id #{params[:id]} not found."
         rescue ActiveRecord::RecordInvalid
@@ -202,15 +164,10 @@ class ArticlesController < ContentController
     return true
   end
 
-  def add_to_cookies(name, value, path=nil, expires=nil)
-    cookies[name] = { :value => value, :path => path || "/#{controller_name}",
-                       :expires => 6.weeks.from_now }
-  end
-
   def verify_config
     if User.count == 0
       redirect_to :controller => "accounts", :action => "signup"
-    elsif ! this_blog.is_ok?
+    elsif ! this_blog.configured?
       redirect_to :controller => "admin/general", :action => "redirect"
     else
       return true
@@ -223,7 +180,14 @@ class ArticlesController < ContentController
       @comment      = Comment.new
       @page_title   = @article.title
       auto_discovery_feed :type => 'article', :id => @article.id
-      render :action => 'read'
+      respond_to do |format|
+        format.html { render :action => 'read' }
+        with_options(:controller => 'xml', :action => 'feed', :type => 'article', :id => article) do |feed|
+          format.xml  { feed.redirect_to :format => 'atom' }
+          format.atom { feed.redirect_to :format => 'atom' }
+          format.rss  { feed.redirect_to :format => 'rss' }
+        end
+      end
     rescue ActiveRecord::RecordNotFound, NoMethodError => e
       error("Post not found...")
     end

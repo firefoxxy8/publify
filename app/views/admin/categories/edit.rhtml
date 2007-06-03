@@ -1,7 +1,9 @@
-  <% @page_heading = 'Categories' %>
-
+  <% @page_heading = _('Categories') %>
+  <% content_for('tasks') do %>
+    <%= task_overview %>
+  <% end %>
   <% form_tag :action=>"edit", :id => @category.id do %>
-  <h3>Editing category</h3>
+  <h3><% _("Editing category")%></h3>
   <div class="form">
     <%= render_partial "form" %>
   </div>

@@ -236,11 +236,18 @@
     width: 98%;
     }
 
-  .list table th {
-    text-align: left;
-    font-weight: bold;
-    border-bottom: 4px solid #ccc;
-    }
+td.operation {
+  width: 25px;
+  text-align: center;
+}
+
+th.operation {
+	text-align: center;
+}
+
+.list {
+  clear: left;
+}
 
   .list table tr td {
     padding: 0 2px;
@@ -307,10 +314,8 @@ label {
   background: #fff;
   border: 1px dashed #ccc;
   padding: 5px;
-  z-index: 9999;
   width: 50%;
   float: right;
-  clear: right;
   margin-bottom: 10px;
   line-height: 1.5em;
   letter-spacing: 0.02em;
@@ -332,14 +337,65 @@ label {
 
 #gensettings {
 
+legend {
+  font-size: 130%;
+  text-transform: capitalize;
 }
 
-/*
- * =SIDEBAR
- */
+.admin ul {
+  margin: 0;
+  padding: 0;
+}
 
+.admin li {
+  list-style: none;
+  padding: 5px;
+  margin: 0;
+  clear: both;
+}
 
- #sidebar-config {
+.admin li p {
+  line-height: 1.6em;
+}
+
+.admin li.checkbox {
+  line-height: 1.4em;
+}
+
+.admin label.float {
+  display: block;
+  float: left;
+  width: 200px;
+  margin-left: 0;
+  margin-right: 12px;
+  padding: 0;
+  text-align: right;
+}
+
+.admin label.block {
+  display: block;
+}
+
+.admin input.float {
+  width: auto;
+}
+
+.admin span.float {
+  margin-left: 212px;
+  padding: 0;
+  display: block;
+  clear: both;
+}
+
+.mandatory {
+  color: #f00;
+}
+
+/* @end */
+
+/* @group Sidebar */
+
+#sidebar-config {
   /* Safari Fix */
    border-top: 5px solid #fff;
  }
