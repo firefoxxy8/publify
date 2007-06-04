@@ -29,7 +29,8 @@ ActionController::Routing::Routes.draw do |map|
   map.xml 'blog/xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
   #map.xml 'sitemap.xml', :controller => 'xml', :action => 'feed', :format => 'googlesitemap', :type => 'sitemap'
 
-  map.datestamped_resources(:articles,
+##    map.datestamped_resources(:articles,
+  map.datestamped_resources(:blog, :controller => :articles, :singular => :article,
                             :collection => {
                               :search => :get, :comment_preview => :any,
                               :author => :get, :archives => :get
@@ -41,6 +42,11 @@ ActionController::Routing::Routes.draw do |map|
                             }) do |dated|
     dated.resources :comments, :new => { :preview => :any }
     dated.resources :trackbacks
+  end
+
+  #
+  %w(nuke_trackback nuke_comment markup_help author trackback).each do |value|
+    map.connect "blog/#{value}/:id", :controller => 'articles', :action => value
   end
 
   # allow neat perma urls
@@ -103,7 +109,7 @@ ActionController::Routing::Routes.draw do |map|
       end
     end
 
-    get.connect 'blog/pages/*name',:controller => 'articles', :action => 'view_page'
+    get.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
 
     get.with_options(:controller => 'theme', :filename => /.*/, :conditions => {:method => :get}) do |theme|
       theme.connect 'stylesheets/theme/:filename', :action => 'stylesheets'
@@ -113,7 +119,7 @@ ActionController::Routing::Routes.draw do |map|
 
     # For the tests
     get.connect 'blog/theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
-    map.connect 'plugins/filters/:filter/:public_action',
+    map.connect 'blog/plugins/filters/:filter/:public_action',
       :controller => 'textfilter', :action => 'public_action'
   end
 
@@ -121,7 +127,7 @@ ActionController::Routing::Routes.draw do |map|
   map.connect '/stats/:action', :controller => 'sitealizer'
 
   # Work around the Bad URI bug
-  %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
+  %w{ accounts backend files live sidebar textfilter xml }.each do |i|
     map.connect "blog/#{i}", :controller => "#{i}", :action => 'index'
     map.connect "blog/#{i}/:action", :controller => "#{i}"
     map.connect "blog/#{i}/:action/:id", :controller => i, :id => nil
@@ -133,29 +139,29 @@ ActionController::Routing::Routes.draw do |map|
     map.connect "blog/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
   end
 
-  returning(map.connect('blog/:controller/:action/:id')) do |default_route|
-    # Ick!
-    default_route.write_generation
-
-    class << default_route
-      def recognize_with_deprecation(path, environment = {})
-        RAILS_DEFAULT_LOGGER.info "#{path} hit the default_route buffer"
-#         if RAILS_ENV=='test'
-#           raise "Don't rely on default routes"
-#         end
-        recognize_without_deprecation(path, environment)
-      end
-      alias_method_chain :recognize, :deprecation
-
-      def generate_with_deprecation(options, hash, expire_on = {})
-        RAILS_DEFAULT_LOGGER.info "generate(#{options.inspect}, #{hash.inspect}, #{expire_on.inspect}) reached the default route"
-#         if RAILS_ENV == 'test'
-#           raise "Don't rely on default route generation"
-#         end
-        generate_without_deprecation(options, hash, expire_on)
-      end
-      alias_method_chain :generate, :deprecation
-    end
-  end
-  map.connect '*from', :controller => 'redirect', :action => 'redirect'
+###   returning(map.connect('blog/:controller/:action/:id')) do |default_route|
+###     # Ick!
+###     default_route.write_generation
+### 
+###     class << default_route
+###       def recognize_with_deprecation(path, environment = {})
+###         RAILS_DEFAULT_LOGGER.info "#{path} hit the default_route buffer"
+### #         if RAILS_ENV=='test'
+### #           raise "Don't rely on default routes"
+### #         end
+###         recognize_without_deprecation(path, environment)
+###       end
+###       alias_method_chain :recognize, :deprecation
+### 
+###       def generate_with_deprecation(options, hash, expire_on = {})
+###         RAILS_DEFAULT_LOGGER.info "generate(#{options.inspect}, #{hash.inspect}, #{expire_on.inspect}) reached the default route"
+### #         if RAILS_ENV == 'test'
+### #           raise "Don't rely on default route generation"
+### #         end
+###         generate_without_deprecation(options, hash, expire_on)
+###       end
+###       alias_method_chain :generate, :deprecation
+###     end
+###   end
+   map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

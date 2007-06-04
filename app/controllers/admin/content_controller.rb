@@ -51,6 +51,9 @@ class Admin::ContentController < Admin::BaseController
     @article = this_blog.articles.build 
     @article.attributes = params[:article]
     set_article_author
+    if @article.blog.nil?
+      raise "No blog?: #{@article.blog} #{@article.blog_id}"
+    end
     data = render_to_string(:layout => "minimal")
     data = Base64.encode64(data).gsub("\n", '')
     data = "data:text/html;charset=utf-8;base64,#{data}"

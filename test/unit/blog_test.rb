@@ -40,10 +40,10 @@ class BlogTest < Test::Unit::TestCase
   end
 
   def test_url_for
-    assert_equal('http://myblog.net/blog/articles/read/1',
+    assert_equal('http://myblog.net/blog/category/zonk',
                  @blog.url_for(:controller => 'articles',
-                               :action     => 'read',
-                               :id         => 1))
+                               :action     => 'category',
+                               :id         => 'zonk'))
   end
 
   def test_blog_has_sidebars

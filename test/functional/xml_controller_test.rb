@@ -390,6 +390,10 @@ class XmlControllerTest < Test::Unit::TestCase
     assert_select 'feed:root[xmlns="http://www.w3.org/2005/Atom"] > entry', :count => assigns(:items).size
   end
 
+  def atom10ns
+    { 'a' => 'http://www.w3.org/2005/Atom' }
+  end
+
   def set_extended_on_rss(value)
     this_blog.show_extended_on_rss = value
   end

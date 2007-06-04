@@ -598,7 +598,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_tag(:tag => 'ul',
                :descendant => {\
                  :tag => 'a',
-                 :attributes => { :href => '/blog/articles/author/tobi' },
+                 :attributes => { :href => '/blog/author/tobi' },
                })
   end
 end

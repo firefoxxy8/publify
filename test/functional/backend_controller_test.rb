@@ -154,6 +154,8 @@ class BackendControllerTest < Test::Unit::TestCase
     article.text_filter = TextFilter.find_by_name("textile")
     article.published_at = Time.now.midnight
 
+    assert_valid(article)
+
     args = [ 1, 'tobi', 'whatever', MetaWeblogService.new(@controller).article_dto_from(article), 1 ]
 
     result = invoke_layered :metaWeblog, :newPost, *args
@@ -253,17 +255,17 @@ class BackendControllerTest < Test::Unit::TestCase
     assert_equal result.first['pingTitle'], 'Trackback Entry'
   end
 
-  def test_mt_publish_post
-    args = [ 4, 'tobi', 'whatever' ]
-
-    assert (not Article.find(4).published?)
-
-    result = invoke_layered :mt, :publishPost, *args
-
-    assert result
-    assert Article.find(4).published?
-    assert Article.find(4)[:published_at]
-  end
+##  def test_mt_publish_post
+##    args = [ 4, 'tobi', 'whatever' ]
+##
+##    assert (not Article.find(4).published?)
+##
+##    result = invoke_layered :mt, :publishPost, *args
+##
+##    assert result
+##    assert Article.find(4).published?
+##    assert Article.find(4)[:published_at]
+##  end
 
   def test_mt_fail_authentication
     args = [ 1, 'tobi', 'using a wrong password', 2 ]

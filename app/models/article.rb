@@ -292,7 +292,8 @@ class Article < Content
 
   protected
 
-  before_create :set_defaults, :create_guid
+  before_validation :set_defaults, :create_guid
+  ##before_create :set_defaults, :create_guid
   before_save :set_published_at
   after_save :keywords_to_tags
   after_create :add_notifications

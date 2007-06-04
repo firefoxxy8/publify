@@ -5,7 +5,7 @@ class ArticlesController < ContentController
 
   cache_sweeper :blog_sweeper
 
-  cached_pages = [:index, :read, :show, :category, :archives, :view_page, :tag, :author, :frontpage]
+  cached_pages = [:index, :show, :category, :archives, :view_page, :tag, :author, :frontpage]
   # If you're really memory-constrained, then consider replacing
   # caches_action_with_params with caches_page
   caches_action_with_params *cached_pages

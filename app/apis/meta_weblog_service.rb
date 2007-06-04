@@ -14,7 +14,7 @@ module MetaWeblogStructs
     member :mt_allow_pings,     :int
     member :mt_convert_breaks,  :string
     member :mt_tb_ping_urls,    [:string]
-    member :dateCreated,        :time
+    member :dateCreated,        :string
   end
 
   class MediaObject < ActionWebService::Struct
@@ -87,6 +87,7 @@ class MetaWeblogService < TypoWebService
     article.title       = struct['title'] || ''
     article.published   = publish
     article.author      = username
+
     article.published_at = struct['dateCreated'].to_time.getlocal rescue Time.now
     article.user        = @user
 

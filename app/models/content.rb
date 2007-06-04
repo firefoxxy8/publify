@@ -51,6 +51,7 @@ class Content < ActiveRecord::Base
   end
 
   def set_default_blog
+    raise "MvZ: Don't want this."
     if self.blog_id.nil? || self.blog_id == 0
       self.blog = Blog.default
     end
@@ -191,10 +192,10 @@ class Content < ActiveRecord::Base
   end
 
   # FIXME -- this feels wrong.
-  def blog
-    #self[:blog] ||= blog_id.to_i.zero? ? Blog.default : Blog.find(blog_id)
-    self[:blog] ||= blog_id.to_i.zero? ? nil : Blog.find(blog_id)
-  end
+  # MvZ: Yes, it is. Commented out.
+  #def blog
+  #  self[:blog] ||= blog_id.to_i.zero? ? nil : Blog.find(blog_id)
+  #end
 
   def publish!
     self.published = true
