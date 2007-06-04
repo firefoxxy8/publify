@@ -13,9 +13,8 @@ var Prototype = {
   },
 
   ScriptFragment: '(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)',
-
   emptyFunction: function() {},
-  K: function(x) {return x}
+  K: function(x) { return x }
 }
 
 var Class = {
@@ -35,16 +34,36 @@ Object.extend = function(destination, source) {
   return destination;
 }
 
-Object.inspect = function(object) {
-  try {
-    if (object == undefined) return 'undefined';
-    if (object == null) return 'null';
-    return object.inspect ? object.inspect() : object.toString();
-  } catch (e) {
-    if (e instanceof RangeError) return '...';
-    throw e;
+Object.extend(Object, {
+  inspect: function(object) {
+    try {
+      if (object === undefined) return 'undefined';
+      if (object === null) return 'null';
+      return object.inspect ? object.inspect() : object.toString();
+    } catch (e) {
+      if (e instanceof RangeError) return '...';
+      throw e;
+    }
+  },
+
+  keys: function(object) {
+    var keys = [];
+    for (var property in object)
+      keys.push(property);
+    return keys;
+  },
+
+  values: function(object) {
+    var values = [];
+    for (var property in object)
+      values.push(object[property]);
+    return values;
+  },
+
+  clone: function(object) {
+    return Object.extend({}, object);
   }
-}
+});
 
 Function.prototype.bind = function() {
   var __method = this, args = $A(arguments), object = args.shift();
@@ -54,9 +73,9 @@ Function.prototype.bind = function() {
 }
 
 Function.prototype.bindAsEventListener = function(object) {
-  var __method = this;
+  var __method = this, args = $A(arguments), object = args.shift();
   return function(event) {
-    return __method.call(object, event || window.event);
+    return __method.apply(object, [( event || window.event)].concat(args).concat($A(arguments)));
   }
 }
 
@@ -81,7 +100,7 @@ var Try = {
   these: function() {
     var returnValue;
 
-    for (var i = 0; i < arguments.length; i++) {
+    for (var i = 0, length = arguments.length; i < length; i++) {
       var lambda = arguments[i];
       try {
         returnValue = lambda();
@@ -106,14 +125,20 @@ PeriodicalExecuter.prototype = {
   },
 
   registerCallback: function() {
-    setInterval(this.onTimerEvent.bind(this), this.frequency * 1000);
+    this.timer = setInterval(this.onTimerEvent.bind(this), this.frequency * 1000);
+  },
+
+  stop: function() {
+    if (!this.timer) return;
+    clearInterval(this.timer);
+    this.timer = null;
   },
 
   onTimerEvent: function() {
     if (!this.currentlyExecuting) {
       try {
         this.currentlyExecuting = true;
-        this.callback();
+        this.callback(this);
       } finally {
         this.currentlyExecuting = false;
       }
@@ -197,15 +222,28 @@ Object.extend(String.prototype, {
   unescapeHTML: function() {
     var div = document.createElement('div');
     div.innerHTML = this.stripTags();
-    return div.childNodes[0] ? div.childNodes[0].nodeValue : '';
+    return div.childNodes[0] ? (div.childNodes.length > 1 ?
+      $A(div.childNodes).inject('',function(memo,node){ return memo+node.nodeValue }) :
+      div.childNodes[0].nodeValue) : '';
   },
 
-  toQueryParams: function() {
-    var pairs = this.match(/^\??(.*)$/)[1].split('&');
-    return pairs.inject({}, function(params, pairString) {
-      var pair = pairString.split('=');
-      params[pair[0]] = pair[1];
-      return params;
+  toQueryParams: function(separator) {
+    var match = this.strip().match(/([^?#]*)(#.*)?$/);
+    if (!match) return {};
+
+    return match[1].split(separator || '&').inject({}, function(hash, pair) {
+      if ((pair = pair.split('='))[0]) {
+        var name = decodeURIComponent(pair[0]);
+        var value = pair[1] ? decodeURIComponent(pair[1]) : undefined;
+
+        if (hash[name] !== undefined) {
+          if (hash[name].constructor != Array)
+            hash[name] = [hash[name]];
+          if (value) hash[name].push(value);
+        }
+        else hash[name] = value;
+      }
+      return hash;
     });
   },
 
@@ -295,6 +333,7 @@ var Enumerable = {
     } catch (e) {
       if (e != $break) throw e;
     }
+    return this;
   },
 
   eachSlice: function(number, iterator) {
@@ -314,7 +353,7 @@ var Enumerable = {
   },
 
   any: function(iterator) {
-    var result = true;
+    var result = false;
     this.each(function(value, index) {
       if (result = !!(iterator || Prototype.K)(value, index))
         throw $break;
@@ -330,7 +369,7 @@ var Enumerable = {
     return results;
   },
 
-  detect: function (iterator) {
+  detect: function(iterator) {
     var result;
     this.each(function(value, index) {
       if (iterator(value, index)) {
@@ -485,7 +524,7 @@ var $A = Array.from = function(iterable) {
     return iterable.toArray();
   } else {
     var results = [];
-    for (var i = 0; i < iterable.length; i++)
+    for (var i = 0, length = iterable.length; i < length; i++)
       results.push(iterable[i]);
     return results;
   }
@@ -498,7 +537,7 @@ if (!Array.prototype._reverse)
 
 Object.extend(Array.prototype, {
   _each: function(iterator) {
-    for (var i = 0; i < this.length; i++)
+    for (var i = 0, length = this.length; i < length; i++)
       iterator(this[i]);
   },
 
@@ -536,13 +575,27 @@ Object.extend(Array.prototype, {
   },
 
   indexOf: function(object) {
-    for (var i = 0; i < this.length; i++)
+    for (var i = 0, length = this.length; i < length; i++)
       if (this[i] == object) return i;
     return -1;
   },
 
   reverse: function(inline) {
     return (inline !== false ? this : this.toArray())._reverse();
+  },
+
+  reduce: function() {
+    return this.length > 1 ? this : this[0];
+  },
+
+  uniq: function() {
+    return this.inject([], function(array, value) {
+      return array.include(value) ? array : array.concat([value]);
+    });
+  },
+
+  clone: function() {
+    return [].concat(this);
   },
 
   size: function() {
@@ -630,7 +683,7 @@ Object.extend(Hash.prototype, {
   },
 
   merge: function(hash) {
-    return $H(hash).inject($H(this), function(mergedHash, pair) {
+    return $H(hash).inject(this, function(mergedHash, pair) {
       mergedHash[pair.key] = pair.value;
       return mergedHash;
     });
@@ -678,10 +731,10 @@ Object.extend(ObjectRange.prototype, {
 
   _each: function(iterator) {
     var value = this.start;
-    do {
+    while (this.include(value)) {
       iterator(value);
       value = value.succ();
-    } while (this.include(value));
+    }
   },
 
   include: function(value) {
@@ -716,18 +769,18 @@ Ajax.Responders = {
     this.responders._each(iterator);
   },
 
-  register: function(responderToAdd) {
-    if (!this.include(responderToAdd))
-      this.responders.push(responderToAdd);
+  register: function(responder) {
+    if (!this.include(responder))
+      this.responders.push(responder);
   },
 
-  unregister: function(responderToRemove) {
-    this.responders = this.responders.without(responderToRemove);
+  unregister: function(responder) {
+    this.responders = this.responders.without(responder);
   },
 
   dispatch: function(callback, request, transport, json) {
     this.each(function(responder) {
-      if (responder[callback] && typeof responder[callback] == 'function') {
+      if (typeof responder[callback] == 'function') {
         try {
           responder[callback].apply(responder, [request, transport, json]);
         } catch (e) {}
@@ -742,7 +795,6 @@ Ajax.Responders.register({
   onCreate: function() {
     Ajax.activeRequestCount++;
   },
-
   onComplete: function() {
     Ajax.activeRequestCount--;
   }
@@ -755,10 +807,10 @@ Ajax.Base.prototype = {
       method:       'post',
       asynchronous: true,
       contentType:  'application/x-www-form-urlencoded',
+      encoding:     'UTF-8',
       parameters:   ''
     }
     Object.extend(this.options, options || {});
-  },
 
     this.options.method = this.options.method.toLowerCase();
     if (typeof this.options.parameters == 'string')
@@ -771,6 +823,8 @@ Ajax.Request.Events =
   ['Uninitialized', 'Loading', 'Loaded', 'Interactive', 'Complete'];
 
 Ajax.Request.prototype = Object.extend(new Ajax.Base(), {
+  _complete: false,
+
   initialize: function(url, options) {
     this.transport = Ajax.getTransport();
     this.setOptions(options);
@@ -796,87 +850,86 @@ Ajax.Request.prototype = Object.extend(new Ajax.Base(), {
       this.url += (this.url.indexOf('?') > -1 ? '&' : '?') + params;
 
     try {
-      this.url = url;
-      if (this.options.method == 'get' && parameters.length > 0)
-        this.url += (this.url.match(/\?/) ? '&' : '?') + parameters;
-
       Ajax.Responders.dispatch('onCreate', this, this.transport);
 
       this.transport.open(this.method.toUpperCase(), this.url,
         this.options.asynchronous);
 
-      if (this.options.asynchronous) {
-        this.transport.onreadystatechange = this.onStateChange.bind(this);
-        setTimeout((function() {this.respondToReadyState(1)}).bind(this), 10);
-      }
+      if (this.options.asynchronous)
+        setTimeout(function() { this.respondToReadyState(1) }.bind(this), 10);
 
+      this.transport.onreadystatechange = this.onStateChange.bind(this);
       this.setRequestHeaders();
 
       var body = this.method == 'post' ? (this.options.postBody || params) : null;
 
-    } catch (e) {
+      this.transport.send(body);
+
+      /* Force Firefox to handle ready state 4 for synchronous requests */
+      if (!this.options.asynchronous && this.transport.overrideMimeType)
+        this.onStateChange();
+
+    }
+    catch (e) {
       this.dispatchException(e);
     }
-  },
-
-  setRequestHeaders: function() {
-    var requestHeaders =
-      ['X-Requested-With', 'XMLHttpRequest',
-       'X-Prototype-Version', Prototype.Version,
-       'Accept', 'text/javascript, text/html, application/xml, text/xml, */*'];
-
-    if (this.method == 'post') {
-      requestHeaders.push('Content-type', this.options.contentType);
-
-      /* Force "Connection: close" for Mozilla browsers to work around
-       * a bug where XMLHttpReqeuest sends an incorrect Content-length
-       * header. See Mozilla Bugzilla #246651.
-       */
-      if (this.transport.overrideMimeType)
-        requestHeaders.push('Connection', 'close');
-    }
-
-    if (this.options.requestHeaders)
-      requestHeaders.push.apply(requestHeaders, this.options.requestHeaders);
-
-    for (var i = 0; i < requestHeaders.length; i += 2)
-      this.transport.setRequestHeader(requestHeaders[i], requestHeaders[i+1]);
   },
 
   onStateChange: function() {
     var readyState = this.transport.readyState;
-    if (readyState != 1)
+    if (readyState > 1 && !((readyState == 4) && this._complete))
       this.respondToReadyState(this.transport.readyState);
   },
 
-  header: function(name) {
-    try {
-      return this.transport.getResponseHeader(name);
-    } catch (e) {}
-  },
+  setRequestHeaders: function() {
+    var headers = {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-Prototype-Version': Prototype.Version,
+      'Accept': 'text/javascript, text/html, application/xml, text/xml, */*'
+    };
 
-  evalJSON: function() {
-    try {
-      return eval('(' + this.header('X-JSON') + ')');
-    } catch (e) {}
-  },
+    if (this.method == 'post') {
+      headers['Content-type'] = this.options.contentType +
+        (this.options.encoding ? '; charset=' + this.options.encoding : '');
 
-  evalResponse: function() {
-    try {
-      return eval(this.transport.responseText);
-    } catch (e) {
-      this.dispatchException(e);
+      /* Force "Connection: close" for older Mozilla browsers to work
+       * around a bug where XMLHttpRequest sends an incorrect
+       * Content-length header. See Mozilla Bugzilla #246651.
+       */
+      if (this.transport.overrideMimeType &&
+          (navigator.userAgent.match(/Gecko\/(\d{4})/) || [0,2005])[1] < 2005)
+            headers['Connection'] = 'close';
     }
+
+    // user-defined headers
+    if (typeof this.options.requestHeaders == 'object') {
+      var extras = this.options.requestHeaders;
+
+      if (typeof extras.push == 'function')
+        for (var i = 0, length = extras.length; i < length; i += 2)
+          headers[extras[i]] = extras[i+1];
+      else
+        $H(extras).each(function(pair) { headers[pair.key] = pair.value });
+    }
+
+    for (var name in headers)
+      this.transport.setRequestHeader(name, headers[name]);
+  },
+
+  success: function() {
+    return !this.transport.status
+        || (this.transport.status >= 200 && this.transport.status < 300);
   },
 
   respondToReadyState: function(readyState) {
-    var event = Ajax.Request.Events[readyState];
+    var state = Ajax.Request.Events[readyState];
     var transport = this.transport, json = this.evalJSON();
 
-    if (event == 'Complete') {
+    if (state == 'Complete') {
       try {
+        this._complete = true;
         (this.options['on' + this.transport.status]
-         || this.options['on' + (this.responseIsSuccess() ? 'Success' : 'Failure')]
+         || this.options['on' + (this.success() ? 'Success' : 'Failure')]
          || Prototype.emptyFunction)(transport, json);
       } catch (e) {
         this.dispatchException(e);
@@ -888,8 +941,8 @@ Ajax.Request.prototype = Object.extend(new Ajax.Base(), {
     }
 
     try {
-      (this.options['on' + event] || Prototype.emptyFunction)(transport, json);
-      Ajax.Responders.dispatch('on' + event, this, transport, json);
+      (this.options['on' + state] || Prototype.emptyFunction)(transport, json);
+      Ajax.Responders.dispatch('on' + state, this, transport, json);
     } catch (e) {
       this.dispatchException(e);
     }
@@ -897,6 +950,28 @@ Ajax.Request.prototype = Object.extend(new Ajax.Base(), {
     if (state == 'Complete') {
       // avoid memory leak in MSIE: clean up
       this.transport.onreadystatechange = Prototype.emptyFunction;
+    }
+  },
+
+  getHeader: function(name) {
+    try {
+      return this.transport.getResponseHeader(name);
+    } catch (e) { return null }
+  },
+
+  evalJSON: function() {
+    try {
+      var json = this.getHeader('X-JSON');
+      return json ? eval('(' + json + ')') : null;
+    } catch (e) { return null }
+  },
+
+  evalResponse: function() {
+    try {
+      return eval(this.transport.responseText);
+    } catch (e) {
+      this.dispatchException(e);
+    }
   },
 
   dispatchException: function(exception) {
@@ -909,41 +984,37 @@ Ajax.Updater = Class.create();
 
 Object.extend(Object.extend(Ajax.Updater.prototype, Ajax.Request.prototype), {
   initialize: function(container, url, options) {
-    this.containers = {
-      success: container.success ? $(container.success) : $(container),
-      failure: container.failure ? $(container.failure) :
-        (container.success ? null : $(container))
+    this.container = {
+      success: (container.success || container),
+      failure: (container.failure || (container.success ? null : container))
     }
 
     this.transport = Ajax.getTransport();
     this.setOptions(options);
 
     var onComplete = this.options.onComplete || Prototype.emptyFunction;
-    this.options.onComplete = (function(transport, object) {
+    this.options.onComplete = (function(transport, param) {
       this.updateContent();
-      onComplete(transport, object);
+      onComplete(transport, param);
     }).bind(this);
 
     this.request(url);
   },
 
   updateContent: function() {
-    var receiver = this.responseIsSuccess() ?
-      this.containers.success : this.containers.failure;
+    var receiver = this.container[this.success() ? 'success' : 'failure'];
     var response = this.transport.responseText;
 
-    if (!this.options.evalScripts)
-      response = response.stripScripts();
+    if (!this.options.evalScripts) response = response.stripScripts();
 
-    if (receiver) {
-      if (this.options.insertion) {
+    if (receiver = $(receiver)) {
+      if (this.options.insertion)
         new this.options.insertion(receiver, response);
-      } else {
-        Element.update(receiver, response);
-      }
+      else
+        receiver.update(response);
     }
 
-    if (this.responseIsSuccess()) {
+    if (this.success()) {
       if (this.onComplete)
         setTimeout(this.onComplete.bind(this), 10);
     }
@@ -972,7 +1043,7 @@ Ajax.PeriodicalUpdater.prototype = Object.extend(new Ajax.Base(), {
   },
 
   stop: function() {
-    this.updater.onComplete = undefined;
+    this.updater.options.onComplete = undefined;
     clearTimeout(this.timer);
     (this.onComplete || Prototype.emptyFunction).apply(this, arguments);
   },
@@ -992,15 +1063,15 @@ Ajax.PeriodicalUpdater.prototype = Object.extend(new Ajax.Base(), {
     this.updater = new Ajax.Updater(this.container, this.url, this.options);
   }
 });
-function $() {
-  var results = [], element;
-  for (var i = 0; i < arguments.length; i++) {
-    element = arguments[i];
-    if (typeof element == 'string')
-      element = document.getElementById(element);
-    results.push(Element.extend(element));
+function $(element) {
+  if (arguments.length > 1) {
+    for (var i = 0, elements = [], length = arguments.length; i < length; i++)
+      elements.push($(arguments[i]));
+    return elements;
   }
-  return results.length < 2 ? results[0] : results;
+  if (typeof element == 'string')
+    element = document.getElementById(element);
+  return Element.extend(element);
 }
 
 if (Prototype.BrowserFeatures.XPath) {
@@ -1015,12 +1086,19 @@ if (Prototype.BrowserFeatures.XPath) {
 }
 
 document.getElementsByClassName = function(className, parentElement) {
-  var children = ($(parentElement) || document.body).getElementsByTagName('*');
-  return $A(children).inject([], function(elements, child) {
-    if (child.className.match(new RegExp("(^|\\s)" + className + "(\\s|$)")))
-      elements.push(Element.extend(child));
+  if (Prototype.BrowserFeatures.XPath) {
+    var q = ".//*[contains(concat(' ', @class, ' '), ' " + className + " ')]";
+    return document._getElementsByXPath(q, parentElement);
+  } else {
+    var children = ($(parentElement) || document.body).getElementsByTagName('*');
+    var elements = [], child;
+    for (var i = 0, length = children.length; i < length; i++) {
+      child = children[i];
+      if (Element.hasClassName(child, className))
+        elements.push(Element.extend(child));
+    }
     return elements;
-  });
+  }
 };
 
 /*--------------------------------------------------------------------------*/
@@ -1032,10 +1110,18 @@ Element.extend = function(element) {
   if (!element || _nativeExtensions || element.nodeType == 3) return element;
 
   if (!element._extended && element.tagName && element != window) {
-    var methods = Element.Methods, cache = Element.extend.cache;
-    for (property in methods) {
+    var methods = Object.clone(Element.Methods), cache = Element.extend.cache;
+
+    if (element.tagName == 'FORM')
+      Object.extend(methods, Form.Methods);
+    if (['INPUT', 'TEXTAREA', 'SELECT'].include(element.tagName))
+      Object.extend(methods, Form.Element.Methods);
+
+    Object.extend(methods, Element.Methods.Simulated);
+
+    for (var property in methods) {
       var value = methods[property];
-      if (typeof value == 'function')
+      if (typeof value == 'function' && !(property in element))
         element[property] = cache.findOrStore(value);
     }
   }
@@ -1057,35 +1143,33 @@ Element.Methods = {
     return $(element).style.display != 'none';
   },
 
-  toggle: function() {
-    for (var i = 0; i < arguments.length; i++) {
-      var element = $(arguments[i]);
-      Element[Element.visible(element) ? 'hide' : 'show'](element);
-    }
+  toggle: function(element) {
+    element = $(element);
+    Element[Element.visible(element) ? 'hide' : 'show'](element);
+    return element;
   },
 
-  hide: function() {
-    for (var i = 0; i < arguments.length; i++) {
-      var element = $(arguments[i]);
-      element.style.display = 'none';
-    }
+  hide: function(element) {
+    $(element).style.display = 'none';
+    return element;
   },
 
-  show: function() {
-    for (var i = 0; i < arguments.length; i++) {
-      var element = $(arguments[i]);
-      element.style.display = '';
-    }
+  show: function(element) {
+    $(element).style.display = '';
+    return element;
   },
 
   remove: function(element) {
     element = $(element);
     element.parentNode.removeChild(element);
+    return element;
   },
 
   update: function(element, html) {
+    html = typeof html == 'undefined' ? '' : html.toString();
     $(element).innerHTML = html.stripScripts();
     setTimeout(function() {html.evalScripts()}, 10);
+    return element;
   },
 
   replace: function(element, html) {
@@ -1100,6 +1184,7 @@ Element.Methods = {
         range.createContextualFragment(html.stripScripts()), element);
     }
     setTimeout(function() {html.evalScripts()}, 10);
+    return element;
   },
 
   inspect: function(element) {
@@ -1207,17 +1292,24 @@ Element.Methods = {
 
   hasClassName: function(element, className) {
     if (!(element = $(element))) return;
-    return Element.classNames(element).include(className);
+    var elementClassName = element.className;
+    if (elementClassName.length == 0) return false;
+    if (elementClassName == className ||
+        elementClassName.match(new RegExp("(^|\\s)" + className + "(\\s|$)")))
+      return true;
+    return false;
   },
 
   addClassName: function(element, className) {
     if (!(element = $(element))) return;
-    return Element.classNames(element).add(className);
+    Element.classNames(element).add(className);
+    return element;
   },
 
   removeClassName: function(element, className) {
     if (!(element = $(element))) return;
-    return Element.classNames(element).remove(className);
+    Element.classNames(element).remove(className);
+    return element;
   },
 
   toggleClassName: function(element, className) {
@@ -1239,11 +1331,14 @@ Element.Methods = {
   // removes whitespace-only text node children
   cleanWhitespace: function(element) {
     element = $(element);
-    for (var i = 0; i < element.childNodes.length; i++) {
-      var node = element.childNodes[i];
+    var node = element.firstChild;
+    while (node) {
+      var nextNode = node.nextSibling;
       if (node.nodeType == 3 && !/\S/.test(node.nodeValue))
-        Element.remove(node);
+        element.removeChild(node);
+      node = nextNode;
     }
+    return element;
   },
 
   empty: function(element) {
@@ -1261,6 +1356,7 @@ Element.Methods = {
     element = $(element);
     var pos = Position.cumulativeOffset(element);
     window.scrollTo(pos[0], pos[1]);
+    return element;
   },
 
   getStyle: function(element, style) {
@@ -1353,6 +1449,7 @@ Element.Methods = {
         element.style.left = 0;
       }
     }
+    return element;
   },
 
   undoPositioned: function(element) {
@@ -1365,21 +1462,24 @@ Element.Methods = {
         element.style.bottom =
         element.style.right = '';
     }
+    return element;
   },
 
   makeClipping: function(element) {
     element = $(element);
-    if (element._overflow) return;
-    element._overflow = element.style.overflow;
+    if (element._overflow) return element;
+    element._overflow = element.style.overflow || 'auto';
     if ((Element.getStyle(element, 'overflow') || 'visible') != 'hidden')
       element.style.overflow = 'hidden';
+    return element;
   },
 
   undoClipping: function(element) {
     element = $(element);
-    if (element._overflow) return;
-    element.style.overflow = element._overflow;
-    element._overflow = undefined;
+    if (!element._overflow) return element;
+    element.style.overflow = element._overflow == 'auto' ? '' : element._overflow;
+    element._overflow = null;
+    return element;
   }
 };
 
@@ -1477,26 +1577,37 @@ Object.extend(Element, Element.Methods);
 
 var _nativeExtensions = false;
 
-if(!HTMLElement && /Konqueror|Safari|KHTML/.test(navigator.userAgent)) {
-  var HTMLElement = {}
-  HTMLElement.prototype = document.createElement('div').__proto__;
-}
+if(/Konqueror|Safari|KHTML/.test(navigator.userAgent))
+  ['', 'Form', 'Input', 'TextArea', 'Select'].each(function(tag) {
+    var className = 'HTML' + tag + 'Element';
+    if(window[className]) return;
+    var klass = window[className] = {};
+    klass.prototype = document.createElement(tag ? tag.toLowerCase() : 'div').__proto__;
+  });
 
 Element.addMethods = function(methods) {
   Object.extend(Element.Methods, methods || {});
 
-  if(typeof HTMLElement != 'undefined') {
-    var methods = Element.Methods, cache = Element.extend.cache;
-    for (property in methods) {
+  function copy(methods, destination, onlyIfAbsent) {
+    onlyIfAbsent = onlyIfAbsent || false;
+    var cache = Element.extend.cache;
+    for (var property in methods) {
       var value = methods[property];
-      if (typeof value == 'function')
-        HTMLElement.prototype[property] = cache.findOrStore(value);
+      if (!onlyIfAbsent || !(property in destination))
+        destination[property] = cache.findOrStore(value);
     }
+  }
+
+  if (typeof HTMLElement != 'undefined') {
+    copy(Element.Methods, HTMLElement.prototype);
+    copy(Element.Methods.Simulated, HTMLElement.prototype, true);
+    copy(Form.Methods, HTMLFormElement.prototype);
+    [HTMLInputElement, HTMLTextAreaElement, HTMLSelectElement].each(function(klass) {
+      copy(Form.Element.Methods, klass.prototype);
+    });
     _nativeExtensions = true;
   }
 }
-
-Element.addMethods();
 
 var Toggle = new Object();
 Toggle.display = Element.toggle;
@@ -1516,8 +1627,8 @@ Abstract.Insertion.prototype = {
       try {
         this.element.insertAdjacentHTML(this.adjacency, this.content);
       } catch (e) {
-        var tagName = this.element.tagName.toLowerCase();
-        if (tagName == 'tbody' || tagName == 'tr') {
+        var tagName = this.element.tagName.toUpperCase();
+        if (['TBODY', 'TR'].include(tagName)) {
           this.insertContent(this.contentFromAnonymousTable());
         } else {
           throw e;
@@ -1616,18 +1727,16 @@ Element.ClassNames.prototype = {
 
   add: function(classNameToAdd) {
     if (this.include(classNameToAdd)) return;
-    this.set(this.toArray().concat(classNameToAdd).join(' '));
+    this.set($A(this).concat(classNameToAdd).join(' '));
   },
 
   remove: function(classNameToRemove) {
     if (!this.include(classNameToRemove)) return;
-    this.set(this.select(function(className) {
-      return className != classNameToRemove;
-    }).join(' '));
+    this.set($A(this).without(classNameToRemove).join(' '));
   },
 
   toString: function() {
-    return this.toArray().join(' ');
+    return $A(this).join(' ');
   }
 };
 
@@ -1680,7 +1789,7 @@ Selector.prototype = {
     if (clause = params.tagName)
       conditions.push('element.tagName.toUpperCase() == ' + clause.inspect());
     if ((clause = params.classNames).length > 0)
-      for (var i = 0; i < clause.length; i++)
+      for (var i = 0, length = clause.length; i < length; i++)
         conditions.push('element.hasClassName(' + clause[i].inspect() + ')');
     if (clause = params.attributes) {
       clause.each(function(attribute) {
@@ -1723,7 +1832,7 @@ Selector.prototype = {
     scope = (scope || document).getElementsByTagName(this.params.tagName || '*');
 
     var results = [];
-    for (var i = 0; i < scope.length; i++)
+    for (var i = 0, length = scope.length; i < length; i++)
       if (this.match(element = scope[i]))
         results.push(Element.extend(element));
 
@@ -1741,8 +1850,9 @@ Object.extend(Selector, {
     return elements.select(selector.match.bind(selector)).map(Element.extend);
   },
 
-  focus: function(element) {
-    $(element).focus();
+  findElement: function(elements, expression, index) {
+    if (typeof expression == 'number') index = expression, expression = false;
+    return Selector.matchElements(elements, expression || '*')[index || 0];
   },
 
   findChildElements: function(element, expressions) {
@@ -1757,8 +1867,13 @@ Object.extend(Selector, {
   }
 });
 
-  select: function(element) {
-    $(element).select();
+function $$() {
+  return Selector.findChildElements(document, $A(arguments));
+}
+var Form = {
+  reset: function(form) {
+    $(form).reset();
+    return form;
   },
 
   serializeElements: function(elements, getHash) {
@@ -1778,25 +1893,21 @@ Object.extend(Selector, {
 
     return getHash ? data : Hash.toQueryString(data);
   }
-}
+};
 
-/*--------------------------------------------------------------------------*/
-
-var Form = {
+Form.Methods = {
   serialize: function(form, getHash) {
     return Form.serializeElements(Form.getElements(form), getHash);
   },
 
   getElements: function(form) {
-    form = $(form);
-    var elements = new Array();
-
-    for (var tagName in Form.Element.Serializers) {
-      var tagElements = form.getElementsByTagName(tagName);
-      for (var j = 0; j < tagElements.length; j++)
-        elements.push(tagElements[j]);
-    }
-    return elements;
+    return $A($(form).getElementsByTagName('*')).inject([],
+      function(elements, child) {
+        if (Form.Element.Serializers[child.tagName.toLowerCase()])
+          elements.push(Element.extend(child));
+        return elements;
+      }
+    );
   },
 
   getInputs: function(form, typeName, name) {
@@ -1809,46 +1920,60 @@ var Form = {
       var input = inputs[i];
       if ((typeName && input.type != typeName) || (name && input.name != name))
         continue;
-      matchingInputs.push(input);
+      matchingInputs.push(Element.extend(input));
     }
 
     return matchingInputs;
   },
 
   disable: function(form) {
-    var elements = Form.getElements(form);
-    for (var i = 0; i < elements.length; i++) {
-      var element = elements[i];
+    form = $(form);
+    form.getElements().each(function(element) {
       element.blur();
       element.disabled = 'true';
-    }
+    });
+    return form;
   },
 
   enable: function(form) {
-    var elements = Form.getElements(form);
-    for (var i = 0; i < elements.length; i++) {
-      var element = elements[i];
+    form = $(form);
+    form.getElements().each(function(element) {
       element.disabled = '';
-    }
+    });
+    return form;
   },
 
   findFirstElement: function(form) {
-    return Form.getElements(form).find(function(element) {
+    return $(form).getElements().find(function(element) {
       return element.type != 'hidden' && !element.disabled &&
         ['input', 'select', 'textarea'].include(element.tagName.toLowerCase());
     });
   },
 
   focusFirstElement: function(form) {
-    Field.activate(Form.findFirstElement(form));
-  },
-
-  reset: function(form) {
-    $(form).reset();
+    form = $(form);
+    form.findFirstElement().activate();
+    return form;
   }
 }
 
+Object.extend(Form, Form.Methods);
+
+/*--------------------------------------------------------------------------*/
+
 Form.Element = {
+  focus: function(element) {
+    $(element).focus();
+    return element;
+  },
+
+  select: function(element) {
+    $(element).select();
+    return element;
+  }
+}
+
+Form.Element.Methods = {
   serialize: function(element) {
     element = $(element);
     if (!element.disabled && element.name) {
@@ -1866,6 +1991,37 @@ Form.Element = {
     element = $(element);
     var method = element.tagName.toLowerCase();
     return Form.Element.Serializers[method](element);
+  },
+
+  clear: function(element) {
+    $(element).value = '';
+    return element;
+  },
+
+  present: function(element) {
+    return $(element).value != '';
+  },
+
+  activate: function(element) {
+    element = $(element);
+    element.focus();
+    if (element.select && ( element.tagName.toLowerCase() != 'input' ||
+      !['button', 'reset', 'submit'].include(element.type) ) )
+      element.select();
+    return element;
+  },
+
+  disable: function(element) {
+    element = $(element);
+    element.disabled = true;
+    return element;
+  },
+
+  enable: function(element) {
+    element = $(element);
+    element.blur();
+    element.disabled = false;
+    return element;
   }
 }
 
@@ -1878,14 +2034,11 @@ var $F = Form.Element.getValue;
 Form.Element.Serializers = {
   input: function(element) {
     switch (element.type.toLowerCase()) {
-      case 'submit':
-      case 'hidden':
-      case 'password':
-      case 'text':
-        return Form.Element.Serializers.textarea(element);
       case 'checkbox':
       case 'radio':
         return Form.Element.Serializers.inputSelector(element);
+      default:
+        return Form.Element.Serializers.textarea(element);
     }
   },
 
@@ -1990,9 +2143,7 @@ Abstract.EventObserver.prototype = {
   },
 
   registerFormCallbacks: function() {
-    var elements = Form.getElements(this.element);
-    for (var i = 0; i < elements.length; i++)
-      this.registerCallback(elements[i]);
+    Form.getElements(this.element).each(this.registerCallback.bind(this));
   },
 
   registerCallback: function(element) {
@@ -2002,11 +2153,7 @@ Abstract.EventObserver.prototype = {
         case 'radio':
           Event.observe(element, 'click', this.onElementEvent.bind(this));
           break;
-        case 'password':
-        case 'text':
-        case 'textarea':
-        case 'select-one':
-        case 'select-multiple':
+        default:
           Event.observe(element, 'change', this.onElementEvent.bind(this));
           break;
       }
@@ -2041,6 +2188,10 @@ Object.extend(Event, {
   KEY_RIGHT:    39,
   KEY_DOWN:     40,
   KEY_DELETE:   46,
+  KEY_HOME:     36,
+  KEY_END:      35,
+  KEY_PAGEUP:   33,
+  KEY_PAGEDOWN: 34,
 
   element: function(event) {
     return event.target || event.srcElement;
@@ -2096,7 +2247,7 @@ Object.extend(Event, {
 
   unloadCache: function() {
     if (!Event.observers) return;
-    for (var i = 0; i < Event.observers.length; i++) {
+    for (var i = 0, length = Event.observers.length; i < length; i++) {
       Event.stopObserving.apply(this, Event.observers[i]);
       Event.observers[i][0] = null;
     }
@@ -2104,7 +2255,7 @@ Object.extend(Event, {
   },
 
   observe: function(element, name, observer, useCapture) {
-    var element = $(element);
+    element = $(element);
     useCapture = useCapture || false;
 
     if (name == 'keypress' &&
@@ -2112,11 +2263,11 @@ Object.extend(Event, {
         || element.attachEvent))
       name = 'keydown';
 
-    this._observeAndCache(element, name, observer, useCapture);
+    Event._observeAndCache(element, name, observer, useCapture);
   },
 
   stopObserving: function(element, name, observer, useCapture) {
-    var element = $(element);
+    element = $(element);
     useCapture = useCapture || false;
 
     if (name == 'keypress' &&
@@ -2127,7 +2278,9 @@ Object.extend(Event, {
     if (element.removeEventListener) {
       element.removeEventListener(name, observer, useCapture);
     } else if (element.detachEvent) {
-      element.detachEvent('on' + name, observer);
+      try {
+        element.detachEvent('on' + name, observer);
+      } catch (e) {}
     }
   }
 });
@@ -2181,7 +2334,8 @@ var Position = {
       valueL += element.offsetLeft || 0;
       element = element.offsetParent;
       if (element) {
-        p = Element.getStyle(element, 'position');
+        if(element.tagName=='BODY') break;
+        var p = Element.getStyle(element, 'position');
         if (p == 'relative' || p == 'absolute') break;
       }
     } while (element);
@@ -2237,17 +2391,6 @@ var Position = {
         element.offsetWidth;
   },
 
-  clone: function(source, target) {
-    source = $(source);
-    target = $(target);
-    target.style.position = 'absolute';
-    var offsets = this.cumulativeOffset(source);
-    target.style.top    = offsets[1] + 'px';
-    target.style.left   = offsets[0] + 'px';
-    target.style.width  = source.offsetWidth + 'px';
-    target.style.height = source.offsetHeight + 'px';
-  },
-
   page: function(forElement) {
     var valueT = 0, valueL = 0;
 
@@ -2264,8 +2407,10 @@ var Position = {
 
     element = forElement;
     do {
-      valueT -= element.scrollTop  || 0;
-      valueL -= element.scrollLeft || 0;
+      if (!window.opera || element.tagName=='BODY') {
+        valueT -= element.scrollTop  || 0;
+        valueL -= element.scrollLeft || 0;
+      }
     } while (element = element.parentNode);
 
     return [valueL, valueT];
@@ -2366,3 +2511,5 @@ if (/Konqueror|Safari|KHTML/.test(navigator.userAgent)) {
     return [valueL, valueT];
   }
 }
+
+Element.addMethods();
