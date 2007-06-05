@@ -66,6 +66,6 @@ class TagTest < Test::Unit::TestCase
   
   def test_permalink
     tag = Tag.get('foo')
-    assert_equal 'http://myblog.net/blog/tag/foo', tag.permalink_url
+    assert_equal 'http://myblog.net/articles/tag/foo', tag.permalink_url
   end
 end

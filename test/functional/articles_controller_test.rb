@@ -94,7 +94,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
 
   def test_tag_routes
     opts = {:controller => "articles", :action => "tag", :id => "foo", :page => "2"}
-    assert_routing("blog/tag/foo/page/2", opts)
+    assert_routing("articles/tag/foo/page/2", opts)
   end
 
   def test_simple_tag_pagination
@@ -106,7 +106,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
                :content => %r{Older posts: 1},
                :descendant => {:tag => 'a',
                                :attributes =>{
-                                  :href => "/blog/tag/foo/page/2"},
+                                  :href => "/articles/tag/foo/page/2"},
                                :content => "2"})
   end
 
@@ -463,10 +463,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     # MvZ: I have commented out this link.
     assert_no_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS',
-        :href => 'http://test.host/blog/xml/rss20/feed.xml'}
+        :href => 'http://test.host/xml/rss20/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/blog/xml/atom/feed.xml'}
+        :href => 'http://test.host/xml/atom/feed.xml'}
   end
 
 
@@ -476,10 +476,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     # MvZ: I have commented out this link.
     assert_no_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS',
-        :href => 'http://test.host/blog/xml/rss20/article/1/feed.xml'}
+        :href => 'http://test.host/xml/rss20/article/1/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/blog/xml/atom/article/1/feed.xml'}
+        :href => 'http://test.host/xml/atom/article/1/feed.xml'}
   end
 
   def test_autodiscovery_category
@@ -488,10 +488,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     # MvZ: I have commented out this link.
     assert_no_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS',
-        :href => 'http://test.host/blog/xml/rss20/category/hardware/feed.xml'}
+        :href => 'http://test.host/xml/rss20/category/hardware/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/blog/xml/atom/category/hardware/feed.xml'}
+        :href => 'http://test.host/xml/atom/category/hardware/feed.xml'}
   end
 
   def test_autodiscovery_tag
@@ -500,10 +500,10 @@ class ArticlesControllerTest < Test::Unit::TestCase
     # MvZ: I have commented out this link.
     assert_no_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/rss+xml', :title => 'RSS',
-        :href => 'http://test.host/blog/xml/rss20/tag/hardware/feed.xml'}
+        :href => 'http://test.host/xml/rss20/tag/hardware/feed.xml'}
     assert_tag :tag => 'link', :attributes =>
       { :rel => 'alternate', :type => 'application/atom+xml', :title => 'Atom',
-        :href => 'http://test.host/blog/xml/atom/tag/hardware/feed.xml'}
+        :href => 'http://test.host/xml/atom/tag/hardware/feed.xml'}
   end
 
   def test_disabled_ajax_comments
@@ -576,7 +576,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert assigns(:articles)
     assert_equal users(:tobi).articles.published, assigns(:articles)
     # This is until we write a proper author feed
-    assert_equal('http://test.host/blog/xml/rss20/feed.xml',
+    assert_equal('http://test.host/xml/rss20/feed.xml',
                  assigns(:auto_discovery_url_rss))
   end
 
@@ -598,7 +598,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
     assert_tag(:tag => 'ul',
                :descendant => {\
                  :tag => 'a',
-                 :attributes => { :href => '/blog/author/tobi' },
+                 :attributes => { :href => '/articles/author/tobi' },
                })
   end
 end

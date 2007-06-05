@@ -1,36 +1,34 @@
 ActionController::Routing::Routes.draw do |map|
 
   # front page (this is the index page, that gives this blog its base url)
-  map.index '', :controller  => 'articles', :action => 'frontpage'
+  map.index 'frontpage', :controller  => 'articles', :action => 'frontpage'
 
   # default
-  # MvZ: Old index. also defined below for perma urls
-  # map.index 'blog', :controller  => 'articles', :action => 'index'
-  map.admin 'blog/admin', :controller  => 'admin/general', :action => 'index'
+  map.index '', :controller  => 'articles', :action => 'index'
+  map.admin 'admin', :controller  => 'admin/general', :action => 'index'
 
   # admin/comments controller needs parent article id
-  map.connect 'blog/admin/comments/article/:article_id/:action/:id',
+  map.connect 'admin/comments/article/:article_id/:action/:id',
     :controller => 'admin/comments', :action => nil, :id => nil
-  map.connect 'blog/admin/trackbacks/article/:article_id/:action/:id',
+  map.connect 'admin/trackbacks/article/:article_id/:action/:id',
     :controller => 'admin/trackbacks', :action => nil, :id => nil
-  map.connect 'blog/admin/content/:action/:id', :controller => 'admin/content'
+  map.connect 'admin/content/:action/:id', :controller => 'admin/content'
 
   # make rss feed urls pretty and let them end in .xml
   # this improves caches_page because now apache and webrick will send out the
   # cached feeds with the correct xml mime type.
-  map.xml 'blog/xml/itunes/feed.xml', :controller => 'xml', :action => 'itunes'
-  map.xml 'blog/xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
-  map.xml 'blog/xml/commentrss/feed.xml', :controller => 'xml', :action => 'commentrss'
-  map.xml 'blog/xml/trackbackrss/feed.xml', :controller => 'xml', :action => 'trackbackrss'
+  map.xml 'xml/itunes/feed.xml', :controller => 'xml', :action => 'itunes'
+  map.xml 'xml/articlerss/:id/feed.xml', :controller => 'xml', :action => 'articlerss'
+  map.xml 'xml/commentrss/feed.xml', :controller => 'xml', :action => 'commentrss'
+  map.xml 'xml/trackbackrss/feed.xml', :controller => 'xml', :action => 'trackbackrss'
 
-  map.xml 'blog/xml/:format/feed.xml', :controller => 'xml', :action => 'feed', :type => 'feed'
-  map.xml 'blog/xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
-  map.xml 'blog/xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
-  map.xml 'blog/xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
+  map.xml 'xml/:format/feed.xml', :controller => 'xml', :action => 'feed', :type => 'feed'
+  map.xml 'xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
+  map.xml 'xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
+  map.xml 'xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
   #map.xml 'sitemap.xml', :controller => 'xml', :action => 'feed', :format => 'googlesitemap', :type => 'sitemap'
 
-##    map.datestamped_resources(:articles,
-  map.datestamped_resources(:blog, :controller => :articles, :singular => :article,
+  map.datestamped_resources(:articles,
                             :collection => {
                               :search => :get, :comment_preview => :any,
                               :author => :get, :archives => :get
@@ -46,13 +44,11 @@ ActionController::Routing::Routes.draw do |map|
 
   #
   %w(nuke_trackback nuke_comment markup_help author trackback).each do |value|
-    map.connect "blog/#{value}/:id", :controller => 'articles', :action => value
+    map.connect "articles/#{value}/:id", :controller => 'articles', :action => value
   end
 
   # allow neat perma urls
-###   map.connect 'blog',
-###     :controller => 'articles', :action => 'index'
-  map.connect 'blog/page/:page',
+  map.connect 'articles/page/:page',
     :controller => 'articles', :action => 'index',
     :page => /\d+/
 
@@ -77,9 +73,9 @@ ActionController::Routing::Routes.draw do |map|
 ###     :controller => 'articles', :action => 'find_by_date',
 ###     :year => /\d{4}/, :page => /\d+/
 #   map.with_options(date_options) do |dated|
-#     dated.resources(:comments, :path_prefix => '/blog/:year/:month/:day/:title',
+#     dated.resources(:comments, :path_prefix => '/articles/:year/:month/:day/:title',
 #                     :members => { :preview => :get })
-#     dated.resources(:trackbacks, :path_prefix => '/blog/:year/:month/:day/:title')
+#     dated.resources(:trackbacks, :path_prefix => '/articles/:year/:month/:day/:title')
 #   end
 
 ###   map.connect 'blog/:year/:month/:day/:title',
@@ -88,24 +84,24 @@ ActionController::Routing::Routes.draw do |map|
   map.with_options(:conditions => {:method => :get}) do |get|
     get.with_options(date_options.merge(:controller => 'articles')) do |dated|
       dated.with_options(:action => 'index') do |finder|
-        finder.connect 'blog/:year/page/:page',
+        finder.connect 'articles/:year/page/:page',
           :month => nil, :day => nil, :page => /\d+/
-        finder.connect 'blog/:year/:month/page/:page',
+        finder.connect 'articles/:year/:month/page/:page',
           :day => nil, :page => /\d+/
-        finder.connect 'blog/:year/:month/:day/page/:page', :page => /\d+/
+        finder.connect 'articles/:year/:month/:day/page/:page', :page => /\d+/
       end
     end
 
   # Old ids from Bryar
-  map.connect 'blog/:bryarid',
+  map.connect ':bryarid',
     :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/
 
     %w(category tag).each do |value|
       get.with_options(:action => value, :controller => 'articles') do |m|
-        m.connect "blog/#{value}"
-        m.connect "blog/#{value}/page/:page", :page => /\d+/
-        m.connect "blog/#{value}/:id"
-        m.connect "blog/#{value}/:id/page/:page", :page => /\d+/
+        m.connect "articles/#{value}"
+        m.connect "articles/#{value}/page/:page", :page => /\d+/
+        m.connect "articles/#{value}/:id"
+        m.connect "articles/#{value}/:id/page/:page", :page => /\d+/
       end
     end
 
@@ -118,28 +114,30 @@ ActionController::Routing::Routes.draw do |map|
     end
 
     # For the tests
-    get.connect 'blog/theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
-    map.connect 'blog/plugins/filters/:filter/:public_action',
+    get.connect 'theme/static_view_test', :controller => 'theme', :action => 'static_view_test'
+
+    map.connect 'plugins/filters/:filter/:public_action',
       :controller => 'textfilter', :action => 'public_action'
   end
+
 
   # Stats plugin
   map.connect '/stats/:action', :controller => 'sitealizer'
 
   # Work around the Bad URI bug
   %w{ accounts backend files live sidebar textfilter xml }.each do |i|
-    map.connect "blog/#{i}", :controller => "#{i}", :action => 'index'
-    map.connect "blog/#{i}/:action", :controller => "#{i}"
-    map.connect "blog/#{i}/:action/:id", :controller => i, :id => nil
+    map.connect "#{i}", :controller => "#{i}", :action => 'index'
+    map.connect "#{i}/:action", :controller => "#{i}"
+    map.connect "#{i}/:action/:id", :controller => i, :id => nil
   end
 
   %w{advanced blacklist cache categories comments content feedback general pages
      resources sidebar textfilters themes trackbacks users}.each do |i|
-    map.connect "blog/admin/#{i}", :controller => "admin/#{i}", :action => 'index'
-    map.connect "blog/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
+    map.connect "/admin/#{i}", :controller => "admin/#{i}", :action => 'index'
+    map.connect "/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
   end
 
-###   returning(map.connect('blog/:controller/:action/:id')) do |default_route|
+###   returning(map.connect(':controller/:action/:id')) do |default_route|
 ###     # Ick!
 ###     default_route.write_generation
 ### 
@@ -163,5 +161,5 @@ ActionController::Routing::Routes.draw do |map|
 ###       alias_method_chain :generate, :deprecation
 ###     end
 ###   end
-   map.connect '*from', :controller => 'redirect', :action => 'redirect'
+  map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

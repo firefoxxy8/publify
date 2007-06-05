@@ -1,6 +1,4 @@
 # BlogRequest is a fake Request object, created so blog.url_for will work.
-## MvZ: do I still need this?
-# require 'action_controller/test_process'
 
 class BlogRequest
 

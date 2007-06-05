@@ -40,7 +40,7 @@ class BlogTest < Test::Unit::TestCase
   end
 
   def test_url_for
-    assert_equal('http://myblog.net/blog/category/zonk',
+    assert_equal('http://myblog.net/articles/category/zonk',
                  @blog.url_for(:controller => 'articles',
                                :action     => 'category',
                                :id         => 'zonk'))

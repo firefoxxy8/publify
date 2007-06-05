@@ -14,12 +14,12 @@ class PageTest < Test::Unit::TestCase
   
   def test_edit_url
     p = contents(:first_page)
-    assert_equal 'http://myblog.net/blog/admin/pages/edit/9', p.edit_url
+    assert_equal 'http://myblog.net/admin/pages/edit/9', p.edit_url
   end
   
   def test_delete_url
     p = contents(:first_page)
-    assert_equal 'http://myblog.net/blog/admin/pages/destroy/9', p.delete_url
+    assert_equal 'http://myblog.net/admin/pages/destroy/9', p.delete_url
   end
 
   def test_validate
