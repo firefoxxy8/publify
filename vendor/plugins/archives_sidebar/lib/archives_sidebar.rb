@@ -17,7 +17,7 @@ class ArchivesSidebar < Sidebar
       date_func = "extract(year from published_at) as year,extract(month from published_at) as month"
     end
 
-    article_counts = Content.find_by_sql(["select count(*) as count, #{date_func} from contents where type='Article' and published = ? and published_at < ? and blog_id = ? group by year,month order by year desc,month desc limit ? ",true,Time.now,this_blog,count.to_i])
+    article_counts = Content.find_by_sql(["select count(*) as count, #{date_func} from contents where type='Article' and published = ? and published_at < ? and blog_id = ? group by year,month order by year desc,month desc limit ? ",true,Time.now,blog,count.to_i])
 
     @archives = article_counts.map do |entry|
       {
