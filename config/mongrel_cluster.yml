@@ -1,0 +1,6 @@
+--- 
+prefix: /blog
+port: "3100"
+environment: production
+pid_file: log/mongrel.pid
+servers: 3
