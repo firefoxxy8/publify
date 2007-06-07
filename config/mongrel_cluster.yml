@@ -1,11 +1,11 @@
 --- 
-# Mongrel cluster for pomme's version of www.matijs.net site
+# Mongrel cluster for main blog at www.matijs.net
 prefix: /blog
-user: matijs
+user: mongrel
 num_procs: "1024"
-cwd: /home/matijs/Public/zeurvis/typo
+cwd: /var/www/www.matijs.net/typo
 port: "3100"
 environment: production
-group: matijs
+group: mongrel
 pid_file: log/mongrel.pid
 servers: 3
