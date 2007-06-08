@@ -1,4 +1,6 @@
 class ArticlesController < ContentController
+  include BryarLink
+  include FrontPage
   before_filter :verify_config
 
   layout :theme_layout, :except => [:comment_preview, :trackback]
@@ -14,15 +16,6 @@ class ArticlesController < ContentController
   verify(:only => [:nuke_comment, :nuke_trackback],
          :session => :user, :method => :post,
          :render => { :text => 'Forbidden', :status => 403 })
-
-  def frontpage
-    @frontpage = true;
-    @articles = this_blog.articles.find_published(
-      :all, :order => 'created_at DESC',
-      :limit => this_blog.limit_article_display
-    )
-    @page_title   = 'matijs.net'
-  end
 
   def index
     @articles = this_blog.published_articles.find_all_by_date(*params.values_at(:year, :month, :day))
@@ -139,30 +132,7 @@ class ArticlesController < ContentController
     render :text => TextFilter.find(params[:id]).commenthelp
   end
 
-  def bryarlink
-    /id_(\d+)/.match(params[:bryarid])
-    begin
-      article = this_blog.published_articles.find($1)
-      headers["Status"] = "301 Moved Permanently"
-      redirect_to article.permalink_url
-      return
-    rescue ActiveRecord::RecordNotFound
-      render :text => "Page not found", :status => 404
-    #rescue
-    #  render :text => "Internal server error", :status => 500
-    end
-  end
-
   private
-
-  def are_date_params_valid?(year, month = nil, day = nil)
-    begin
-      test = Time.mktime(year, month || 1, day || 1)
-    rescue ArgumentError
-      return false
-    end
-    return true
-  end
 
   def verify_config
     if User.count == 0

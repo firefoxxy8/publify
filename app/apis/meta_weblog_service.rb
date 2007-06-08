@@ -87,7 +87,6 @@ class MetaWeblogService < TypoWebService
     article.title       = struct['title'] || ''
     article.published   = publish
     article.author      = username
-
     article.published_at = struct['dateCreated'].to_time.getlocal rescue Time.now
     article.user        = @user
 

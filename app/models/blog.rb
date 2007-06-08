@@ -1,5 +1,4 @@
 # BlogRequest is a fake Request object, created so blog.url_for will work.
-
 class BlogRequest
 
   attr_accessor :protocol, :host_with_port, :path, :symbolized_path_parameters, :relative_url_root

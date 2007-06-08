@@ -2,6 +2,10 @@ ActionController::Routing::Routes.draw do |map|
 
   # front page (this is the index page, that gives this blog its base url)
   map.index 'frontpage', :controller  => 'articles', :action => 'frontpage'
+  # Old ids from Bryar
+  map.connect ':bryarid',
+    :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/
+
 
   # default
   map.index '', :controller  => 'articles', :action => 'index'
@@ -52,35 +56,14 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'articles', :action => 'index',
     :page => /\d+/
 
-###   map.connect 'blog/:year/:month/:day',
-###     :controller => 'articles', :action => 'find_by_date',
-###     :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/
-###   map.connect 'blog/:year/:month',
-###     :controller => 'articles', :action => 'find_by_date',
-###     :year => /\d{4}/, :month => /\d{1,2}/
-###   map.connect 'blog/:year',
-###     :controller => 'articles', :action => 'find_by_date',
-###     :year => /\d{4}/
   date_options = { :year => /\d{4}/, :month => /(?:0?[1-9]|1[12])/, :day => /(?:0[1-9]|[12]\d|3[01])/ }
 
-###   map.connect 'blog/:year/:month/:day/page/:page',
-###     :controller => 'articles', :action => 'find_by_date',
-###     :year => /\d{4}/, :month => /\d{1,2}/, :day => /\d{1,2}/, :page => /\d+/
-###   map.connect 'blog/:year/:month/page/:page',
-###     :controller => 'articles', :action => 'find_by_date',
-###     :year => /\d{4}/, :month => /\d{1,2}/, :page => /\d+/
-###   map.connect 'blog/:year/page/:page',
-###     :controller => 'articles', :action => 'find_by_date',
-###     :year => /\d{4}/, :page => /\d+/
 #   map.with_options(date_options) do |dated|
 #     dated.resources(:comments, :path_prefix => '/articles/:year/:month/:day/:title',
 #                     :members => { :preview => :get })
 #     dated.resources(:trackbacks, :path_prefix => '/articles/:year/:month/:day/:title')
 #   end
 
-###   map.connect 'blog/:year/:month/:day/:title',
-###     :controller => 'articles', :action => 'permalink',
-###     :year => /\d{4}/, :day => /\d{1,2}/, :month => /\d{1,2}/
   map.with_options(:conditions => {:method => :get}) do |get|
     get.with_options(date_options.merge(:controller => 'articles')) do |dated|
       dated.with_options(:action => 'index') do |finder|
@@ -91,10 +74,6 @@ ActionController::Routing::Routes.draw do |map|
         finder.connect 'articles/:year/:month/:day/page/:page', :page => /\d+/
       end
     end
-
-  # Old ids from Bryar
-  map.connect ':bryarid',
-    :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/
 
     %w(category tag).each do |value|
       get.with_options(:action => value, :controller => 'articles') do |m|

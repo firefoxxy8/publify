@@ -46,10 +46,7 @@ class ApplicationController < ActionController::Base
   # The base URL for this request, calculated by looking up the URL for the main
   # blog index page.  This is matched with Blog#base_url to determine which Blog
   # is supposed to handle this URL
-  # MvZ: I think this means they want to run several instances of typo on
-  # the same database, by copying the code. Seems strange!
   def blog_base_url
-    #url_for(:controller => '/articles').gsub(%r{/$},'')
     index_url.gsub(%r{/$},'')
   end
 
