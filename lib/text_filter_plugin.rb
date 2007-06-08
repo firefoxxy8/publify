@@ -50,12 +50,12 @@ class TextFilterPlugin
 
   def self.default_helper_module!
   end
-
+  
   # Look up a config paramater, falling back to the default as needed.
   def self.config_value(params,name)
     params[:filterparams][name] || default_config[name][:default]
   end
-
+  
   def self.logger
     @logger ||= RAILS_DEFAULT_LOGGER || Logger.new(STDOUT)
   end

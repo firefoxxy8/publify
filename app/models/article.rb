@@ -106,29 +106,22 @@ class Article < Content
     ping_urls = weblogupdatesping_urls + pingback_or_trackback_urls
 
     ping_urls.uniq.each do |url|
-      logger.info "\nPinging #{url}"
       begin
         unless pings.collect { |p| p.url }.include?(url.strip)
           ping = pings.build("url" => url)
-          logger.info "Just before deciding what to do with #{url}"
 
           if weblogupdatesping_urls.include?(url)
-            logger.info "About to do send_weblogupdatesping with #{url}"
             ping.send_weblogupdatesping(serverurl, articleurl)
           elsif pingback_or_trackback_urls.include?(url)
-            logger.info "About to do send_pingback_or_trackback with #{url}"
             ping.send_pingback_or_trackback(articleurl)
           end
         end
-        logger.info "Did all without exception with #{url}"
       rescue Exception => e
         logger.error(e)
         # in case the remote server doesn't respond or gives an error,
         # we should throw an xmlrpc error here.
       end
-      logger.info "End of loop for #{url}"
     end
-    logger.info "All done!"
   end
 
   def next
@@ -293,7 +286,6 @@ class Article < Content
   protected
 
   before_validation :set_defaults, :create_guid
-  ##before_create :set_defaults, :create_guid
   before_save :set_published_at
   after_save :keywords_to_tags
   after_create :add_notifications

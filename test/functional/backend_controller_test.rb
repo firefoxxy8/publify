@@ -255,17 +255,17 @@ class BackendControllerTest < Test::Unit::TestCase
     assert_equal result.first['pingTitle'], 'Trackback Entry'
   end
 
-##  def test_mt_publish_post
-##    args = [ 4, 'tobi', 'whatever' ]
-##
-##    assert (not Article.find(4).published?)
-##
-##    result = invoke_layered :mt, :publishPost, *args
-##
-##    assert result
-##    assert Article.find(4).published?
-##    assert Article.find(4)[:published_at]
-##  end
+  def test_mt_publish_post
+    args = [ 4, 'tobi', 'whatever' ]
+
+    assert (not Article.find(4).published?)
+
+    result = invoke_layered :mt, :publishPost, *args
+
+    assert result
+    assert Article.find(4).published?
+    assert Article.find(4)[:published_at]
+  end
 
   def test_mt_fail_authentication
     args = [ 1, 'tobi', 'using a wrong password', 2 ]
