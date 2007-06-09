@@ -114,26 +114,26 @@ ActionController::Routing::Routes.draw do |map|
     map.connect "/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil
   end
 
-###   returning(map.connect(':controller/:action/:id')) do |default_route|
-###     # Ick!
-###     default_route.write_generation
-### 
-###     class << default_route
-###       def recognize_with_deprecation(path, environment = {})
-###         RAILS_DEFAULT_LOGGER.info "#{path} hit the default_route buffer"
-###         recognize_without_deprecation(path, environment)
-###       end
-###       alias_method_chain :recognize, :deprecation
-### 
-###       def generate_with_deprecation(options, hash, expire_on = {})
-###         RAILS_DEFAULT_LOGGER.info "generate(#{options.inspect}, #{hash.inspect}, #{expire_on.inspect}) reached the default route"
-### #         if RAILS_ENV == 'test'
-### #           raise "Don't rely on default route generation"
-### #         end
-###         generate_without_deprecation(options, hash, expire_on)
-###       end
-###       alias_method_chain :generate, :deprecation
-###     end
-###   end
+  returning(map.connect(':controller/:action/:id')) do |default_route|
+    # Ick!
+    default_route.write_generation
+
+    class << default_route
+      def recognize_with_deprecation(path, environment = {})
+        RAILS_DEFAULT_LOGGER.info "#{path} hit the default_route buffer"
+        recognize_without_deprecation(path, environment)
+      end
+      alias_method_chain :recognize, :deprecation
+
+      def generate_with_deprecation(options, hash, expire_on = {})
+        RAILS_DEFAULT_LOGGER.info "generate(#{options.inspect}, #{hash.inspect}, #{expire_on.inspect}) reached the default route"
+#         if RAILS_ENV == 'test'
+#           raise "Don't rely on default route generation"
+#         end
+        generate_without_deprecation(options, hash, expire_on)
+      end
+      alias_method_chain :generate, :deprecation
+    end
+  end
   map.connect '*from', :controller => 'redirect', :action => 'redirect'
 end

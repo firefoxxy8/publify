@@ -105,7 +105,6 @@ require 'login_system'
 require 'typo_version'
 require 'metafragment'
 require 'actionparamcache'
-# require_dependency 'spam_protection'
 $KCODE = 'u'
 require 'jcode'
 require 'xmlrpc_fix'
@@ -168,4 +167,5 @@ require 'cached_model'
 CachedModel.use_local_cache = true
 CachedModel.use_memcache = false
 
-# $blog_id_for = {}
+# Uncomment this to choose your blog's language
+# Localization.lang = 'fr_FR'
