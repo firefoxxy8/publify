@@ -8,23 +8,14 @@ class Ping < ActiveRecord::Base
     attr_accessor :blog
 
     def send_pingback_or_trackback
-      @logger = RAILS_DEFAULT_LOGGER
       begin
-        @logger.info "About to get resource: #{ping.url}"
-        uri = URI.parse(ping.url)
-        @response = Net::HTTP.get_response(uri)
-        #@logger.info "\nAbout to get resource: #{uri}"
-        #test = Resolv.getaddress(uri.host)
-        #conn = Net::HTTP.new(uri.host, uri.port)
-        #@response = conn.get(uri.path)
-        @logger.info "Got resource for #{uri}"
+        @response = Net::HTTP.get_response(URI.parse(ping.url))
         send_pingback or send_trackback
-        @logger.info "Done pinger for #{uri}"
       rescue Timeout::Error => err
-        @logger.info "Sending pingback or trackback timed out"
+        RAILS_DEFAULT_LOGGER.info "Sending pingback or trackback timed out"
         return
       rescue => err
-        @logger.info "Sending pingback or trackback failed with error: #{err}"
+        RAILS_DEFAULT_LOGGER.info "Sending pingback or trackback failed with error: #{err}"
       end
     end
 
@@ -73,7 +64,6 @@ class Ping < ActiveRecord::Base
 
     def send_pingback
       if pingback_url
-        @logger.info "Pinger.send_pingback: #{pingback_url}"
         send_xml_rpc(pingback_url, "pingback.ping", origin_url, ping.url)
         return true
       else
@@ -82,7 +72,6 @@ class Ping < ActiveRecord::Base
     end
 
     def send_trackback
-      @logger.info "Pinger.send_trackback: #{trackback_url}"
       ping.send_trackback(trackback_url, origin_url)
     end
 
@@ -99,8 +88,7 @@ class Ping < ActiveRecord::Base
     t = Thread.start(Pinger.new(origin_url, self)) do |pinger|
       pinger.send_pingback_or_trackback
     end
-    logger.info "About to wait for thread" if defined? $TESTING
-    t.join if defined? $TESTING
+    t.join if (defined? $TESTING and $TESTING == true)
   end
 
   def send_trackback(trackback_url, origin_url)
@@ -123,7 +111,7 @@ class Ping < ActiveRecord::Base
       send_xml_rpc(self.url, "weblogUpdates.ping", blog_name,
                    server_url, origin_url)
     end
-    t.join if defined? $TESTING
+    t.join if (defined? $TESTING and $TESTING == true)
   end
 
   protected

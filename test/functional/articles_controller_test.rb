@@ -114,7 +114,7 @@ class ArticlesControllerTest < Test::Unit::TestCase
   def test_front_page
     get :frontpage
     assert_response :success
-    assert_rendered_file "frontpage"
+    assert_template "frontpage"
     # TODO: Make front page return list of articles in azure theme, then
     # test that second-blog-article is not shown
     ### assert ! @response.body

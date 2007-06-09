@@ -1,5 +1,5 @@
 # General Apache options
-AddHandler fcgid-script .fcgi
+AddHandler fastcgi-script .fcgi
 AddHandler cgi-script .cgi
 Options +FollowSymLinks +ExecCGI
 
@@ -18,10 +18,9 @@ RewriteEngine On
 #
 # Example:
 #   Alias /blog /path/to/typo/public
-RewriteBase /blog
+#   RewriteBase /blog
 
 RewriteRule ^$ index.html [QSA]
-RewriteRule ^([^.]+)/$ $1.html [QSA]
 RewriteRule ^([^.]+)$ $1.html [QSA]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ dispatch.fcgi [QSA,L]
@@ -32,5 +31,4 @@ RewriteRule ^(.*)$ dispatch.fcgi [QSA,L]
 # Example:
 #   ErrorDocument 500 /500.html
 
-ErrorDocument 500 "<h2>Application error</h2> <p>Typo failed to start properly</p>"
-#ErrorDocument 500 /500.html
+ErrorDocument 500 "<h2>Application error</h2>Typo failed to start properly"

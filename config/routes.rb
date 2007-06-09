@@ -48,11 +48,6 @@ ActionController::Routing::Routes.draw do |map|
     dated.resources :trackbacks
   end
 
-  #
-  %w(nuke_trackback nuke_comment markup_help author trackback).each do |value|
-    map.connect "articles/#{value}/:id", :controller => 'articles', :action => value
-  end
-
   # allow neat perma urls
   map.connect 'articles/page/:page',
     :controller => 'articles', :action => 'index',
@@ -107,7 +102,7 @@ ActionController::Routing::Routes.draw do |map|
   map.connect '/stats/:action', :controller => 'sitealizer'
 
   # Work around the Bad URI bug
-  %w{ accounts backend files live sidebar textfilter xml }.each do |i|
+  %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|
     map.connect "#{i}", :controller => "#{i}", :action => 'index'
     map.connect "#{i}/:action", :controller => "#{i}"
     map.connect "#{i}/:action/:id", :controller => i, :id => nil
