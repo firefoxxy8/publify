@@ -1,5 +1,5 @@
-$DOING_TESTING = defined? $TESTING
-
+#$DOING_TESTING = defined? $TESTING
+# Thank you Mathijs van Zuijlen
 require 'socket'
 require 'thread'
 require 'timeout'
