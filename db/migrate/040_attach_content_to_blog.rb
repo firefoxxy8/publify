@@ -12,8 +12,7 @@ class AttachContentToBlog < ActiveRecord::Migration
       add_column :contents, :blog_id, :integer
       blog_id = BareBlog.find(:first).id
       BareContent.find(:all).each {|c| c.blog_id = blog_id; c.save! }
-      #change_column :contents, :blog_id, :integer, :null => false
-      execute("ALTER TABLE contents ALTER blog_id SET NOT NULL")
+      change_column :contents, :blog_id, :integer, :null => false
       add_index :contents, :blog_id
     rescue Exception => e
       remove_index :contents, :blog_id rescue nil

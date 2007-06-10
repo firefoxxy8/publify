@@ -1,4 +1,3 @@
-#$DOING_TESTING = defined? $TESTING
 # Thank you Mathijs van Zuijlen
 require 'socket'
 require 'thread'
@@ -278,7 +277,7 @@ class MemCache
     set key, value
   end
 
-  protected unless $DOING_TESTING
+  protected unless $TESTING
 
   ##
   # Create a key for the cache, incorporating the namespace qualifier if

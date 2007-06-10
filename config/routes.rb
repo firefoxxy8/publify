@@ -1,7 +1,7 @@
 ActionController::Routing::Routes.draw do |map|
 
-  # front page (this is the index page, that gives this blog its base url)
-  map.index 'frontpage', :controller  => 'articles', :action => 'frontpage'
+  # front page
+  map.connect 'frontpage', :controller  => 'articles', :action => 'frontpage'
   # Old ids from Bryar
   map.connect ':bryarid',
     :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/

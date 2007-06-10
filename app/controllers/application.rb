@@ -51,7 +51,7 @@ class ApplicationController < ActionController::Base
   # blog index page.  This is matched with Blog#base_url to determine which Blog
   # is supposed to handle this URL
   def blog_base_url
-    index_url.gsub(%r{/$},'')
+    url_for(:controller => '/articles').gsub(%r{/$},'')
   end
 
   def add_to_cookies(name, value, path=nil, expires=nil)
