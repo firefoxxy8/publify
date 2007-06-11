@@ -7,37 +7,38 @@
   <%= stylesheet_link_tag "/stylesheets/user-styles", :media => 'all' %>
   <%= stylesheet_link_tag "/stylesheets/theme/print", :media => 'print' %>
 </head>
+
 <body>
   <div class="contents">
       <div class="main">
-	  <% if @frontpage -%>
+          <% if @frontpage -%>
           <h1 id="sitename">matijs.net</h1>
-	  <% else -%>
-          <h1 id="sitename"><%= link_to this_blog.blog_name, { :controller => 'articles' } %></h1>
-	  <% end -%>
-	  <%= @content_for_layout %>
+          <% else -%>
+          <h1 id="sitename"><%= link_to this_blog.blog_name, this_blog.base_url %></h1>
+          <% end -%>
+          <%= @content_for_layout %>
           <%= javascript_tag "show_dates_as_local_time()" %>
       </div>
       <div class="places">
         <% if @frontpage -%>
         <%= render_partial "articles/frontbar" %>
         <% else -%>
-	<p>Toxic Elephant is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
-	<%= link_to image_tag("powered.gif"),  "http://www.typosphere.org/", {:class => "powered" } %>
-	<div id="search"> <%= render :partial => "shared/search" %></div>
+        <p>Toxic Elephant is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
+        <%= link_to image_tag("powered.gif"),  "http://www.typosphere.org/", {:class => "powered" } %>
+        <div id="search"> <%= render :partial => "shared/search" %></div>
 
             <div id="search-results"></div>
 
         <%= render_sidebars %>
         <% end -%>
-	<!--
+        <!--
         <ul>
           <li><a href="http://validator.w3.org/check?uri=referer">Valid XHTML 1.0</a></li>
-          <li><a href="http://jigsaw.w3.org/css-validator/validator?uri=<%= url_for :controller => 'articles' %>">Valid CSS</a></li>
+          <li><a href="http://jigsaw.w3.org/css-validator/validator?uri=<%= this_blog.base_url %>">Valid CSS</a></li>
         </ul>
-	-->
+        -->
       </div>
-      <p class="copyright">Copyright 2002&ndash;2006, Matijs van Zuijlen</p>
+      <p class="copyright">Copyright 2002&ndash;2007, Matijs van Zuijlen</p>
   </div>
 </body>
 </html>
