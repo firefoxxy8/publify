@@ -6,7 +6,7 @@ class BlogRequest
   def initialize(root)
     @protocol = @host_with_port = @path = ''
     @symbolized_path_parameters = {}
-    @relative_url_root = root.gsub(%r{/^},'')
+    @relative_url_root = root.gsub(%r{/$},'')
   end
 end
 
@@ -22,6 +22,10 @@ class Blog < CachedModel
   has_many :trackbacks
   has_many :articles
   has_many :comments
+  has_many(:published_comments,
+           :class_name => 'Comment',
+           :conditions => {:published => true},
+           :order => 'contents.published_at DESC')
   has_many :pages, :order => "id DESC"
   has_many(:published_articles, :class_name => "Article",
            :conditions => {:published => true},
@@ -163,10 +167,7 @@ class Blog < CachedModel
   end
 
   # Deprecated
-  def canonical_server_url
-    typo_deprecated "Use base_url instead"
-    base_url
-  end
+  typo_deprecate :canonical_server_url => :base_url
 
   def [](key)  # :nodoc:
     typo_deprecated "Use blog.#{key}"
@@ -191,6 +192,25 @@ class Blog < CachedModel
   def current_theme_path  # :nodoc:
     typo_deprecated "use current_theme.path"
     Theme.themes_root + "/" + theme
+  end
+
+  def requested_article(params)
+    published_articles.find_by_params_hash(params)
+  end
+
+  def requested_articles(params)
+    published_articles.find_all_by_date(*params.values_at(:year, :month, :day))
+  end
+
+  def articles_matching(query)
+    published_articles.search(query)
+  end
+
+  def rss_limit_params
+    limit = limit_rss_display.to_i
+    return limit.zero? \
+      ? {} \
+      : {:limit => limit}
   end
 end
 

@@ -1,3 +1,43 @@
+module ActionController
+  module Resources
+    class InflectedResource < Resource
+      def member_path
+        @member_path ||= "#{singular_path}/:id"
+      end
+
+      def nesting_path_prefix
+        @nesting_path_prefix ||= "#{singular_path}/:#{singular}_id"
+      end
+
+      protected
+      def singular_path
+        @singular_path ||= "#{path_prefix}/#{singular}"
+      end
+    end
+
+    def inflected_resource(*entities, &block)
+      options = entities.last.is_a?(Hash) ? entities.pop : { }
+      entities.each { |entity| map_inflected_resource entity, options.dup, &block }
+    end
+
+    private
+    def map_inflected_resource(entities, options = { }, &block)
+      resource = InflectedResource.new(entities, options)
+
+      with_options :controller => resource.controller do |map|
+        map_collection_actions(map, resource)
+        map_default_collection_actions(map, resource)
+        map_new_actions(map, resource)
+        map_member_actions(map, resource)
+
+        if block_given?
+          with_options(:path_prefix => resource.nesting_path_prefix, &block)
+        end
+      end
+    end
+  end
+end
+
 ActionController::Routing::Routes.draw do |map|
 
   # front page
@@ -17,6 +57,9 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'admin/trackbacks/article/:article_id/:action/:id',
     :controller => 'admin/trackbacks', :action => nil, :id => nil
   map.connect 'admin/content/:action/:id', :controller => 'admin/content'
+
+  # Stats plugin
+  map.connect '/stats/:action', :controller => 'sitealizer'
 
   # make rss feed urls pretty and let them end in .xml
   # this improves caches_page because now apache and webrick will send out the
@@ -48,6 +91,8 @@ ActionController::Routing::Routes.draw do |map|
     dated.resources :trackbacks
   end
 
+  map.inflected_resource(:categories, :path_prefix => '/articles')
+
   # allow neat perma urls
   map.connect 'articles/page/:page',
     :controller => 'articles', :action => 'index',
@@ -72,7 +117,7 @@ ActionController::Routing::Routes.draw do |map|
       end
     end
 
-    %w(category tag author).each do |value|
+    %w(tag author).each do |value|
       get.with_options(:action => value, :controller => 'articles') do |m|
         m.named_route("#{value.pluralize}", "articles/#{value}")
         m.connect "articles/#{value}/page/:page", :page => /\d+/
@@ -96,10 +141,6 @@ ActionController::Routing::Routes.draw do |map|
     map.connect 'plugins/filters/:filter/:public_action',
       :controller => 'textfilter', :action => 'public_action'
   end
-
-
-  # Stats plugin
-  map.connect '/stats/:action', :controller => 'sitealizer'
 
   # Work around the Bad URI bug
   %w{ accounts articles backend files live sidebar textfilter xml }.each do |i|

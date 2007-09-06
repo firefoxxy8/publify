@@ -9,6 +9,11 @@ class ApplicationController < ActionController::Base
 
   protected
 
+  def error(message = "Record not found...", options = { })
+    @message = message.to_s
+    render :template => 'articles/error', :status => options[:status] || 404
+  end
+
   def authorized?
     session[:user] && session[:user].reload && authorize?
   end
@@ -46,6 +51,10 @@ class ApplicationController < ActionController::Base
               end
   end
   helper_method :this_blog
+
+  def reset_blog_ids
+    @@blog_id_for = {}
+  end
 
   # The base URL for this request, calculated by looking up the URL for the main
   # blog index page.  This is matched with Blog#base_url to determine which Blog

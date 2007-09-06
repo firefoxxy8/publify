@@ -8,7 +8,7 @@ class Admin::ContentController < Admin::BaseController
 
   def list
     now = Time.now
-    count = this_blog.articles.count
+    count = this_blog.articles.size
     @articles_pages = Paginator.new(self, count, 15, params[:id])
     @articles = this_blog.articles.find(:all, :limit => 15, :order => 'id DESC',
                                         :offset => @articles_pages.current.offset)
@@ -48,7 +48,7 @@ class Admin::ContentController < Admin::BaseController
 
   def preview
     headers["Content-Type"] = "text/html; charset=utf-8"
-    @article = this_blog.articles.build 
+    @article = this_blog.articles.build
     @article.attributes = params[:article]
     set_article_author
     if @article.blog.nil?
@@ -99,6 +99,7 @@ class Admin::ContentController < Admin::BaseController
   def new_or_edit
     get_or_build_article
     params[:article] ||= {}
+    params[:bookmarklet_link] && post_from_bookmarklet
 
     @article.attributes = params[:article]
     setup_categories
@@ -112,6 +113,14 @@ class Admin::ContentController < Admin::BaseController
         redirect_to :action => 'show', :id => @article.id
       end
     end
+  end
+
+  def post_from_bookmarklet
+    params[:article][:title] = params[:bookmarklet_title]
+    params[:article][:body] = '<a href="' + params[:bookmarklet_link] + \
+      ' title="' + params[:bookmarklet_title] + '">' + \
+      params[:bookmarklet_title] + '</a>'
+    params[:article][:body] += ("\n\n" + params[:bookmarklet_text]) if params[:bookmarklet_text]
   end
 
   def set_the_flash

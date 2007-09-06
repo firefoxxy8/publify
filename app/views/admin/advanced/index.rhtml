@@ -1,14 +1,13 @@
     <% @page_heading = _('Blog advanced settings') %>
 
-    <% form_tag :action => 'update' do %>
+  <% content_for('tasks') do -%>
+    <li><%= link_to(_("Basic settings"), {:controller=>"general"}) %></li>
+	<li><%= link_to _('Empty Fragment Cache'), :controller => '/admin/cache', :action => 'sweep' %></li>
+	<li><%= link_to _('Rebuild cached HTML'), :controller => '/admin/cache', :action => 'sweep_html' %></li>
+  <% end -%> 
 
-    <div class="tasks">
-        <h3><%= _("Things you can do")%>?</h3>
-        <ul>
-            <li><%= link_to(_("Basic settings"), {:controller=>"general"}) %></li>
-        </ul>
-    <p style="clear:both;"></p>
-  </div>
+
+    <% form_tag :action => 'update' do %>
 
 <div class="admin">
     <fieldset id="write" class="set">
@@ -83,9 +82,9 @@
                 <input name="setting[global_pings_disable]" id="global_pings_disable" type="checkbox" value="1" <%= 'checked="checked"' if this_blog.global_pings_disable%> />
                 <input name="setting[global_pings_disable]" type="hidden" value="0" />
             </li>
-            <li><%= _("You can enable site wide comment moderation. If you do so, no comment or trackback will appear on your blog unless you validate it")%>.</li>
+            <li><%= _("You can enable site wide feeback moderation. If you do so, no comment or trackback will appear on your blog unless you validate it")%>.</li>
             <li class="checkbox">
-                <label class="float" for="default_moderate_comments"><%= _("Enable comments moderation")%>:</label>
+                <label class="float" for="default_moderate_comments"><%= _("Enable feedback moderation")%>:</label>
                 <input name="setting[default_moderate_comments]" id="default_moderate_comments" type="checkbox" value="1" <%= 'checked="checked"' if this_blog.default_moderate_comments %> />
                 <input name="setting[default_moderate_comments]" type="hidden" value="0" />
             </li>
