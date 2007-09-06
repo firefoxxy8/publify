@@ -44,9 +44,7 @@ module ArticlesHelper
   #{ meta_tag 'ICBM', this_blog.geourl_location unless this_blog.geourl_location.empty? }
   <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => '/xml', :action => 'rsd' }" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ @auto_discovery_url_atom }" />
-  <!--
   <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ @auto_discovery_url_rss }" />
-  -->
   #{ javascript_include_tag "cookies" }
   #{ javascript_include_tag "prototype" }
   #{ javascript_include_tag "effects" }
@@ -91,7 +89,7 @@ module ArticlesHelper
 
   def prev_link(article)
     p = article.previous
-    return p ? n.link_to_permalink("&laquo; #{p.title}") : ''
+    return p ? p.link_to_permalink("&laquo; #{p.title}") : ''
   end
 
   def render_to_string(*args, &block)
