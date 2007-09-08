@@ -3,9 +3,9 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 describe "CommentSanitization", :shared => true do
   before do
     build_text_filters
-    @article = mock_model(Article, :created_at => Time.now, :published_at => Time.now)
-    Article.stub!(:find).and_return(@article)
     @blog = mock_model(Blog, :use_gravatar => false)
+    @article = mock_model(Article, :created_at => Time.now, :published_at => Time.now, :blog => @blog, :blog_id => @blog.id)
+    Article.stub!(:find).and_return(@article)
     @controller.template.stub!(:this_blog).and_return(@blog)
     Blog.stub!(:find).and_return(@blog)
 

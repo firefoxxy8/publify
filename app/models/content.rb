@@ -6,7 +6,7 @@ class Content < ActiveRecord::Base
 
   belongs_to :text_filter
   belongs_to :blog
-  validates_presence_of :blog_id
+  validates_presence_of :blog
   # validates_length_of :author, :maximum => 20, :allow_nil => true
 
   has_many :notifications, :foreign_key => 'content_id'

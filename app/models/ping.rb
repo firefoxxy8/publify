@@ -86,6 +86,7 @@ class Ping < ActiveRecord::Base
       pinger.send_pingback_or_trackback
     end
     t.join if (defined? $TESTING and $TESTING == true)
+    t
   end
 
   def send_trackback(trackback_url, origin_url)
@@ -109,6 +110,7 @@ class Ping < ActiveRecord::Base
                    server_url, origin_url)
     end
     t.join if (defined? $TESTING and $TESTING == true)
+    t
   end
 
   protected

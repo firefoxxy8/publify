@@ -76,7 +76,7 @@ describe "General Comment Creation", :shared => true do
       @comment
     end
 
-    make_the_request
+    make_the_request({:body => 'content'})
   end
 
   it "should set an author cookie" do

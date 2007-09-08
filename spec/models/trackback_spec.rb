@@ -10,7 +10,7 @@ describe 'With the various trackback filters loaded and DNS mocked out appropria
   end
 
   it 'Incomplete trackbacks should not be accepted' do
-    tb = Trackback.new(:blog_name => 'Blog name', :title => 'Title', :excerpt => 'Excerpt')
+    tb = Trackback.new(:blog_name => 'Blog name', :title => 'Title', :excerpt => 'Excerpt', :blog_id => @blog.id)
     tb.should_not be_valid
     tb.errors.should be_invalid('url')
 
@@ -60,6 +60,6 @@ describe 'With the various trackback filters loaded and DNS mocked out appropria
   def ham_params
     { :blog_name => 'Blog', :title => 'trackback', :excerpt => 'bland',
       :url => 'http://notaspammer.com', :ip => '212.42.230.206',
-      :blog => @blog }
+      :blog_id => @blog.id }
   end
 end

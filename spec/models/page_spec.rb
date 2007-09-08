@@ -37,7 +37,7 @@ end
 
 describe "ValidPageHelper", :shared => true do
   def valid_attributes
-    { :name => 'name', :title => 'title', :body => 'body'}
+    { :name => 'name', :title => 'title', :body => 'body', :blog => mock_model(Blog)}
   end
 end
 

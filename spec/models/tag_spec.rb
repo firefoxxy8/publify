@@ -28,7 +28,8 @@ describe 'Given loaded fixtures' do
   end
 
   it 'articles can be tagged' do
-    a = Article.create(:title => 'an article')
+    a = Article.create(:title => 'an article', :blog => Blog.find(:first))
+    a.save!
     a.tags << tags(:foo_tag)
     a.tags << tags(:bar_tag)
 
