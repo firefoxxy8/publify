@@ -6,6 +6,6 @@ num_procs: "1024"
 cwd: /var/www/www.matijs.net/typo
 port: "3100"
 environment: production
-group: mongrel
+group: www-data
 pid_file: log/mongrel.pid
 servers: 3

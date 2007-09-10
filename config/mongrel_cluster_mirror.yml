@@ -8,4 +8,4 @@ port: "3100"
 environment: production
 group: matijs
 pid_file: log/mongrel.pid
-servers: 1
+servers: 3
