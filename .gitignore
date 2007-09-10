@@ -1,8 +1,6 @@
 /db/schema.rb
 .*.swp
 /vendor/plugins/sitealizer/lib/last_update
-/vendor/plugins/rspec
-/vendor/plugins/rspec_on_rails
 /vendor/rails
 /coverage
 /coverage.data
