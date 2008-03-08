@@ -1,0 +1,20 @@
+development:
+  adapter: postgresql
+  database: typo
+  host: 
+  username: typo
+  password: 
+
+test:
+  adapter: sqlite3
+  database: typo_tests
+  host:
+  username: typo
+  password: 
+
+production:
+  adapter: postgresql
+  database: typo
+  host: 
+  username: typo
+  password: 
