@@ -1,0 +1,414 @@
+/*
+ * Passepartout style for matijs.net
+ * Copyright 2004-2006 Matijs van Zuijlen
+ * http://www.matijs.net/
+ */
+/*
+ * This design is supposed to create the effect of text surrounded by a
+ * passepartout. Thus, there is a (gray) `central area' containing the main
+ * text, and this area is surrounded by four `borders'. There are no css
+ * borders in this design, so in the following `borders' refers to the
+ * parts of the passepartout.
+ *
+ * DIMENSIONS
+ * 
+ * The background images are all 800px wide. Vertical edges occur at 25px,
+ * 90px, 560px, 775px. Left border is 65px, central area is 470px, right
+ * border is 215px.
+ *
+ * The body background is 300px high to get a non-trivial repetition of the
+ * paper texture.
+ *
+ * The top and bottom images are each 125px high. For these images,
+ * horizontal edges occur at 30px and 95px.
+ *
+ * The dark rectangle in the top image has a bottom edge at 110px.
+ *
+ * COLOR SCHEME
+ *
+ * Top bar (brown): #a5945a;
+ * Main text (black): #000;
+ * Headings (red): #c20;
+ * Secondary text (gray): #555;
+ * Link hover (green): #85ab02;
+ * Admin tools, gray on white, red when active: #ccc; #fff; #c00;
+ */
+html {
+  /* background is centered to line it op with the pattern on the frame */
+  background: url(../../images/theme/paper_dark.png) top center;
+  margin: 0px;
+  padding: 0px;
+}
+body {
+  color: #555;
+  /* IE 5.5 seems to make the body as wide as the window. Also, since it
+   * doesn't support centering the body, the contents of body will be
+   * against the left edge of the window. So, we must make the background
+   * align left. In better browsers, this is not different from center,
+   * since the body is as wide as the image. */
+  background: url(../../images/theme/body_bg.png) top left repeat-y;
+
+  width: 800px; /* background image has this width */
+  padding: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  /*
+   * BROWSER HACKS HERE:
+   * REASON: IE 5.5 and lower do not support margin: auto, so hide it.
+   * - shut off netscape 4[4]
+   * - shut off IE (up to 5.5) (2 lines)[5]
+   * - turn on netscape 4?
+   * - set margin
+   */
+  /*/*/
+  voice-family: "\"}\"";
+  voice-family: inherit;
+  /* welcome back netscape */
+  margin: 0px auto;
+}
+/* Be nice to Opera 5[5] */
+html>body p.copyright {
+  margin: 0px auto;
+}
+
+div.contents {
+  background: url(../../images/theme/top_bg.png) top left no-repeat;
+  font-family: sans-serif;
+  padding: 0px;
+  margin: 0px;
+  height: 100%;
+}
+
+/* Text in central grey area. 20px padding to inner edge of border. */
+div.main {
+  float: left;
+  display: inline; /* Fix IE margin-doubling bug[3] */
+  color: #000;
+
+  width: 430px; /* 470px - 2 x padding. */
+  padding: 0px;
+
+  margin-bottom: 0px; /* For padding against p.copyright. */
+  margin-left: 110px; /* Edge at 90px, plus 20px padding */
+  margin-right: 0px;
+  /*
+   * BROWSER HACKS HERE:
+   * IE 6 (and before?) collapses the first child element's margin with
+   * this float's padding. So add some to this padding. Then, use a child
+   * selector rule to set it correctly for non-IE browsers.
+   */
+  margin-top: 115px; /* Edge at 95px, plus 20px padding */
+}
+div>div.main {
+  margin-top: 95px; /* Edge at 95px, padding done by text itself */
+}
+
+/* Text in right border. 25px padding to sides of border. */
+div.places {
+  font-size: 80%;
+
+  width: 165px; /* 215px - 2 x padding */
+  /* We need to do the vertical spacing with padding, since the margin
+   * collapses with the body's margin, and we'll end up moving the top image
+   * down, as well as the float.
+   * */
+  padding-top: 110px; /* Edge at 95px, padding done by text itself */
+  padding-bottom: 0px; /* For padding against p.copyright. */
+  padding-left: 0px;
+  padding-right: 0px;
+
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-left: 585px; /* edge at 560px, plus padding. Use this instead of
+		       * auto to make IE stop being silly. */
+  /* This right margin follows from the settings above. Leaving it in makes
+   * IE think it's too wide to display next to the float */
+  /* margin-right: 50px; */ /* 25px padding, plus 25px to right edge of image. */
+}
+
+/* Layout of text inside the right border. Basically, this part is filled
+ * with lists, but we don't want them to look like standard lists. */
+.places ul {
+  list-style: square;
+  margin: 0px;
+  margin-left: 1.5em;
+  padding: 0px;
+  color: #a5945a;
+}
+.places ul li {
+  margin: 0px;
+}
+.places ul li .nolink {
+  color: #000;
+}
+.places * {
+  margin-bottom: 0.4em;
+  margin-top: 0.4em;
+}
+.places h2, .places h3 {
+  margin-top: 1em;
+}
+
+h2, h3, h4, h5, h6 {
+  color: #c20;
+  font-weight: normal;
+}
+
+/* h1 is a box that starts at the left edge of the main column, and ends at
+ * the right edge of the places column. Its baseline is 25px above the
+ * bottom of the top border. */
+h1 {
+  color: #000;
+  font-weight: normal;
+  position: absolute;
+  top: 0px;
+  left: auto; /* Stay where we are */
+  text-align: right;
+  width: 630px; /* 800px - 110px - 60px; */
+  background: transparent;
+
+  line-height: 0px;
+  padding-top: 70px; /* 95px - 25px */
+  padding-bottom: 40px; /* Give text room in IE to grow to the bottom edge
+			 * of the dark rectangle */
+  margin: 0px;
+}
+
+/* Main text */
+.main p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+
+/* This text is also in central grey area. 20px padding to inner edge of
+ * border. */
+p.copyright {
+  font-size: 70%;
+  text-align: right;
+  clear: both;
+  background: url(../../images/theme/bot_bg.png) bottom left no-repeat;
+  margin: 0px;
+  /* We have to use padding, since the background will not show up in the
+   * margin */
+  padding-top:	    2em; /* keep main float at bay; this won't work using
+			  * the margin[2]. */ 
+  padding-bottom: 115px; /* 20px to edge of border, plus 95px to lower edge
+			  * of picture */
+  padding-left:   110px; /* Edge at 90px, plus 20px padding */
+  padding-right:  260px; /* 20px padding, 215px border, 25px to edge of
+			  * picture */
+
+  /*
+   * BROWSER HACKS HERE:
+   * - shut off netscape 4[4]
+   * - set width for IE[5]
+   * - shut off IE (up to 5.5) (2 lines)
+   * - turn on netscape 4?
+   * - set correct width for non-IE browsers
+   */
+  /*/*/
+  width: 800px;
+  voice-family: "\"}\"";
+  voice-family: inherit;
+  /* welcome back netscape */
+  width: 430px;	/* Same width as main text */
+}
+/* Be nice to Opera 5[5] */
+html>body p.copyright {
+  width: 430px;	/* Same width as main text */
+}
+
+a {
+  color: black;
+}
+
+/* Make sure this doesn't overflow to the sides */
+pre {
+  overflow: auto;
+  border: solid #a5945a;
+  border-width: 1px 0px;
+  padding: 1em 0em;
+}
+
+/* Blog-specific styles */
+
+/*
+ * Typo displays headings as links, but I want them to look normal.
+ */
+h1 a, h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/*
+ * Article layout
+ */
+
+p.auth, p.meta {
+  font-size: 80%;
+  color: #555;
+}
+p.meta a, p.postmetadata a {
+  color: inherit;
+}
+
+h4.blueblk {
+  margin-bottom: 0em;
+}
+
+/*
+ * Commenting
+ */
+div.comment, div.comment-box {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 0em;
+  margin-right: 0em;
+  border: 1px solid #a5945a;
+  padding: 0.1px 10px;
+}
+
+div.comment p, div.comment-box p {
+  margin-left: 0em;
+  margin-right: 0em;
+}
+
+/* Other bits from azure.css, to be adapted */
+.comment-list {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+.comment-list li {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 0em;
+  margin-right: 0em;
+  border: 1px solid #a5945a;
+  padding: 0.1px 10px;
+}
+/* Is this needed? */
+.comment-list li div {
+  margin: 0px;
+  padding: 0px;
+}
+.comment-list li p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding: 0px;
+}
+li.author_comment {
+  border: 1px solid #c20;
+}
+
+#comment_body { height: 220px; }
+
+textarea {
+  width: 400px;
+}
+
+a { color: #000; /* TODO: Color */}
+a:hover { color: #85ab02; /* TODO: Color */}
+
+/* Admin tools: copied from azure.css, the standart typo style sheet */
+.admintools {
+  float: right;
+  background-color: #fff;
+  font-size: smaller;
+  padding: 0 2px;
+  margin: 0 1px;
+  color: #ccc;
+  border: 1px solid #ccc;
+}
+
+.admintools:hover {
+  color: #c00;
+  border: 1px solid #c00;
+}
+
+/* Other bits from azure.css, to be adapted */
+.powered img {
+  border: 0px;
+}
+#search_spinner {
+  /* avoid re-layouting of other stuff */
+  position: absolute;
+}
+
+/* Syntax highlighting (straight from azure.css) */
+.typocode_ruby .normal {}
+.typocode_ruby .comment { color: #005; font-style: italic; }
+.typocode_ruby .keyword { color: #A00; font-weight: bold; }
+.typocode_ruby .method { color: #077; }
+.typocode_ruby .class { color: #074; }
+.typocode_ruby .module { color: #050; }
+.typocode_ruby .punct { color: #447; font-weight: bold; }
+.typocode_ruby .symbol { color: #099; }
+.typocode_ruby .string { color: #944; background: #FFE; }
+.typocode_ruby .char { color: #F07; }
+.typocode_ruby .ident { color: #004; }
+.typocode_ruby .constant { color: #07F; }
+.typocode_ruby .regex { color: #B66; background: #FEF; }
+.typocode_ruby .number { color: #F99; }
+.typocode_ruby .attribute { color: #7BB; }
+.typocode_ruby .global { color: #7FB; }
+.typocode_ruby .expr { color: #227; }
+.typocode_ruby .escape { color: #277; }
+.typocode_xml .normal {}
+.typocode_xml .namespace { color: #B66; font-weight: bold; }
+.typocode_xml .tag { color: #F88; }
+.typocode_xml .comment { color: #005; font-style: italic; }
+.typocode_xml .punct { color: #447; font-weight: bold; }
+.typocode_xml .string { color: #944; }
+.typocode_xml .number { color: #F99; }
+.typocode_xml .attribute { color: #BB7; }
+.typocode_yaml .normal {}
+.typocode_yaml .document { font-weight: bold; color: #07F; }
+.typocode_yaml .type { font-weight: bold; color: #05C; }
+.typocode_yaml .key { color: #F88; }
+.typocode_yaml .comment { color: #005; font-style: italic; }
+.typocode_yaml .punct { color: #447; font-weight: bold; }
+.typocode_yaml .string { color: #944; }
+.typocode_yaml .number { color: #F99; }
+.typocode_yaml .time { color: #F99; }
+.typocode_yaml .date { color: #F99; }
+.typocode_yaml .ref { color: #944; }
+.typocode_yaml .anchor { color: #944; }
+
+/*
+.typocode {
+  background-color:#eee;
+  padding:2px;
+  margin:5px;
+  margin-left:1em;
+  margin-bottom:1em;
+}
+
+.typocode pre {
+  padding: 0px;
+  margin: 0px;
+  background: transparent;
+  font-family: monospace;
+  overflow:auto;
+}
+*/
+
+.typocode .lineno {
+  text-align: right;
+/*  color: #B00;*/
+  font-family: monospace;
+  padding-right: 1em;
+}
+
+/*
+ * FOOTNOTES:
+ * [1] I'm setting div.contents as the containing block. see
+ * <http://www.autisticcuckoo.net/archive.php?id=2004/12/07/relatively-absolute>.
+ * [2] This has to do with the exact effect of the clear property. See
+ * <http://www.autisticcuckoo.net/archive.php?id=2004/12/10/floating>. 
+ * [3] http://www.positioniseverything.net/explorer/doubled-margin.html
+ * [4] http://w3development.de/css/hide_css_from_browsers/more/
+ * [5] http://tantek.com/CSS/Examples/boxmodelhack.html, via
+ * http://w3development.de/css/hide_css_from_browsers/tantek/
+ */
