@@ -1,4 +1,7 @@
 class ArticlesController < ContentController
+  include BryarLink
+  include FrontPage
+
   before_filter :verify_config
   before_filter :auto_discovery_feed, :only => [:show, :index]
 
@@ -6,7 +9,7 @@ class ArticlesController < ContentController
 
   cache_sweeper :blog_sweeper
 
-  cached_pages = [:index, :read, :show, :archives, :view_page]
+  cached_pages = [:index, :read, :show, :archives, :view_page, :frontpage]
 
   if Blog.default && Blog.default.cache_option == "caches_action_with_params"
     caches_action_with_params *cached_pages
