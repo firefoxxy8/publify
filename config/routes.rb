@@ -68,7 +68,7 @@ ActionController::Routing::Routes.draw do |map|
   map.xml 'xml/:format/:type/feed.xml', :controller => 'xml', :action => 'feed'
   map.xml 'xml/:format/:type/:id/feed.xml', :controller => 'xml', :action => 'feed'
   map.xml 'xml/rss', :controller => 'xml', :action => 'feed', :type => 'feed', :format => 'rss'
-  map.xml 'sitemap.xml', :controller => 'xml', :action => 'feed', :format => 'googlesitemap', :type => 'sitemap'
+  #map.xml 'sitemap.xml', :controller => 'xml', :action => 'feed', :format => 'googlesitemap', :type => 'sitemap'
 
   map.resources :comments, :name_prefix => 'admin_'
   map.resources :trackbacks
