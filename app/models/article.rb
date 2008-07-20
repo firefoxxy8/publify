@@ -281,6 +281,10 @@ class Article < Content
     !(allow_comments? && in_feedback_window?)
   end
 
+  def pings_closed?
+    !(allow_pings? && in_feedback_window?)
+  end
+
   def in_feedback_window?
     self.blog.sp_article_auto_close.zero? ||
       self.created_at.to_i > self.blog.sp_article_auto_close.days.ago.to_i
