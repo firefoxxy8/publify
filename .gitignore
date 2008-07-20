@@ -1,0 +1,10 @@
+/db/schema.rb
+.*.swp
+/vendor/rails
+/coverage
+/coverage.data
+/previous_failures.txt
+/log
+/typo_tests
+/public/2007
+/public/index.html
