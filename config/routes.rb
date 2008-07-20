@@ -40,6 +40,13 @@ end
 
 ActionController::Routing::Routes.draw do |map|
 
+  # Front page
+  map.connect 'frontpage', :controller  => 'local', :action => 'frontpage'
+  # Old ids from Bryar
+  map.connect ':bryarid',
+    :controller  => 'local', :action => 'bryarlink', :bryarid => /id_\d*/
+
+
   # default
   map.root :controller  => 'articles', :action => 'index'
   map.admin 'admin', :controller  => 'admin/dashboard', :action => 'index'
