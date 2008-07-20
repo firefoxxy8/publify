@@ -58,7 +58,7 @@ ActionController::Routing::Routes.draw do |map|
     
     controller.with_options :action => 'feed' do |action|
       action.xml 'rss', :type => 'feed', :format => 'rss'
-      action.xml 'sitemap.xml', :format => 'googlesitemap', :type => 'sitemap', :path_prefix => nil
+      #action.xml 'sitemap.xml', :format => 'googlesitemap', :type => 'sitemap', :path_prefix => nil
       action.xml ':format/feed.xml', :type => 'feed'
       action.xml ':format/:type/feed.xml'
       action.xml ':format/:type/:id/feed.xml'
