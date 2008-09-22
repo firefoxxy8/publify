@@ -1,7 +1,4 @@
 class ArticlesController < ContentController
-  include BryarLink
-  include FrontPage
-
   before_filter :verify_config
   before_filter :auto_discovery_feed, :only => [:show, :index]
 
