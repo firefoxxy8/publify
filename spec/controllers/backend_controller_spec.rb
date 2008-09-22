@@ -1,19 +1,7 @@
-require File.dirname(__FILE__) + '/../../test/test_helper'
 require File.dirname(__FILE__) + '/../spec_helper'
-require 'spec'
-require 'action_web_service/test_invoke'
-require 'backend_controller'
-require 'blogger_service'
 require 'meta_weblog_service'
-require 'digest/sha1'
-require 'base64'
-
-# Re-raise errors caught by the controller.
-class BackendController; def rescue_action(e) raise e end; end
 
 describe BackendController do
-  include FlexMock::TestCase
-
   before do
     @protocol = :xmlrpc
   end
