@@ -49,7 +49,7 @@ module ApplicationHelper
   end
 
   def date(date)
-    "<span class=\"typo_date\">" + date.utc.strftime(_("%%a, %%d %%b %%Y, %%H:%%M:%%S", date.utc))+ "</span>"
+    "<span class=\"typo_date\">" + date.utc.strftime(_("%%d. %%b", date.utc)) + "</span>"
   end
 
   def render_theme(options)
