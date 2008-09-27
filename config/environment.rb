@@ -186,6 +186,7 @@ CachedModel.use_memcache = false
 require 'application'
 class LocalController < ApplicationController
   include ArticleControllerExtensions
+  append_view_path("#{RAILS_ROOT}/vendor/plugins/local_extensions/views")
   if Blog.default && Blog.default.cache_option == "caches_action_with_params"
     caches_action_with_params :frontpage
   else
