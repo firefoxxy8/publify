@@ -1,4 +1,4 @@
-module BryarLink
+module ArticleControllerExtensions
   def bryarlink
     /id_(\d+)/.match(params[:bryarid])
     begin
@@ -12,9 +12,7 @@ module BryarLink
     #  render :text => "Internal server error", :status => 500
     end
   end
-end
 
-module FrontPage
   def frontpage
     @frontpage = true;
     @articles = Article.find_already_published(
@@ -22,5 +20,11 @@ module FrontPage
       :limit => this_blog.limit_article_display
     )
     @page_title   = 'matijs.net'
+  end
+end
+
+module ArticleModelExtensions
+  def pings_closed?
+    !(allow_pings? && in_feedback_window?)
   end
 end
