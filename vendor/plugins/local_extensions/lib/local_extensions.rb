@@ -1,3 +1,4 @@
+require 'application'
 module ArticleControllerExtensions
   def bryarlink
     /id_(\d+)/.match(params[:bryarid])
@@ -20,6 +21,16 @@ module ArticleControllerExtensions
       :limit => this_blog.limit_article_display
     )
     @page_title   = 'matijs.net'
+  end
+end
+
+class LocalController < ApplicationController
+  include ArticleControllerExtensions
+  append_view_path("#{RAILS_ROOT}/vendor/plugins/local_extensions/views")
+  if Blog.default && Blog.default.cache_option == "caches_action_with_params"
+    caches_action_with_params :frontpage
+  else
+    caches_page :frontpage
   end
 end
 
