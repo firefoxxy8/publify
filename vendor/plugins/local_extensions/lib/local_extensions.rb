@@ -1,3 +1,5 @@
+::ActionController::Base.append_view_path("#{RAILS_ROOT}/vendor/plugins/local_extensions/views")
+
 require 'application'
 module ArticleControllerExtensions
   def bryarlink
@@ -24,9 +26,14 @@ module ArticleControllerExtensions
   end
 end
 
-class LocalController < ApplicationController
+class LocalController < ContentController
   include ArticleControllerExtensions
-  append_view_path("#{RAILS_ROOT}/vendor/plugins/local_extensions/views")
+  layout :theme_layout
+
+  def theme_layout
+    this_blog.current_theme.layout
+  end
+
   if Blog.default && Blog.default.cache_option == "caches_action_with_params"
     caches_action_with_params :frontpage
   else
