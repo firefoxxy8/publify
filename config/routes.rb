@@ -41,10 +41,10 @@ end
 ActionController::Routing::Routes.draw do |map|
 
   # Front page
-  map.connect 'frontpage', :controller  => 'articles', :action => 'frontpage'
+  map.connect 'frontpage', :controller  => 'local', :action => 'frontpage'
   # Old ids from Bryar
   map.connect ':bryarid',
-    :controller  => 'articles', :action => 'bryarlink', :bryarid => /id_\d*/
+    :controller  => 'local', :action => 'bryarlink', :bryarid => /id_\d*/
 
 
   # default

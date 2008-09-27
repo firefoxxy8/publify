@@ -184,12 +184,13 @@ CachedModel.use_memcache = false
 # TODO: Move to config/initializers/local_extensions.rb or even to the
 # plugin's init.rb, once the stuff above is moved to where it belongs
 require 'application'
-ArticlesController.send(:include, ArticleControllerExtensions)
-ArticlesController.module_eval do
+class LocalController < ApplicationController
+  include ArticleControllerExtensions
   if Blog.default && Blog.default.cache_option == "caches_action_with_params"
     caches_action_with_params :frontpage
   else
     caches_page :frontpage
   end
 end
+
 Article.send(:include, ArticleModelExtensions)
