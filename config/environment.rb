@@ -181,6 +181,3 @@ require 'cached_model'
 CachedModel.use_local_cache = true
 CachedModel.use_memcache = false
 
-# TODO: Move to config/initializers/local_extensions.rb or even to the
-# plugin's init.rb, once the stuff above is moved to where it belongs
-Article.send(:include, ArticleModelExtensions)

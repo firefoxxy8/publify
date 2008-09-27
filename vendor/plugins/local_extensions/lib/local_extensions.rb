@@ -39,3 +39,4 @@ module ArticleModelExtensions
     !(allow_pings? && in_feedback_window?)
   end
 end
+Article.send(:include, ArticleModelExtensions)
