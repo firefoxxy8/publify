@@ -12,9 +12,16 @@ require File.join(File.dirname(__FILE__), 'boot')
 # need this early for plugins
 require 'typo_deprecated'
 
+class Rails::Configuration
+  attr_accessor :action_web_service
+end
+
 Rails::Initializer.run do |config|
   # Skip frameworks you're not going to use
   config.frameworks -= [ :active_resource ]
+  config.frameworks += [ :action_web_service ]
+
+  config.action_web_service = Rails::OrderedOptions.new
 
   # Add additional load paths for your own custom dirs
   # config.load_paths += %W( #{RAILS_ROOT}/app/services )
@@ -88,8 +95,6 @@ Inflector.inflections {|i| i.uncountable %w(feedback)}
 # Include your application configuration below
 
 # Load included libraries.
-require 'actionwebservice'
-
 require 'redcloth'
 require 'bluecloth'
 require 'rubypants'
