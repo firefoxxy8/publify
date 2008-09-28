@@ -1,4 +1,5 @@
 require 'application'
+require 'cached_model'
 
 ::ActionController::Base.append_view_path("#{RAILS_ROOT}/vendor/plugins/local_extensions/views")
 
