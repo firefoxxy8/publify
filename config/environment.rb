@@ -19,6 +19,9 @@ end
 Rails::Initializer.run do |config|
   # Skip frameworks you're not going to use
   config.frameworks -= [ :active_resource ]
+
+  # Fix up action_web_service, see:
+  # http://www.texperts.com/2007/12/21/using-action-web-service-with-rails-20/
   config.frameworks += [ :action_web_service ]
 
   config.action_web_service = Rails::OrderedOptions.new
