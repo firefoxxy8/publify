@@ -17,9 +17,9 @@ set :scm, :git
 set :deploy_via, :copy
 set :copy_strategy, :export
 
-role :app, "www.matijs.net"
-role :web, "www.matijs.net"
-role :db,  "www.matijs.net", :primary => true
+role :app, "mist.matijs.net"
+role :web, "mist.matijs.net"
+role :db,  "mist.matijs.net", :primary => true
 
 after :update_code do
   sudo "chgrp -R www-data #{current_path}/public"
