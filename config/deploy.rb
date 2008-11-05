@@ -4,6 +4,9 @@ set :application, "typo"
 set :repository,  "."
 
 set :mongrel_conf, "/etc/mongrel-cluster/sites-enabled/#{application}.yml"
+set :mongrel_port, 3100
+set :mongrel_servers, 2
+set :mongrel_prefix, "/blog"
 
 # If you aren't deploying to /u/apps/#{application} on the target
 # servers (which is the default), you can specify the actual location
