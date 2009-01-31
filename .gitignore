@@ -5,3 +5,4 @@ config/mail.yml
 db/*.sqlite3
 db/schema.rb
 .*.swp
+vendor/plugins/memory_test_fix/
