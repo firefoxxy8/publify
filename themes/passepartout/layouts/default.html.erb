@@ -22,7 +22,7 @@
 
     <div class="places">
     <% if @frontpage -%>
-      <%= render_partial "articles/frontbar" %>
+      <%= render :partial => "articles/frontbar" %>
     <% else -%>
       <p>Toxic Elephant is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
       <%= link_to image_tag("powered.gif"),  "http://www.typosphere.org/", {:class => "powered" } %>
