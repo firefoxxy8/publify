@@ -24,13 +24,6 @@ role :app, "mist.matijs.net"
 role :web, "mist.matijs.net"
 role :db,  "mist.matijs.net", :primary => true
 
-after :update_code do
-  # Make public dir accessible to www-data
-  sudo "chgrp -R www-data #{current_path}/public"
-  # Link in the production database.yml 
-  run "ln -nfs #{deploy_to}/#{shared_dir}/config/database.yml #{release_path}/config/database.yml" 
-end
-
 namespace :deploy do
   desc "Create database.yml in shared/config" 
   task :after_setup do
@@ -57,4 +50,13 @@ EOF
     put database_configuration, "#{deploy_to}/#{shared_dir}/config/database.yml" 
     sudo "chmod 750 #{deploy_to}/#{shared_dir}/config"
   end
+
+  desc "Touchups after update_code"
+  task :after_update_code do
+    # Make public dir accessible to www-data
+    sudo "chgrp -R www-data #{current_path}/public"
+    # Link in the production database.yml 
+    run "ln -nfs #{deploy_to}/#{shared_dir}/config/database.yml #{current_path}/config/database.yml" 
+  end
+
 end
