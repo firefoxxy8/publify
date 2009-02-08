@@ -67,7 +67,22 @@ class Ping < ActiveRecord::Base
     end
 
     def send_trackback
-      ping.send_trackback(trackback_url, origin_url)
+      do_send_trackback(trackback_url, origin_url)
+    end
+
+    def do_send_trackback(trackback_url, origin_url)
+      trackback_uri = URI.parse(trackback_url)
+
+      post = "title=#{CGI.escape(article.title)}"
+      post << "&excerpt=#{CGI.escape(article.body.strip_html[0..254])}"
+      post << "&url=#{origin_url}"
+      post << "&blog_name=#{CGI.escape(blog.blog_name)}"
+
+      Net::HTTP.start(trackback_uri.host, trackback_uri.port) do |http|
+        path = trackback_uri.path
+        path += "?#{trackback_uri.query}" if trackback_uri.query
+          http.post(path, post, 'Content-type' => 'application/x-www-form-urlencoded; charset=utf-8')
+      end
     end
 
     private
@@ -85,23 +100,7 @@ class Ping < ActiveRecord::Base
     t = Thread.start(Pinger.new(origin_url, self)) do |pinger|
       pinger.send_pingback_or_trackback
     end
-    t.join if (defined? $TESTING and $TESTING == true)
     t
-  end
-
-  def send_trackback(trackback_url, origin_url)
-    trackback_uri = URI.parse(trackback_url)
-
-    post = "title=#{CGI.escape(article.title)}"
-    post << "&excerpt=#{CGI.escape(article.body.strip_html[0..254])}"
-    post << "&url=#{origin_url}"
-    post << "&blog_name=#{CGI.escape(article.blog.blog_name)}"
-
-    Net::HTTP.start(trackback_uri.host, trackback_uri.port) do |http|
-      path = trackback_uri.path
-      path += "?#{trackback_uri.query}" if trackback_uri.query
-      http.post(path, post, 'Content-type' => 'application/x-www-form-urlencoded; charset=utf-8')
-    end
   end
 
   def send_weblogupdatesping(server_url, origin_url)
@@ -109,7 +108,6 @@ class Ping < ActiveRecord::Base
       send_xml_rpc(self.url, "weblogUpdates.ping", blog_name,
                    server_url, origin_url)
     end
-    t.join if (defined? $TESTING and $TESTING == true)
     t
   end
 
