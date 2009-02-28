@@ -7,6 +7,7 @@ describe 'A successfully authenticated login' do
     @user = mock_model(User, :new_record? => false, :reload => @user)
     @user.stub!(:profile).and_return(Profile.find_by_label('admin'))
     User.stub!(:authenticate).and_return(@user)
+    User.stub!(:find_by_id).with(@user.id).and_return(@user)
     User.stub!(:count).and_return(1)
     controller.stub!(:this_blog).and_return(Blog.default)
   end
@@ -30,6 +31,17 @@ describe 'A successfully authenticated login' do
     request.session[:return_to] = '/bogus/location'
     make_request
     response.should redirect_to('/bogus/location')
+  end
+  
+  it 'redirects to /admin if no return' do
+    make_request
+    response.should redirect_to(:controller => 'admin')
+  end
+
+  it 'redirects to /admin if no return and your are logged' do
+    session[:user_id] = session[:user] = @user.id
+    make_request
+    response.should redirect_to(:controller => 'admin')
   end
 
   it "should redirect to signup if no users" do
@@ -195,22 +207,29 @@ describe 'User is logged in' do
       .with(:first, :conditions => { :id => @user.id }) \
       .any_number_of_times \
       .and_return(@user)
-    @user.should_receive(:forget_me)
 
     cookies[:typo_user_profile] = 'admin'
   end
 
+  it 'trying to log in once again redirects to admin/dashboard/index' do
+    get 'login'
+    response.should redirect_to(:controller => 'admin')
+  end
+
   it 'logging out deletes the session[:user_id]' do
+    @user.should_receive(:forget_me)
     get 'logout'
     session[:user_id].should be_blank
   end
 
   it 'redirects to the login action' do
+    @user.should_receive(:forget_me)
     get 'logout'
     response.should redirect_to(:action => 'login')
   end
 
   it 'logging out deletes cookies containing credentials' do
+    @user.should_receive(:forget_me)
     get 'logout'
     cookies[:auth_token].should == []
     cookies[:typo_user_profile].should == []

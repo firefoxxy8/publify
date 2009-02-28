@@ -1,47 +1,14 @@
-module ActionController
-  module Resources
-    class InflectedResource < Resource
-      def member_path
-        @member_path ||= "#{singular_path}/:id"
-      end
-
-      def nesting_path_prefix
-        @nesting_path_prefix ||= "#{singular_path}/:#{singular}_id"
-      end
-
-      protected
-      def singular_path
-        @singular_path ||= "#{path_prefix}/#{singular}"
-      end
-    end
-
-    def inflected_resource(*entities, &block)
-      options = entities.last.is_a?(Hash) ? entities.pop : { }
-      entities.each { |entity| map_inflected_resource entity, options.dup, &block }
-    end
-
-    private
-    def map_inflected_resource(entities, options = { }, &block)
-      resource = InflectedResource.new(entities, options)
-
-      with_options :controller => resource.controller do |map|
-        map_collection_actions(map, resource)
-        map_default_collection_actions(map, resource)
-        map_new_actions(map, resource)
-        map_member_actions(map, resource)
-
-        if block_given?
-          with_options(:path_prefix => resource.nesting_path_prefix, &block)
-        end
-      end
-    end
-  end
-end
-
 ActionController::Routing::Routes.draw do |map|
 
   # default
   map.root :controller  => 'articles', :action => 'index'
+
+  # TODO: use only in archive sidebar. See how made other system
+  map.articles_by_month ':year/:month', :controller => 'articles', :action => 'index', :year => /\d{4}/, :month => /\d{1,2}/
+  map.articles_by_month_page ':year/:month/page/:page', :controller => 'articles', :action => 'index', :year => /\d{4}/, :month => /\d{1,2}/
+  map.articles_by_year ':year', :controller => 'articles', :action => 'index', :year => /\d{4}/
+  map.articles_by_year_page ':year/page/:page', :controller => 'articles', :action => 'index', :year => /\d{4}/
+
   map.admin 'admin', :controller  => 'admin/dashboard', :action => 'index'
 
   # make rss feed urls pretty and let them end in .xml
@@ -66,42 +33,29 @@ ActionController::Routing::Routes.draw do |map|
   end
   
 
-  map.resources :comments, :name_prefix => 'admin_'
+  map.resources :comments, :name_prefix => 'admin_', :collection => [:preview]
   map.resources :trackbacks
-  map.resources :users
 
-  map.datestamped_resources(:articles,
-                            :collection => {
-                              :search => :get, 
-                              :live_search => :post, 
-                              :comment_preview => :any,
-                              :archives => :get
-                            },
-                            :member => {
-                              :markup_help => :get,
-                            }) do |dated|
-    dated.resources :comments, :new => { :preview => :any }
-    dated.resources :trackbacks
-    dated.connect 'trackbacks', :controller => 'trackbacks', :action => 'create', :conditions => {:method => :post}
-  end
-  
+  map.live_search_articles "/live_search/", :controller => "articles", :action => "live_search"
+  map.connect "/articles/search/", :controller => "articles", :action => "search"
+
+  # I thinks it's useless. More investigating
   map.connect "trackbacks/:id/:day/:month/:year",
     :controller => 'trackbacks', :action => 'create', :conditions => {:method => :post}
 
-  map.inflected_resource(:categories, :path_prefix => '')
-  map.connect '/category/:id/page/:page',
-  :controller => 'categories', :action => 'show'
-  
-  map.inflected_resource(:authors, :path_prefix => '')
-  
-  map.inflected_resource(:tags, :path_prefix => '')
-  map.connect '/tag/:id/page/:page',
-    :controller => 'tags', :action => 'show'
-  map.connect '/tags/page/:page', 
-    :controller => 'tags', :action => 'index'
-  
-  map.resources(:feedback)
+  # Before use inflected_resource
+  map.resources :categories, :except => [:show, :update, :destroy, :edit]
+  map.resources :categories, :as => 'category', :only => [:show, :edit, :update, :destroy]
 
+  map.connect '/category/:id/page/:page', :controller => 'categories', :action => 'show'
+  
+  # Before use inflected_resource
+  map.resources :tags, :except => [:show, :update, :destroy, :edit]
+  map.resources :tags, :as => 'tag', :only => [:show, :edit, :update, :destroy]
+
+  map.connect '/tag/:id/page/:page', :controller => 'tags', :action => 'show'
+  map.connect '/tags/page/:page', :controller => 'tags', :action => 'index'
+  
   # allow neat perma urls
   map.connect 'page/:page',
     :controller => 'articles', :action => 'index',
@@ -110,22 +64,6 @@ ActionController::Routing::Routes.draw do |map|
   date_options = { :year => /\d{4}/, :month => /(?:0?[1-9]|1[012])/, :day => /(?:0[1-9]|[12]\d|3[01])/ }
 
   map.with_options(:conditions => {:method => :get}) do |get|
-    get.with_options(date_options.merge(:controller => 'articles')) do |dated|
-      dated.with_options(:action => 'index') do |finder|
-        # new URL
-        finder.connect ':year/page/:page',
-          :month => nil, :day => nil, :page => /\d+/
-        finder.connect ':year/:month/page/:page',
-          :day => nil, :page => /\d+/
-        finder.connect ':year/:month/:day/page/:page', :page => /\d+/
-        finder.connect ':year',
-          :month => nil, :day => nil
-          finder.connect ':year/:month',
-            :day => nil
-          finder.connect ':year/:month/:day', :page => nil
-      end
-    end
-
     get.connect 'pages/*name',:controller => 'articles', :action => 'view_page'
 
     get.with_options(:controller => 'theme', :filename => /.*/, :conditions => {:method => :get}) do |theme|

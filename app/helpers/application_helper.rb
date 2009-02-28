@@ -18,7 +18,7 @@ module ApplicationHelper
     anchor = "##{anchor}" if anchor
     case item
     when Article
-      "<a href=\"#{article_path(item)}#{anchor}\" rel=\"#{nofollow}\" class=\"#{style}\">#{title}</a>"
+      "<a href=\"#{item.permalink_url}#{anchor}\" rel=\"#{nofollow}\" class=\"#{style}\">#{title}</a>"
     else
       "<a href=\"#{item.permalink_url}#{anchor}\" rel=\"#{nofollow}\" class=\"#{style}\">#{title}</a>"
     end
@@ -115,24 +115,6 @@ module ApplicationHelper
     text.strip_html
   end
 
-  def admin_tools_for(model)
-    type = model.class.to_s.downcase
-    tag = []
-    tag << content_tag("div",
-      link_to_remote('nuke', {
-          :url => feedback_path(model.id),
-          :method => :delete,
-          :confirm => _("Are you sure you want to delete this %s?", "#{type}" )
-        }, :class => "admintools") <<
-      link_to('edit', {
-        :controller => "admin/#{type.pluralize}",
-        :article_id => model.article.id,
-        :action => "edit", :id => model
-        }, :class => "admintools"),
-      :id => "admin_#{type}_#{model.id}", :style => "display: none")
-    tag.join(" | ")
-  end
-
   def onhover_show_admin_tools(type, id = nil)
     tag = []
     tag << %{ onmouseover="if (getCookie('typo_user_profile') == 'admin') { Element.show('admin_#{[type, id].compact.join('_')}'); }" }
@@ -208,6 +190,7 @@ module ApplicationHelper
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   #{ meta_tag 'ICBM', this_blog.geourl_location unless this_blog.geourl_location.blank? }
   #{ meta_tag 'description', @description unless @description.blank? }
+  #{ meta_tag 'robots', 'noindex, follow' unless @noindex.nil? }
   <meta name="generator" content="Typo #{TYPO_VERSION}">
   #{ meta_tag 'keywords', @keywords unless @keywords.blank? }
   <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => '/xml', :action => 'rsd' }" />
@@ -227,4 +210,5 @@ module ApplicationHelper
     HTML
     ).chomp
   end
+
 end
