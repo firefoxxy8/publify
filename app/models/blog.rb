@@ -77,7 +77,10 @@ class Blog < CachedModel
   setting :meta_keywords,              :string, ''
   setting :google_analytics,           :string, ''
   setting :rss_description,            :boolean, false
-  
+  setting :permalink_format,           :string, '/%year%/%month%/%day%/%title%'
+  setting :robots,                     :string, ''
+  setting :index_categories,           :boolean, true
+  setting :index_tags,                 :boolean, true
   #deprecation warning for plugins removal
   setting :deprecation_warning,        :integer, 1
 
@@ -106,12 +109,13 @@ class Blog < CachedModel
     nil
   end
 
+  # In settings with :article_id
   def ping_article!(settings)
     unless global_pings_enabled? && settings.has_key?(:url) && settings.has_key?(:article_id)
       throw :error, "Invalid trackback or trackbacks not enabled"
     end
     settings[:blog_id] = self.id
-    article = requested_article(settings)
+    article = Article.find(settings[:article_id])
     unless article.allow_pings?
       throw :error, "Trackback not saved"
     end
@@ -139,9 +143,14 @@ class Blog < CachedModel
   #
   # It also uses our new RouteCache, so repeated URL generation requests should be
   # fast, as they bypass all of Rails' route logic.
-  def url_for(options = {}, *extra_params)
+  def url_for(options = {}, extra_params = {})
     case options
-    when String then options # They asked for 'url_for "/some/path"', so return it unedited.
+    when String
+      url_generated = ''
+      url_generated = self.base_url if extra_params[:only_path]
+      url_generated += "/#{options}" # They asked for 'url_for "/some/path"', so return it unedited.
+      url_generated += "##{extra_params[:anchor]}" if extra_params[:anchor]
+      url_generated
     when Hash
       unless RouteCache[options]
         options.reverse_merge!(:only_path => true, :controller => '',
@@ -206,10 +215,6 @@ class Blog < CachedModel
 
   def requested_article(params)
     Article.find_by_params_hash(params)
-  end
-
-  def requested_articles(params)
-    Article.find_all_by_date(*params.values_at(:year, :month, :day))
   end
 
   def articles_matching(query, args={})

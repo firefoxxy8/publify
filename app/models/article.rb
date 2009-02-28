@@ -112,22 +112,40 @@ class Article < Content
     self.title.tr(FROM, TO).gsub(/<[^>]*>/, '').to_url
   end
 
+  def year_url
+    published_at.year.to_s
+  end
+
+  def month_url
+    sprintf("%.2d", published_at.month)
+  end
+
+  def day_url
+    sprintf("%.2d", published_at.day)
+  end
+
+  def title_url
+    permalink.to_s
+  end
+
   def permalink_url_options(nesting = false)
-    {:year                         => published_at.year,
-     :month                        => sprintf("%.2d", published_at.month),
-     :day                          => sprintf("%.2d", published_at.day),
-     :controller                   => 'articles',
-     :action                       => 'show',
-     (nesting ? :article_id : :id) => permalink}
+    format_url = blog.permalink_format.dup
+    format_url.gsub!('%year%', year_url)
+    format_url.gsub!('%month%', month_url)
+    format_url.gsub!('%day%', day_url)
+    format_url.gsub!('%title%', title_url)
+    if format_url[0,1] == '/'
+      format_url[1..-1]
+    else
+      format_url
+    end
   end
 
   def permalink_url(anchor=nil, only_path=true)
     @cached_permalink_url ||= {}
 
     @cached_permalink_url["#{anchor}#{only_path}"] ||= \
-      blog.with_options(permalink_url_options) do |b|
-        b.url_for(:anchor => anchor, :only_path => only_path)
-      end
+      blog.url_for(permalink_url_options, :anchor => anchor, :only_path => only_path)
   end
 
   def param_array
@@ -148,7 +166,27 @@ class Article < Content
   end
 
   def trackback_url
-    blog.url_for(permalink_url_options(true).merge(:controller => 'trackbacks', :action => 'index'))
+    blog.url_for("trackbacks?article_id=#{self.id}", :only_path => true)
+  end
+
+  def permalink_by_format(format=nil)
+    if format.nil?
+      permalink_url
+    elsif format.to_sym == :rss
+      feed_url(:rss)
+    elsif format.to_sym == :atom
+      feed_url(:atom)
+    else
+      raise UnSupportedFormat
+    end
+  end
+
+  def comment_url
+    blog.url_for("comments?article_id=#{self.id}")
+  end
+
+  def preview_comment_url
+    blog.url_for("comments/preview?article_id=#{self.id}")
   end
 
   def feed_url(format = :rss20)
@@ -223,57 +261,30 @@ class Article < Content
     end
   end
 
-  # Find all articles on a certain date
-  def self.find_all_by_date(year, month = nil, day = nil)
-    if !year.blank?
-      find_published(:all,
-                     :conditions => { :published_at =>
-                       time_delta(year,month,day) })
-    else
-      find_published(:all)
-    end
-  end
-
-  # Find one article on a certain date
-
-  def self.find_by_date(year, month, day)
-    find_all_by_date(year, month, day).first
-  end
-
   def self.find_by_published_at
     super(:published_at)
   end
 
-  def self.date_from(params_hash)
-    params_hash[:article_year] \
-      ? params_hash.values_at(:article_year, :article_month, :article_day, :article_id) \
-      : params_hash.values_at(:year, :month, :day, :id)
-  end
-
   # Finds one article which was posted on a certain date and matches the supplied dashed-title
-  def self.find_by_permalink(year, month=nil, day=nil, title=nil)
-    unless month
-      case year
-      when Hash
-        year, month, day, title = date_from(year)
-      when Array
-        year, month, day, title = year
-      end
+  # params is a Hash
+  def self.find_by_permalink(params)
+    date_range = self.time_delta(params[:year], params[:month], params[:day])
+    req_params = {}
+    if params[:title]
+      req_params[:permalink] = params[:title]
     end
-    date_range = self.time_delta(year, month, day)
-    find_published(:first,
-                   :conditions => { :permalink => title,
-                                    :published_at => date_range }) \
-      or raise ActiveRecord::RecordNotFound
+
+    if date_range
+      req_params[:published_at] = date_range
+    end
+    return nil if req_params.empty? # no search if no params send
+
+    find_published(:first, :conditions => req_params) or raise ActiveRecord::RecordNotFound
   end
 
   def self.find_by_params_hash(params = {})
-    params[:id] ||= params[:article_id]
-    if params[:id]
-      find_by_permalink(params)
-    else
-      find_by_date(*date_from(params))
-    end
+    params[:title] ||= params[:article_id]
+    find_by_permalink(params)
   end
 
   # Fulltext searches the body of published articles
@@ -543,7 +554,8 @@ class Article < Content
     self.notify_users.uniq!
   end
 
-  def self.time_delta(year, month = nil, day = nil)
+  def self.time_delta(year = nil, month = nil, day = nil)
+    return nil if year.nil? && month.nil? && day.nil?
     from = Time.mktime(year, month || 1, day || 1)
 
     to = from.next_year

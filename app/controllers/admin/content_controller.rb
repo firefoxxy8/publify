@@ -24,12 +24,20 @@ class Admin::ContentController < Admin::BaseController
     end
   end
 
-  def show
-    @article = Article.find(params[:id])
-  end
-
   def new 
     new_or_edit
+  end
+
+  def create_fck_editor
+    current_user.editor = 2
+    current_user.save!
+    render :partial => "fckeditor"
+  end
+  
+  def create_simple_editor
+    current_user.editor = 0
+    current_user.save!
+    render :partial => "simple_editor"
   end
   
   def edit
