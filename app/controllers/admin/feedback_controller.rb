@@ -54,7 +54,17 @@ class Admin::FeedbackController < Admin::BaseController
         flash[:notice] = _("Not found")
       end
     end
-    redirect_to :action => 'article', :id => @feedback.article.id
+    respond_to do |format|
+      format.html do
+        redirect_to :action => 'article', :id => @feedback.article.id
+      end
+      format.js do
+        render :update do |page|
+          page.visual_effect(:puff,
+                             "#{@feedback.class.to_s.underscore}-#{@feedback.id}")
+        end
+      end
+    end
   end
 
   def create
