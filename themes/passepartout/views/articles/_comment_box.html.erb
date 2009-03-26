@@ -25,7 +25,10 @@
       <%= text_field "comment", "email" %>
     </p>
     <p>
-      <label for="comment_body"><%= _("Your message")%></label></p>
+      <label for="comment_body"><%= _("Your message")%></label>
+      <%= content_tag('small', link_to(_("Textile enabled"), "http://hobix.com/textile/")) if this_blog.comment_text_filter.include? 'textile' %>
+      <%= content_tag('small', link_to(_("Markdown enabled"), "http://daringfireball.net/projects/markdown/")) if this_blog.comment_text_filter.include? 'markdown' %>
+    </p>
       <p>
         <%= text_area "comment", "body" %>
       </p>
@@ -33,7 +36,6 @@
 
 
       <span id="comment_loading" style="display:none;"><%= image_tag "spinner.gif" %></span>
-      <%= markup_help_popup TextFilter.find_by_name(this_blog.comment_text_filter), _("Comment Markup Help") %>
       <a href="#" onclick="new Ajax.Updater('preview', '<%= @article.preview_comment_url %>',  {asynchronous:true, evalScripts:true, parameters:Form.serialize('commentform'), onComplete:function(request){Element.show('preview')}}); return false;"><%= _("Preview comment")%></a>
       <input type="submit" name="submit" id="form-submit-button" value="submit" class="button" />&nbsp;&nbsp;
     </p>
