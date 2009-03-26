@@ -68,7 +68,7 @@ class Blog < CachedModel
   setting :ping_urls,                  :string, "http://blogsearch.google.com/ping/RPC2\nhttp://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
   setting :send_outbound_pings,        :boolean, true
   setting :email_from,                 :string, 'typo@example.com'
-  setting :editor,                     :integer, 2
+  setting :editor,                     :integer, 'visual'
   setting :cache_option,               :string, 'caches_page'
   setting :allow_signup,               :integer, 0
 
@@ -76,6 +76,7 @@ class Blog < CachedModel
   setting :meta_description,           :string, ''
   setting :meta_keywords,              :string, ''
   setting :google_analytics,           :string, ''
+  setting :feedburner_url,             :string, ''
   setting :rss_description,            :boolean, false
   setting :permalink_format,           :string, '/%year%/%month%/%day%/%title%'
   setting :robots,                     :string, ''
@@ -83,6 +84,9 @@ class Blog < CachedModel
   setting :index_tags,                 :boolean, true
   #deprecation warning for plugins removal
   setting :deprecation_warning,        :integer, 1
+
+
+  validate :permalink_has_identifier
 
   def initialize(*args)
     super
@@ -227,5 +231,17 @@ class Blog < CachedModel
       ? {} \
       : {:limit => limit}
   end
+
+  def permalink_has_identifier
+    unless permalink_format =~ /(%year%|%month%|%day%|%title%)/
+      errors.add(:permalink_format, _('You need a Format of permalink with an identifier : %%month%%, %%year%%, %%day%%, %%title%%'))
+    end
+
+    # A permalink can be finish by .atom or .rss. it's reserved to feed
+    if permalink_format =~ /\.(atom|rss)$/
+      errors.add(:permalink_format, _("Can't finish by .rss or .atom. It's reserved to be use by feed"))
+    end
+  end
+
 end
 

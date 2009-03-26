@@ -13,6 +13,16 @@ class ApplicationController < ActionController::Base
         ActionController::Base.view_paths.last
       end
     end
+
+    # Log all path in file path_cache in Rails.root
+    # When we sweep all cache. We just need delete this file
+    def cache_page_with_log_page(content, path)
+      return unless perform_caching
+      cache_page_without_log_page(content, path)
+      CacheInformation.create(:path => page_cache_file(path))
+    end
+    alias_method_chain :cache_page, :log_page
+
   end
 
   protected

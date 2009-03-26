@@ -13,14 +13,18 @@ describe 'With the contents and users fixtures loaded' do
     User.authenticate('bob', 'wrong password').should be_nil
   end
 
+  it 'User.authenticate(inactive,valid) returns nil' do
+    User.authenticate('inactive', 'longtest').should be_nil
+  end
+
   it 'User.authenticate(invalid,whatever) returns nil' do
     User.authenticate('userwhodoesnotexist', 'what ever').should be_nil
   end
 
   it 'The various article finders work appropriately' do
-    users(:tobi).articles.size.should == 7
+    users(:tobi).articles.size.should == 8
 #    User.find(1).articles.find_published.size.should == Article.find(:all, :conditions => {:published => true}).size
-    users(:tobi).articles.published.size.should == 6
+    users(:tobi).articles.published.size.should == 7
   end
 
   it 'authenticate? works as expected' do

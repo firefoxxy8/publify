@@ -39,8 +39,10 @@ ActionController::Routing::Routes.draw do |map|
   map.resources :comments, :name_prefix => 'admin_', :collection => [:preview]
   map.resources :trackbacks
 
-  map.live_search_articles "/live_search/", :controller => "articles", :action => "live_search"
-  map.connect "/articles/search/", :controller => "articles", :action => "search"
+  map.live_search_articles '/live_search/', :controller => "articles", :action => "live_search"
+  map.connect '/search/:q.:format', :controller => "articles", :action => "search"
+  map.connect '/search/', :controller => "articles", :action => "search"
+  map.connect '/archives/', :controller => "articles", :action => "archives"
 
   # I thinks it's useless. More investigating
   map.connect "trackbacks/:id/:day/:month/:year",
