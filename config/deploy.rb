@@ -51,8 +51,8 @@ EOF
     sudo "chmod 750 #{deploy_to}/#{shared_dir}/config"
   end
 
-  desc "Touchups after update_code"
-  task :after_update_code do
+  desc "Touchups after symlink"
+  task :after_symlink do
     # Make public dir accessible to www-data
     sudo "chgrp -R www-data #{current_path}/public"
     # Link in the production database.yml 
