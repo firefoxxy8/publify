@@ -5,10 +5,7 @@ class ArticlesController < ContentController
   layout :theme_layout, :except => [:comment_preview, :trackback]
 
   cache_sweeper :blog_sweeper
-
-  cached_pages = [:index, :read, :archives, :view_page]
-
-  caches_page *cached_pages
+  caches_page :index, :read, :archives, :view_page
 
   helper :'admin/base'
 
@@ -39,11 +36,11 @@ class ArticlesController < ContentController
     respond_to do |format|
       format.html { render_paginated_index }
       format.atom do
-        render :partial => 'articles/atom_feed', :object => @articles
+        send_feed('atom')
       end
       format.rss do
         auto_discovery_feed(:only_path => false)
-        render :partial => 'articles/rss20_feed', :object => @articles
+        send_feed('rss20')
       end
     end
   end
@@ -51,7 +48,11 @@ class ArticlesController < ContentController
   def search
     @articles = this_blog.articles_matching(params[:q], :page => params[:page], :per_page => @limit)
     return error(_("No posts found..."), :status => 200) if @articles.empty?
-    render :action => 'search'
+    respond_to do |format|
+      format.html { render :action => 'search' }
+      format.rss { render :partial => "articles/rss20_feed", :object => @articles }
+      format.atom { render :partial => "articles/atom_feed", :object => @articles }
+    end
   end
 
   def live_search
@@ -112,6 +113,14 @@ class ArticlesController < ContentController
     end
   end
   
+  def send_feed(format)
+    if this_blog.feedburner_url.empty? or request.env["HTTP_USER_AGENT"][/Feedburner/] 
+      render :partial => "articles/#{format}_feed", :object => @articles
+    else
+      redirect_to "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
+    end
+  end
+  
   alias_method :rescue_action_in_public, :error
 
   def render_error(object = '', status = 500)
@@ -124,6 +133,12 @@ class ArticlesController < ContentController
 
   def render_paginated_index(on_empty = _("No posts found..."))
     return error(on_empty, :status => 200) if @articles.empty?
+    if this_blog.feedburner_url.empty?
+      auto_discovery_feed(:only_path => false)
+    else
+      @auto_discovery_url_rss = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
+      @auto_discovery_url_atom = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
+    end
     render :action => 'index'
   end
 
