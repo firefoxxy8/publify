@@ -1,11 +1,12 @@
 require File.dirname(__FILE__) + '/../../spec_helper'
 
 # test standard view and all themes
-[ nil, "dirtylicious", "scribbish", "standard_issue", "typographic" ].each do |theme|
+[ nil, "dirtylicious", "scribbish", "standard_issue", "typographic",
+  "passepartout" ].each do |theme|
   view_path = theme ? "#{RAILS_ROOT}/themes/#{theme}/views" : "" 
   describe "#{view_path}/articles/read" do
     before(:each) do
-      @controller.view_paths = [ "#{RAILS_ROOT}/themes/#{theme}/views" ] if theme
+      @controller.view_paths.unshift(view_path) if theme
       # we do not want to test article links and such
       ActionView::Base.class_eval do
         def article_links(article)
