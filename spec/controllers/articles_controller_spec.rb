@@ -37,6 +37,12 @@ describe 'ArticlesController' do
     assigns[:articles].should_not be_nil
   end
 
+  it 'index for month' do
+    get 'index', :year => 2004, :month => 4
+    response.should render_template(:index)
+    assigns[:articles].should_not be_nil
+  end
+
   it 'search' do
     get 'search', :q => 'a'
     response.should render_template(:search)
