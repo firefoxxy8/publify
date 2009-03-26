@@ -120,8 +120,10 @@ module ApplicationHelper
     tag = []
     tag << content_tag("div",
       link_to_remote('nuke', {
-          :url => feedback_path(model.id),
-          :method => :delete,
+          :controller => "admin/#{type.pluralize}",
+          :article_id => model.article.id,
+          :action => "delete", :id => model,
+          :method => :post,
           :confirm => _("Are you sure you want to delete this %s?", "#{type}" )
         }, :class => "admintools") <<
       link_to('edit', {
