@@ -36,7 +36,7 @@ class Wp25Converter < BaseConverter
 
     converter.import_articles do |wp_article|
       unless wp_article.post_content.blank? || wp_article.post_title.blank?
-        user = wp_article.post_author.nil? ? nil : converter.users[WP25::User.find(wp_article.post_author.to_i).ID]
+        user = wp_article.post_author.nil? ? nil : converter.users[WP25::User.find(wp_article.post_author.to_i).user_login]
         
         excerpt, body = !wp_article.post_excerpt.blank? ?
           [wp_article.post_excerpt, wp_article.post_content] :
@@ -49,7 +49,8 @@ class Wp25Converter < BaseConverter
           :created_at   => wp_article.post_date,
           :published_at => wp_article.post_date,
           :updated_at   => wp_article.post_modified,
-          :author       => user,
+          :user         => user,
+          :author       => user.login,
           :tags         => converter.find_or_create_tags(wp_article.tags)
         [a, converter.find_or_create_categories(wp_article)]
       end
@@ -57,7 +58,7 @@ class Wp25Converter < BaseConverter
     
     converter.import_pages do |wp_page|
       unless wp_page.post_content.blank? || wp_page.post_title.blank?
-        user = wp_page.post_author.nil? ? nil : converter.users[WP25::User.find(wp_page.post_author.to_i).ID]
+        user = wp_page.post_author.nil? ? nil : converter.users[WP25::User.find(wp_page.post_author.to_i).user_login]
         
         excerpt, body = !wp_page.post_excerpt.blank? ?
           [wp_page.post_excerpt, wp_page.post_content] :
@@ -70,16 +71,20 @@ class Wp25Converter < BaseConverter
           :created_at   => wp_page.post_date,
           :published_at => wp_page.post_date,
           :updated_at   => wp_page.post_modified,
-          :author       => user
+          :user         => user,
+          :author       => user.login
       end
     end
 
     converter.import_comments do |wp_comment|
+      user = wp_comment.user.nil? ? nil : converter.users[wp_comment.user.user_login]
+
       ::Comment.new \
         :body         => wp_comment.comment_content,
         :created_at   => wp_comment.comment_date,
         :updated_at   => wp_comment.comment_date,
         :published_at => wp_comment.comment_date,
+        :user         => user,
         :author       => wp_comment.comment_author,
         :url          => wp_comment.comment_author_url,
         :email        => wp_comment.comment_author_email,
