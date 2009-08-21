@@ -41,12 +41,14 @@ class Article < Content
   has_many :categories, \
     :through => :categorizations, \
     :include => :categorizations, \
+    :select => 'categories.*', \
     :uniq => true, \
-    :order => 'categorizations.is_primary DESC, categories.position '
+    :order => 'categorizations.is_primary DESC'
 
   has_and_belongs_to_many :tags, :foreign_key => 'article_id'
 
   named_scope :category, lambda {|category_id| {:conditions => ['categorizations.category_id = ?', category_id], :include => 'categorizations'}}
+  named_scope :drafts, :conditions => ['state = ?', 'draft']
 
 
   belongs_to :user
@@ -108,16 +110,8 @@ class Article < Content
     o
   }
 
-  def permalink
-    if read_attribute(:permalink)
-      CGI.escape(read_attribute(:permalink))
-    else
-      nil
-    end
-  end
-
   def stripped_title
-    self.title.tr(FROM, TO).gsub(/<[^>]*>/, '').to_url
+    CGI.escape(self.title.tr(FROM, TO).gsub(/<[^>]*>/, '').to_url)
   end
 
   def year_url
@@ -378,22 +372,12 @@ class Article < Content
     self[:body]
   end
 
-  def body_html
-    typo_deprecated "Use html(:body)"
-    html(:body)
-  end
-
   def extended=(newval)
     if self[:extended] != newval
       changed if published?
       self[:extended] = newval
     end
     self[:extended]
-  end
-
-  def extended_html
-    typo_deprecated "Use html(:extended)"
-    html(:extended)
   end
 
   def self.html_map(field=nil)

@@ -114,19 +114,13 @@ class ArticlesController < ContentController
   end
   
   def send_feed(format)
-    if this_blog.feedburner_url.empty? or request.env["HTTP_USER_AGENT"][/Feedburner/] 
+    if this_blog.feedburner_url.empty? or request.env["HTTP_USER_AGENT"] =~ /FeedBurner/i
       render :partial => "articles/#{format}_feed", :object => @articles
     else
       redirect_to "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
     end
   end
   
-  alias_method :rescue_action_in_public, :error
-
-  def render_error(object = '', status = 500)
-    render(:text => (object.errors.full_messages.join(", ") rescue object.to_s), :status => status)
-  end
-
   def set_headers
     headers["Content-Type"] = "text/html; charset=utf-8"
   end

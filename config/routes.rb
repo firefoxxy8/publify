@@ -18,7 +18,8 @@ ActionController::Routing::Routes.draw do |map|
   # this improves caches_page because now apache and webrick will send out the
   # cached feeds with the correct xml mime type.
 
-  map.xml 'articles.:format', :controller => 'articles', :action => 'index', :format => /rss|atom/
+  map.rss 'articles.rss', :controller => 'articles', :action => 'index', :format => 'rss'
+  map.atom 'articles.atom', :controller => 'articles', :action => 'index', :format => 'atom'
   
   map.with_options :controller => 'xml', :path_prefix => 'xml' do |controller|
     controller.xml 'itunes/feed.xml', :action => 'itunes'
@@ -40,8 +41,8 @@ ActionController::Routing::Routes.draw do |map|
   map.resources :trackbacks
 
   map.live_search_articles '/live_search/', :controller => "articles", :action => "live_search"
-  map.connect '/search/:q.:format', :controller => "articles", :action => "search"
-  map.connect '/search/', :controller => "articles", :action => "search"
+  map.search '/search/:q.:format', :controller => "articles", :action => "search"
+  map.search_base '/search/', :controller => "articles", :action => "search"
   map.connect '/archives/', :controller => "articles", :action => "archives"
 
   # I thinks it's useless. More investigating
@@ -62,6 +63,7 @@ ActionController::Routing::Routes.draw do |map|
   map.connect '/tags/page/:page', :controller => 'tags', :action => 'index'
 
   map.connect '/author/:id', :controller => 'authors', :action => 'show'
+  map.xml '/author/:id.:format', :controller => 'authors', :action => 'show', :format => /rss|atom/
   
   # allow neat perma urls
   map.connect 'page/:page',
@@ -93,7 +95,7 @@ ActionController::Routing::Routes.draw do |map|
     map.connect "#{i}/:action/:id", :controller => i, :id => nil
   end
 
-  %w{advanced blacklist cache categories comments content feedback general pages
+  %w{advanced blacklist cache categories comments content profiles feedback general pages
      resources sidebar textfilters themes trackbacks users settings tags }.each do |i|
     map.connect "/admin/#{i}", :controller => "admin/#{i}", :action => 'index'
     map.connect "/admin/#{i}/:action/:id", :controller => "admin/#{i}", :action => nil, :id => nil

@@ -17,7 +17,6 @@ describe 'ArticlesController' do
     IPSocket.stub!(:getaddress).and_return do
       raise SocketError.new("getaddrinfo: Name or service not known")
     end
-    CachedModel.cache_reset
     controller.send(:reset_blog_ids)
   end
 
@@ -61,7 +60,7 @@ describe 'ArticlesController' do
 
   describe '#search action' do
 
-    describe 'a valid research' do
+    describe 'a valid search' do
       before :each do
         get 'search', :q => 'a'
       end
@@ -83,7 +82,7 @@ describe 'ArticlesController' do
       end
 
       it 'should have content markdown interpret and without html tag' do
-        response.should have_tag('div', /in markdown format\n\n\nwe\nuse\nok to define a link\n...\n/)
+        response.should have_tag('div', /in markdown format\n\n\nwe\nuse\nok to define a link\n\n...\n/)
       end
 
     end
@@ -154,7 +153,7 @@ describe ArticlesController, "feeds" do
     get 'index', :format => 'rss'
     response.should be_success
     response.should render_template("_rss20_feed")
-    response.should have_tag('link', 'http://test.host/articles.rss')
+    response.should have_tag('link', 'http://myblog.net')
   end
 
   def scoped_getter
