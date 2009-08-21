@@ -6,4 +6,5 @@ db/*.sqlite*
 db/schema.rb
 .*.swp
 .DS_Store
-vendor/plugins/memory_test_fix/
+installer/rails_installer.yml
+tmp/*

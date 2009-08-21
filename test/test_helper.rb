@@ -8,7 +8,7 @@ $TESTING = true
 
 User.salt = 'change-me'
 
-class Test::Unit::TestCase
+class ActiveSupport::TestCase
   self.use_transactional_fixtures = true
 
   # Instantiated fixtures are slow, but give you @david where you otherwise would need people(:david)
@@ -22,7 +22,6 @@ class Test::Unit::TestCase
     yield(STARTED, name)
     @_result = result
     begin
-      CachedModel.cache_reset
       setup
       __send__(@method_name)
     rescue Test::Unit::AssertionFailedError => e

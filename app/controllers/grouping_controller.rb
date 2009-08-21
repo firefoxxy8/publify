@@ -35,7 +35,23 @@ class GroupingController < ContentController
   def show
     set_noindex
     grouping = grouping_class.find_by_permalink(params[:id])
-    @page_title = "#{_(self.class.to_s.sub(/Controller$/,'').singularize)} #{grouping.name}, #{_('everything about')} #{grouping.name}"
+
+    @page_title = "#{_(self.class.to_s.sub(/Controller$/,'').singularize)} #{grouping.name}, "
+
+    if grouping.respond_to? :description and
+        not grouping.description.nil?
+      @page_title += grouping.description
+    else
+      @page_title += "#{_('everything about')} "
+
+      if grouping.respond_to? :display_name and
+          not grouping.display_name.nil?
+        @page_title += grouping.display_name
+      else
+        @page_title += grouping.name
+      end
+    end
+
     @page_title << " page " << params[:page] if params[:page]
     @description = (grouping.description.blank?) ? "" : grouping.description
     @keywords = (grouping.keywords.blank?) ? "" : grouping.keywords
@@ -98,4 +114,9 @@ class GroupingController < ContentController
     @noindex = 1 unless params[:page].blank?
   end
 
+  def template_exists?(path = default_template_name)
+    self.view_paths.find_template(path, response.template.template_format)
+  rescue ActionView::MissingTemplate
+    false
+  end
 end

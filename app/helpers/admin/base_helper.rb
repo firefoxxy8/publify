@@ -131,6 +131,11 @@ module Admin::BaseHelper
   def class_settings
     controller.controller_name  =~ /settings|textfilter/ ? "current right" : "right"
   end
+  
+  def class_profile
+    controller.controller_name  =~ /profiles/ ? "current right" : "right"
+  end
+  
 
   def t_textarea(object_name, method, options)
     return fckeditor_textarea(object_name, method, options) if current_user.editor == 'visual'
@@ -200,7 +205,7 @@ module Admin::BaseHelper
       result << "<tr #{alternate_class}>"
       result << "<td>#{macro_help_popup macro, macro.display_name}</td>"
       result << "<td>#{h macro.description}</td>"
-      result << "<td><code>&lt;typo:#{h macro.short_name}gt;</code></td>"
+      result << "<td><code>&lt;typo:#{h macro.short_name}&gt;</code></td>"
       result << "</tr>"
     end
     result << "</table>"

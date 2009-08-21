@@ -21,7 +21,20 @@ class Content < ActiveRecord::Base
 
   has_many :triggers, :as => :pending_item, :dependent => :delete_all
 
-  named_scope :published_at_like, lambda {|date_at| {:conditions => ['published_at LIKE ? ', "%#{date_at}%"]}}
+  named_scope :published_at_like, lambda {|date_at| {:conditions => {
+    :published_at => (
+      if date_at =~ /\d{4}-\d{2}-\d{2}/
+        DateTime.strptime(date_at, '%Y-%m-%d').beginning_of_day..DateTime.strptime(date_at, '%Y-%m-%d').end_of_day
+      elsif date_at =~ /\d{4}-\d{2}/
+        DateTime.strptime(date_at, '%Y-%m').beginning_of_month..DateTime.strptime(date_at, '%Y-%m').end_of_month
+      elsif date_at =~ /\d{4}/
+        DateTime.strptime(date_at, '%Y').beginning_of_year..DateTime.strptime(date_at, '%Y').end_of_year
+      else
+        date_at
+      end
+    )}
+  }
+  }
   named_scope :user_id, lambda {|user_id| {:conditions => ['user_id = ?', user_id]}}
   named_scope :published, {:conditions => ['published = ?', true]}
   named_scope :order, lambda {|order_by| {:order => order_by}}
@@ -67,7 +80,6 @@ class Content < ActiveRecord::Base
         end
         unless self.method_defined?("#{field}_html")
           define_method("#{field}_html") do
-            typo_deprecated "Use html(:#{field})"
             html(field.to_sym)
           end
         end
@@ -310,7 +322,7 @@ class Content < ActiveRecord::Base
   end
 
   def rss_description(xml)
-    if respond_to?(:user) && self.user.name
+    if respond_to?(:user) && self.user && self.user.name
       rss_desc = "<hr /><p><small>#{_('Original article writen by')} #{self.user.name} #{_('and published on')} <a href='#{blog.base_url}'>#{blog.blog_name}</a> | <a href='#{self.permalink_url}'>#{_('direct link to this article')}</a> | #{_('If you are reading this article elsewhere than')} <a href='#{blog.base_url}'>#{blog.blog_name}</a>, #{_('it has been illegally reproduced and without proper authorization')}.</small></p>"
     else
       rss_desc = ""
@@ -338,13 +350,6 @@ class Content < ActiveRecord::Base
     xml.content(:type => 'xhtml') do
       xml.div(:xmlns => 'http://www.w3.org/1999/xhtml') { xml << html(:all) }
     end
-  end
-
-
-  # deprecated
-  def full_html
-    typo_deprecated "use .html instead"
-    html
   end
 end
 

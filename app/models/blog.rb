@@ -15,7 +15,7 @@ end
 #
 # Typo decides which Blog object to use by searching for a Blog base_url that
 # matches the base_url computed for each request.
-class Blog < CachedModel
+class Blog < ActiveRecord::Base
   include ConfigManager
   extend ActiveSupport::Memoizable
 
@@ -183,39 +183,6 @@ class Blog < CachedModel
   # The URL for a static file.
   def file_url(filename)
     "#{base_url}/files/#{filename}"
-  end
-
-  # The base server URL.
-  def server_url
-    base_url
-  end
-
-  # Deprecated
-  typo_deprecate :canonical_server_url => :base_url
-
-  def [](key)  # :nodoc:
-    typo_deprecated "Use blog.#{key}"
-    self.send(key)
-  end
-
-  def []=(key, value)  # :nodoc:
-    typo_deprecated "Use blog.#{key}="
-    self.send("#{key}=", value)
-  end
-
-  def has_key?(key)  # :nodoc:
-    typo_deprecated "Why?"
-    self.class.fields.has_key?(key.to_s)
-  end
-
-  def find_already_published(content_type)  # :nodoc:
-    typo_deprecated "Use #{content_type}.find_already_published"
-    content_type.to_s.camelize.constantize.find_already_published
-  end
-
-  def current_theme_path  # :nodoc:
-    typo_deprecated "use current_theme.path"
-    Theme.themes_root + "/" + theme
   end
 
   def requested_article(params)
