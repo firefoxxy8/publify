@@ -1,5 +1,4 @@
-require 'application'
-require 'cached_model'
+require 'application_controller'
 
 ::ActionController::Base.append_view_path("#{RAILS_ROOT}/vendor/plugins/local_extensions/views")
 
@@ -18,12 +17,6 @@ class LocalController < ContentController
       :all, :order => 'created_at DESC',
       :limit => this_blog.limit_article_display
     )
-    @page_title   = 'matijs.net'
-  end
-end
-
-Article.class_eval do
-  def pings_closed?
-    !(allow_pings? && in_feedback_window?)
+    @page_title = 'matijs.net'
   end
 end
