@@ -8,3 +8,6 @@ db/schema.rb
 .DS_Store
 installer/rails_installer.yml
 tmp/*
+public/2*/
+public/category/
+log/mongrel.*.pid
