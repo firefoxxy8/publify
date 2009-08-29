@@ -1,5 +1,3 @@
-require 'application_controller'
-
 ::ActionController::Base.append_view_path("#{RAILS_ROOT}/vendor/plugins/local_extensions/views")
 
 class LocalController < ContentController
