@@ -52,12 +52,6 @@ describe 'ArticlesController' do
     end
   end
 
-  it 'index for month' do
-    get 'index', :year => 2004, :month => 4
-    response.should render_template(:index)
-    assigns[:articles].should_not be_nil
-  end
-
   describe '#search action' do
 
     describe 'a valid search' do
