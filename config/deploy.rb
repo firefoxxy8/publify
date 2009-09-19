@@ -1,13 +1,8 @@
 set :application, "typo"
 set :repository,  "."
 
-# If you aren't deploying to /u/apps/#{application} on the target
-# servers (which is the default), you can specify the actual location
-# via the :deploy_to variable:
-set :deploy_to, "/var/www/www.matijs.net/#{application}"
+set :deploy_to, "/var/www/#{application}"
 
-# If you aren't using Subversion to manage your source code, specify
-# your SCM below:
 set :scm, :git
 
 set :deploy_via, :copy
@@ -18,6 +13,14 @@ role :web, "mist.matijs.net"
 role :db,  "mist.matijs.net", :primary => true
 
 namespace :deploy do
+  desc "After setup: adjust ownership of necessary directories"
+  task :after_setup do
+    sudo "chown matijs:matijs #{deploy_to}"
+    sudo "chown matijs:matijs #{releases_path}"
+    # logdir
+    sudo "chgrp -R www-data #{shared_path}/log"
+  end
+
   desc "Create database.yml in shared/config" 
   task :after_setup do
     database_configuration = <<-EOF
@@ -52,4 +55,7 @@ EOF
     run "ln -nfs #{deploy_to}/#{shared_dir}/config/database.yml #{current_path}/config/database.yml" 
   end
 
+  task :restart do
+    run "touch #{current_path}/tmp/restart.txt"
+  end
 end
