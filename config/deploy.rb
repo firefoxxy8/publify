@@ -53,6 +53,8 @@ EOF
     sudo "chgrp -R www-data #{current_path}/public"
     # Link in the production database.yml 
     run "ln -nfs #{deploy_to}/#{shared_dir}/config/database.yml #{current_path}/config/database.yml" 
+    # Link in the resource folder
+    run "ln -nfs #{shared_path}/files #{current_path}/public/files" 
   end
 
   task :restart do
