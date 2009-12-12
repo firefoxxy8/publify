@@ -38,6 +38,7 @@ html {
   background: url(../../images/theme/paper_dark.png) top center;
   margin: 0px;
   padding: 0px;
+  font-size: 14px;
 }
 body {
   color: #555;
