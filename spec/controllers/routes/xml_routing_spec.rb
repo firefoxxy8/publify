@@ -34,9 +34,9 @@ describe XmlController do
       route_for(:controller => "xml", :action => "feed", :type => "feed", :format => "rss").should == "/xml/rss"
     end
     
-    #it "should map #feed with sitemap type" do
-    #  route_for(:controller => "xml", :action => "feed", :type => "sitemap", :format => "googlesitemap").should == "/sitemap.xml"
-    #end
+    it "should map #feed with sitemap type" do
+      route_for(:controller => "xml", :action => "feed", :type => "sitemap", :format => "googlesitemap").should == "/sitemap.xml"
+    end
   end
 
   describe "route recognition" do
@@ -72,8 +72,8 @@ describe XmlController do
       params_from(:get, "/xml/rss").should == {:controller => "xml", :action => "feed", :type => "feed", :format => "rss"}
     end
     
-    #it "should generate params for #feed with sitemap type" do
-    #  params_from(:get, "/sitemap.xml").should == {:controller => "xml", :action => "feed", :type => "sitemap", :format => "googlesitemap"}
-    #end
+    it "should generate params for #feed with sitemap type" do
+      params_from(:get, "/sitemap.xml").should == {:controller => "xml", :action => "feed", :type => "sitemap", :format => "googlesitemap"}
+    end
   end
 end

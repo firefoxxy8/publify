@@ -35,6 +35,7 @@ describe ArticlesController do
     end
   end
 
+
   describe '#search action' do
 
     describe 'a valid search' do
