@@ -36,13 +36,63 @@ describe Admin::ContentController do
 
   end
 
+  describe 'autosave action', :shared => true do
+    it 'should save new article with draft status and link to other article if first autosave' do
+      lambda do
+      lambda do
+        post :autosave, :article => {:allow_comments => '1',
+          :body_and_extended => 'my draft in autosave',
+          :keywords => 'mientag',
+          :permalink => 'big-post',
+          :title => 'big post',
+          :text_filter => 'none',
+          :published => '1',
+          :published_at => 'December 23, 2009 03:20 PM'}
+      end.should change(Article, :count)
+      end.should change(Tag, :count)
+    end
+
+    it 'should create an article like draft and parent_id define like article if article is edit and already published' do
+      article = contents(:article1)
+      lambda do
+        post :autosave, :id => article.id,
+          :article => {:allow_comments => article.allow_comments,
+          :body_and_extended => 'my draft in autosave',
+          :keywords => '',
+          :permalink => article.permalink,
+          :title => article.title,
+          :text_filter => article.text_filter,
+          :published => '1',
+          :published_at => 'December 23, 2009 03:20 PM'}
+      end.should change(Article, :count)
+      Article.last.parent_id.should == article.id
+    end
+
+    it 'should not create another draft article with parent_id if article has already a draft associated' do
+      article = contents(:article1)
+      draft = Article.create!(article.attributes.merge(:guid => nil, :state => 'draft', :parent_id => article.id))
+      lambda do
+        post :autosave, :id => article.id,
+          :article => {:allow_comments => article.allow_comments,
+          :body_and_extended => 'my draft in autosave',
+          :keywords => '',
+          :permalink => article.permalink,
+          :title => article.title,
+          :text_filter => article.text_filter,
+          :published => '1',
+          :published_at => 'December 23, 2009 03:20 PM'}
+      end.should_not change(Article, :count)
+      Article.last.parent_id.should == article.id
+    end
+  end
+
   describe 'insert_editor action' do
-    
+
     before do
       @user = users(:tobi)
       request.session = { :user => @user.id }
     end
-    
+
     it 'should render _simple_editor' do
       get(:insert_editor, :editor => 'simple')
       response.should render_template('_simple_editor')
@@ -68,7 +118,7 @@ describe Admin::ContentController do
       { :title => "posted via tests!",
         :body => "A good body",
         :keywords => "tagged",
-        :allow_comments => '1', 
+        :allow_comments => '1',
         :allow_pings => '1' }.merge(options)
     end
 
@@ -97,8 +147,8 @@ describe Admin::ContentController do
 
         assert_difference 'Article.count_published_articles' do
           tags = ['foo', 'bar', 'baz bliz', 'gorp gack gar']
-          post :new, 
-            'article' => base_article(:keywords => tags) , 
+          post :new,
+            'article' => base_article(:keywords => tags) ,
             'categories' => [category.id]
           assert_response :redirect, :action => 'show'
         end
@@ -180,12 +230,12 @@ describe Admin::ContentController do
     it_should_behave_like 'index action'
     it_should_behave_like 'new action'
     it_should_behave_like 'destroy action'
+    it_should_behave_like 'autosave action'
 
     describe 'edit action' do
 
       it 'should edit article' do
         get :edit, 'id' => contents(:article1).id
-        assigns(:selected).should == contents(:article1).categories.collect {|c| c.id}
         response.should render_template('new')
         assert_template_has 'article'
         assigns(:article).should be_valid
@@ -224,6 +274,26 @@ describe Admin::ContentController do
         article.reload
         article.body.should == 'foo'
         article.extended.should == 'bar<!--more-->baz'
+      end
+
+      it 'should delete draft about this article if update' do
+        article = contents(:article1)
+        draft = Article.create!(article.attributes.merge(:state => 'draft', :parent_id => article.id, :guid => nil))
+        lambda do
+          post :edit, 'id' => article.id, 'article' => { 'title' => 'new'}
+        end.should change(Article, :count).by(-1)
+        Article.should_not be_exists({:id => draft.id})
+      end
+
+      it 'should delete all draft about this article if update not happen but why not' do
+        article = contents(:article1)
+        draft = Article.create!(article.attributes.merge(:state => 'draft', :parent_id => article.id, :guid => nil))
+        draft_2 = Article.create!(article.attributes.merge(:state => 'draft', :parent_id => article.id, :guid => nil))
+        lambda do
+          post :edit, 'id' => article.id, 'article' => { 'title' => 'new'}
+        end.should change(Article, :count).by(-2)
+        Article.should_not be_exists({:id => draft.id})
+        Article.should_not be_exists({:id => draft_2.id})
       end
     end
 
@@ -303,7 +373,6 @@ describe Admin::ContentController do
 
       it 'should edit article' do
         get :edit, 'id' => contents(:publisher_article).id
-        assigns(:selected).should == contents(:publisher_article).categories.collect {|c| c.id}
         response.should render_template('new')
         assert_template_has 'article'
         assigns(:article).should be_valid

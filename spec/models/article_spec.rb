@@ -15,11 +15,18 @@ describe Article do
     it 'should second_article factory valid' do
       Factory(:second_article).should be_valid
       Factory.build(:second_article).should be_valid
-
     end
     it 'should article_with_accent_in_html' do
       Factory(:article_with_accent_in_html).should be_valid
       Factory.build(:article_with_accent_in_html).should be_valid
+    end
+    it 'should store user too' do
+      a = Factory(:article)
+      Article.find(a.id).user.should_not be_nil
+    end
+    it 'should multiple article factory valid' do
+      Factory(:article).should be_valid
+      Factory(:article).should be_valid
     end
   end
 
@@ -307,7 +314,7 @@ describe Article do
   end
 
   describe 'body_and_extended' do
-    before :each do 
+    before :each do
       @article = contents(:article1)
     end
 
@@ -358,7 +365,7 @@ describe Article do
   end
 
   describe 'body_and_extended=' do
-    before :each do 
+    before :each do
       @article = contents(:article1)
     end
 
@@ -367,7 +374,7 @@ describe Article do
       @article.body.should == 'foo'
       @article.extended.should == 'bar'
     end
-    
+
     it 'should remove newlines around <!--more-->' do
       @article.body_and_extended = "foo\n<!--more-->\nbar"
       @article.body.should == 'foo'
@@ -440,6 +447,26 @@ describe Article do
 
     it 'should return all content on this date if date send' do
       Article.published_at_like(2.month.ago.strftime('%Y-%m-%d')).map(&:id).sort.should == [@article_two_month_ago.id].sort
+    end
+  end
+
+  describe '#has_child?' do
+    it 'should be true if article has one to link it by parent_id' do
+      Factory(:article, :parent_id => contents(:article1).id)
+      contents(:article1).should be_has_child
+    end
+    it 'should be false if article has no article to link it by parent_id' do
+      contents(:article1).should_not be_has_child
+    end
+  end
+
+  describe 'self#last_draft(id)' do
+    it 'should return article if no draft associated' do
+      Article.last_draft(contents(:article1).id).should == contents(:article1)
+    end
+    it 'should return draft associated to this article if there are one' do
+      draft = Factory(:article, :parent_id => contents(:article1).id, :state => 'draft')
+      Article.last_draft(contents(:article1).id).should == draft
     end
   end
 end
