@@ -221,4 +221,20 @@ module Admin::BaseHelper
       return "<tr><td colspan=#{cols} class='paginate'>#{will_paginate(collection)}</td></tr>"
     end
   end 
+  
+  def show_thumbnail_for_editor(image)
+    thumb = "#{RAILS_ROOT}/public/files/thumb_#{image.filename}"
+    picture = "#{this_blog.base_url}/files/#{image.filename}"
+    
+    image.create_thumbnail unless File.exists? thumb
+    
+    # If something went wrong with thumbnail generation, we just display a place holder
+    thumbnail = (File.exists? thumb) ? "#{this_blog.base_url}/files/thumb_#{image.filename}" : "#{this_blog.base_url}/images/thumb_blank.jpg" 
+    
+    picture = "<img class='tumb' src='#{thumbnail}' "
+    picture << "alt='#{this_blog.base_url}/files/#{image.filename}' "
+    picture << " onclick=\"edInsertImageFromCarousel('article_body_and_extended', '#{this_blog.base_url}/files/#{image.filename}');\" />"
+    return picture
+  end
+  
 end
