@@ -219,9 +219,9 @@ class Article < Content
 
   def html_urls
     urls = Array.new
-    html.gsub(/<a [^>]*>/) do |tag|
-      if(tag =~ /href="([^"]+)"/)
-        urls.push($1)
+    html.gsub(/<a\s+[^>]*>/) do |tag|
+      if(tag =~ /\bhref=(["']?)([^ >"]+)\1/)
+        urls.push($2)
       end
     end
 
@@ -451,9 +451,7 @@ class Article < Content
   end
 
   def rss_comments(xml)
-    iri = permalink_url
-    uri = Addressable::URI.parse(iri).normalize
-    xml.comments(uri + "#comments")
+    xml.comments(normalized_permalink_url + "#comments")
   end
 
   def link_to_author?
