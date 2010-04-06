@@ -1,5 +1,6 @@
 class AccountsController < ApplicationController
 
+  before_filter :verify_config
   before_filter :verify_users, :only => [:login, :recover_password]
   filter_parameter_logging "password"
 
@@ -53,14 +54,7 @@ class AccountsController < ApplicationController
       if @user.save
         self.current_user = @user
         session[:user_id] = @user.id
-        
-        # Crappy hack : by default, the auto generated post is user_id less and it makes Typo crash
-        if User.count == 1
-          art = Article.find(:first)
-          art.user_id = @user.id
-          art.save
-        end
-        
+      
         redirect_to :controller => "accounts", :action => "confirm"
         return
       end
@@ -94,7 +88,6 @@ class AccountsController < ApplicationController
   end
 
   private
-
   def generate_password
     chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
     newpass = ""
@@ -106,5 +99,8 @@ class AccountsController < ApplicationController
     redirect_to(:controller => "accounts", :action => "signup") if User.count == 0
     true
   end
-
+  
+  def verify_config
+    redirect_to :controller => "setup", :action => "index" if  ! this_blog.configured?
+  end
 end
