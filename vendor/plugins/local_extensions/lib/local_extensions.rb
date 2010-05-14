@@ -3,11 +3,7 @@
 class LocalController < ContentController
   layout :theme_layout
 
-  if Blog.default && Blog.default.cache_option == "caches_action_with_params"
-    caches_action_with_params :frontpage
-  else
-    caches_page :frontpage
-  end
+  caches_page :frontpage
 
   def frontpage
     @frontpage = true;
