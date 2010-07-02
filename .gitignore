@@ -15,6 +15,5 @@ installer/rails_installer.yml
 /public/stylesheets/all.css
 tmp/*
 /coverage/
-public/2*/
-public/category/
-log/mongrel.*.pid
+nbproject
+public/cache/*
