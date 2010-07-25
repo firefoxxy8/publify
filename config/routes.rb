@@ -48,7 +48,7 @@ ActionController::Routing::Routes.draw do |map|
   map.connect '/archives/', :controller => "articles", :action => "archives"
   map.connect '/setup', :controller => 'setup', :action => 'index'
   map.connect '/setup/confirm', :controller => 'setup', :action => 'confirm'
-  
+
   # I thinks it's useless. More investigating
   map.connect "trackbacks/:id/:day/:month/:year",
     :controller => 'trackbacks', :action => 'create', :conditions => {:method => :post}
@@ -93,6 +93,7 @@ ActionController::Routing::Routes.draw do |map|
   end
 
   map.connect 'previews/:id', :controller => 'articles', :action => 'preview'
+  map.connect 'check_password', :controller => 'articles', :action => 'check_password'
 
   # Work around the Bad URI bug
   %w{ accounts backend files sidebar textfilter xml }.each do |i|
