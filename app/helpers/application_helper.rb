@@ -1,4 +1,4 @@
-# The methods added to this helper will be available to all templates in the application.
+# Methods added to this helper will be available to all templates in the application.
 require 'digest/sha1'
 
 module ApplicationHelper
@@ -107,13 +107,13 @@ module ApplicationHelper
 
     output.join("<br />\n")
   end
-  
+
   # Generate the image tag for a commenters gravatar based on their email address
   # Valid options are described at http://www.gravatar.com/implement.php
   def gravatar_tag(email, options={})
     options.update(:gravatar_id => Digest::MD5.hexdigest(email.strip))
     options[:default] = CGI::escape(options[:default]) if options.include?(:default)
-    options[:size] ||= 60
+    options[:size] ||= 48
 
     image_tag("http://www.gravatar.com/avatar.php?" <<
       options.map { |key,value| "#{key}=#{value}" }.sort.join("&"), :class => "gravatar")
@@ -161,7 +161,7 @@ module ApplicationHelper
   end
 
   def javascript_include_lang
-    javascript_include_tag "lang/#{Localization.lang.to_s}" if File.exists? File.join(RAILS_ROOT, 'public', 'lang', Localization.lang.to_s)    
+    javascript_include_tag "lang/#{Localization.lang.to_s}" if File.exists? File.join(RAILS_ROOT, 'public', 'lang', Localization.lang.to_s)
   end
 
   def page_header
@@ -180,6 +180,7 @@ module ApplicationHelper
   #{ meta_tag 'ICBM', this_blog.geourl_location unless this_blog.geourl_location.blank? }
   #{ meta_tag 'description', @description unless @description.blank? }
   #{ meta_tag 'robots', 'noindex, follow' unless @noindex.nil? }
+  #{ meta_tag 'google-site-verification', this_blog.google_verification unless this_blog.google_verification.blank?}
   <meta name="generator" content="Typo #{TYPO_VERSION}" />
   #{ meta_tag 'keywords', @keywords unless @keywords.blank? }
   <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => '/xml', :action => 'rsd' }" />
@@ -208,13 +209,13 @@ module ApplicationHelper
     return unless flash[:notice] or flash[:error]
     the_class = flash[:error] ? 'ui-state-error' : 'ui-state-highlight'
     the_icon = flash[:error] ? 'ui-icon-alert' : 'ui-icon-info'
-    
+
     html = "<div class='ui-widget settings'>"
-    html << "<div class='#{the_class} ui-corner-all' style='padding: 0 .7em;'>" 
+    html << "<div class='#{the_class} ui-corner-all' style='padding: 0 .7em;'>"
     html << "<p><span class='ui-icon #{the_icon}' style='float: left; margin-right: .3em;'></span>"
-    html << render_flash rescue nil	
+    html << render_flash rescue nil
     html << "</div>"
-    html << "</div>"    
+    html << "</div>"
   end
-  
+
 end
