@@ -1,4 +1,4 @@
-Localization.define("de_DE") do |l|
+Localization.define("lt_LT") do |l|
 
   # app/controllers/accounts_controller.rb
   l.store "Login successful", ""
@@ -81,23 +81,23 @@ Localization.define("de_DE") do |l|
   l.store "everything about", ""
 
   # app/helpers/admin/base_helper.rb
-  l.store "Cancel", "Abbrechen"
+  l.store "Cancel", "Baigti" # tik ne i kelnes :)
   l.store "Store", ""
-  l.store "Delete", "Löschen"
+  l.store "Delete", "Trinti"
   l.store "delete", ""
   l.store "Delete content", ""
   l.store "Are you sure?", ""
   l.store "Please select", ""
   l.store "There are no %s yet. Why don't you start and create one?", ""
-  l.store "or", "oder"
-  l.store "Save", "Speichern"
-  l.store "Edit", "Bearbeiten"
+  l.store "or", "arba"
+  l.store "Save", "Saugoti"
+  l.store "Edit", "Redaguoti"
   l.store "Show", ""
-  l.store "Published", "Veröffentlicht"
+  l.store "Published", "Publikuotas"
   l.store "Unpublished", ""
   l.store "Show help on Typo macros", ""
-  l.store "Back to overview", "Zurück zur Übersicht"
-  l.store "Name", "Name"
+  l.store "Back to overview", "Atgal į peržiūrą"
+  l.store "Name", "Vardas"
   l.store "Description", "Beschreibung"
   l.store "Tag", ""
 
@@ -117,15 +117,15 @@ Localization.define("de_DE") do |l|
   l.store "%%a, %%d %%b %%Y %%H:%%M:%%S GMT", ""
   l.store "%%d. %%b", ""
   l.store "%d comments", ""
-  l.store "no comments", "keine Kommentare"
+  l.store "no comments", "nėra komentarų"
   l.store "1 comment", ""
-  l.store "no trackbacks", "keine Trackbacks"
+  l.store "no trackbacks", "nėra dienoraščio nuorodų"
   l.store "1 trackback", ""
   l.store "%d trackbacks", ""
 
   # app/helpers/content_helper.rb
   l.store "Posted in", ""
-  l.store "Tags", "Tags"
+  l.store "Tags", "Žymės"
   l.store "no posts", ""
   l.store "1 post", ""
   l.store "%d posts", ""
@@ -153,8 +153,8 @@ Localization.define("de_DE") do |l|
 
   # app/views/accounts/login.html.erb
   l.store "I've lost my password", ""
-  l.store "Login", "Login"
-  l.store "Password", "Passwort"
+  l.store "Login", "Prisijungimas"
+  l.store "Password", "slaptažodis"
   l.store "Remember me", ""
   l.store "Submit", ""
   l.store "Back to ", ""
@@ -164,21 +164,21 @@ Localization.define("de_DE") do |l|
 
   # app/views/accounts/signup.html.erb
   l.store "Create an account", ""
-  l.store "Username", "Benutzername"
-  l.store "Email", "Email"
-  l.store "Signup", "Registrieren"
+  l.store "Username", "Vartotojo vardas"
+  l.store "Email", "El. pašto adresas"
+  l.store "Signup", "Registracija"
 
   # app/views/admin/categories/_categories.html.erb
-  l.store "Title", "Titel"
-  l.store "Reorder", "Sortieren"
-  l.store "Sort alphabetically", "Alphabetisch sortieren"
+  l.store "Title", "Pavadinimas"
+  l.store "Reorder", "Rikiuoti"
+  l.store "Sort alphabetically", "Rikiuoti pagal abėcėlę"
 
   # app/views/admin/categories/_form.html.erb
   l.store "Keywords", ""
 
   # app/views/admin/categories/destroy.html.erb
-  l.store "Are you sure you want to delete the category ", "Sind Sie sicher, die Kategorie zu löschen: "
-  l.store "Delete this category", "Kategorie löschen"
+  l.store "Are you sure you want to delete the category ", "Ar tikrai nori ištrinti šią kategoriją : "
+  l.store "Delete this category", "Trinti šią kategoriją"
   l.store "Categories", ""
 
   # app/views/admin/categories/index.html.erb
@@ -188,45 +188,45 @@ Localization.define("de_DE") do |l|
   l.store "%s Category", ""
 
   # app/views/admin/categories/reorder.html.erb
-  l.store "(Done)", "(Fertig)"
+  l.store "(Done)", "(Baigta)"
 
   # app/views/admin/content/_attachment.html.erb
-  l.store "Remove", "Löschen"
-  l.store "Currently this article has the following resources", "Aktuell sind folgende Ressourcen dem Artikel zugeordnet"
-  l.store "You can associate the following resources", "Sie können folgende Ressourcen zuordnen"
-  l.store "Really delete attachment", "Anhang wirklich löschen"
-  l.store "Add Another Attachment", "Einen weiteren Anhang hinzufügen"
+  l.store "Remove", "Pašalinti"
+  l.store "Currently this article has the following resources", "Šiuo metu straipsnis turi šiuos resursus"
+  l.store "You can associate the following resources", "Jūs galite susieti su šiais resursais"
+  l.store "Really delete attachment", "Ištrinti prikabintus failus"
+  l.store "Add Another Attachment", "Prikabinti kitą failą"
 
   # app/views/admin/content/_drafts.html.erb
   l.store "Drafts", ""
 
   # app/views/admin/content/_form.html.erb
   l.store "Publish settings", ""
-  l.store "Allow comments", "Kommentare erlauben"
-  l.store "Allow trackbacks", "Trackbacks erlauben"
+  l.store "Allow comments", "Leisti komentarus"
+  l.store "Allow trackbacks", "Leisti dienoraščių nuorodas"
   l.store "Password:", ""
-  l.store "Publish", "Veröffentlichen"
+  l.store "Publish", "Publikuoti"
   l.store "Excerpt", ""
   l.store "Excerpts are posts summaries that are shown on your blog homepage only but won’t appear on the post itself", ""
   l.store "Uploads", ""
   l.store "Post settings", ""
-  l.store "Publish at", "Veröffentlicht am"
-  l.store "Permalink", "Permanenter Link"
-  l.store "Article filter", "Textfilter für Artikel"
+  l.store "Publish at", "Publikuotas"
+  l.store "Permalink", "Nuoroda"
+  l.store "Article filter", "Straipsnių filtras"
   l.store "Save as draft", ""
 
   # app/views/admin/content/destroy.html.erb
-  l.store "Are you sure you want to delete this article", "Sind Sie sicher, diesen Artikel zu löschen"
-  l.store "Delete this article", "Diesen Artikel löschen"
+  l.store "Are you sure you want to delete this article", "Ar tikrai norite ištrinti šį straipsnį"
+  l.store "Delete this article", "Trinti šį straipsnį"
   l.store "Articles", ""
 
   # app/views/admin/content/index.html.erb
   l.store "New Article", ""
   l.store "Search articles that contain ...", ""
   l.store "Search", ""
-  l.store "Author", "Autor"
+  l.store "Author", "Autorius"
   l.store "Date", ""
-  l.store "Feedback", "Diskussion"
+  l.store "Feedback", "Atsiliepimas"
   l.store "Filter", ""
   l.store "Manage articles", ""
 
@@ -280,30 +280,30 @@ Localization.define("de_DE") do |l|
   l.store "All comments", ""
   l.store "Limit to ham", ""
   l.store "Unapproved comments", ""
-  l.store "Limit to spam", "Einschränken auf Spam"
+  l.store "Limit to spam", "Spamo limitas"
 
   # app/views/admin/feedback/_form.html.erb
   l.store "Add a comment", ""
-  l.store "Url", "Url"
+  l.store "Url", "Url adresas"
 
   # app/views/admin/feedback/_spam.html.erb
   l.store "This comment by <strong>%s</strong> was flagged as spam, %s?", ""
 
   # app/views/admin/feedback/article.html.erb
   l.store "Comments for %s", ""
-  l.store "Status", "Status"
+  l.store "Status", "Statusas"
   l.store "Comment Author", ""
   l.store "Comment", ""
 
   # app/views/admin/feedback/edit.html.erb
-  l.store "Comments for", "Kommentare für"
+  l.store "Comments for", "Komentarai"
 
   # app/views/admin/feedback/index.html.erb
   l.store "Search Comments and Trackbacks that contain", ""
   l.store "Article", ""
 
   # app/views/admin/pages/_form.html.erb
-  l.store "Online", "Online"
+  l.store "Online", "Pasiekiamas"
   l.store "Page settings", ""
   l.store "Permanent link", ""
 
@@ -323,8 +323,8 @@ Localization.define("de_DE") do |l|
   l.store "Content Type", "Content Type"
 
   # app/views/admin/resources/_pages.html.erb
-  l.store "Previous page", "Vorherige Seite"
-  l.store "Next page", "Nächste Seite"
+  l.store "Previous page", "Buvęs puslapis" # reikia kitaip kazkaip
+  l.store "Next page", "Sekantis puslapis"
 
   # app/views/admin/resources/_upload.html.erb
   l.store "Upload a File to your Site", "Legen Sie einen Dateianhang an ihrer Site an"
@@ -353,7 +353,7 @@ Localization.define("de_DE") do |l|
   l.store "Enable Trackbacks by default", "Trackbacks per default aktivieren"
   l.store "Enable feedback moderation", "Moderation von Kommentaren aktivieren"
   l.store "You can enable site wide feeback moderation. If you do so, no comment or trackback will appear on your blog unless you validate it", ""
-  l.store "Comments filter", "Textfilter für Kommentar"
+  l.store "Comments filter", "Komentarų filtras"
   l.store "Enable gravatars", "Gratavare aktivieren"
   l.store "Show your email address", "Ihre Email Adresse anzeigen"
   l.store "Notifications", ""
@@ -375,29 +375,29 @@ Localization.define("de_DE") do |l|
   l.store "Feedback settings", ""
 
   # app/views/admin/settings/index.html.erb
-  l.store "Your blog", "Mein Blog"
-  l.store "Blog name", "Blog Titel"
-  l.store "Blog subtitle", "Blog Untertitel"
-  l.store "Blog URL", "Blog Adresse"
-  l.store "Language", "Language" #Need translate
+  l.store "Your blog", "Tavo dienoraščio adresas"
+  l.store "Blog name", "Dienoraščio pavadinimas"
+  l.store "Blog subtitle", "Dienoraščio subpavadinimas" #
+  l.store "Blog URL", "Dienoraščio adresas"
+  l.store "Language", "Kalba" 
   l.store "Allow users to register", ""
   l.store "You can allow users to register to your blog. By default, they will register as contributors, an unpriviledged account level which grant them no rights but own a profile on the site. If you don't want users to register, you can thus add them by yourself in the users part of this admin.", ""
   l.store "Items to display in admin lists", ""
   l.store "Publishing options", ""
-  l.store "Display", "Zeige"
-  l.store "articles on my homepage by default", "Artikel auf einmal auf meiner Homepage"
-  l.store "articles in my news feed by default", "Artikel auf einmal in meinen RSS News Feeds"
-  l.store "Show full article on feed", "Ganzen Artikel im RSS News Feed anzeigen"
+  l.store "Display", "Rodyti"
+  l.store "articles on my homepage by default", "straipsniai pradžioje pagal nutylėjimą"
+  l.store "articles in my news feed by default", "straipsniai naujienų sraute pagal nutylėjimą"
+  l.store "Show full article on feed", "Rodyti pilną straipsnį RSS sraute"
   l.store "Feedburner ID", ""
-  l.store "General settings", "Allgemeine Einstellungen"
+  l.store "General settings", "Pagrindiniai nustatymai"
   l.store "You can use your Google Feedburner account instead of Typo feed URL. To enable this, fill this form with your Feedburner ID.", ""
 
   # app/views/admin/settings/seo.html.erb
   l.store "Search Engine Optimisation", ""
-  l.store "Show blog name", "Blogtitel anzeigen"
-  l.store "At the beginning of page title", "Am Anfang des Seitentitels"
-  l.store "At the end of page title", "Am Ende des Seitentitels"
-  l.store "Don't show blog name in page title", "Den Blognamen nicht im Seitentitel anzeigen"
+  l.store "Show blog name", "Rodyti dienoraščio pavadinimą"
+  l.store "At the beginning of page title", "Puslapio antraštės pradžioje"
+  l.store "At the end of page title", "Puslapio antraštės pabaigoje"
+  l.store "Don't show blog name in page title", "Nerodyti dienoraščio pavadinimo antraštėje"
   l.store "Format of permalink", ""
   l.store "Google Analytics", ""
   l.store "Google verification link", ""
@@ -428,13 +428,13 @@ Localization.define("de_DE") do |l|
   l.store "no", "nein"
 
   # app/views/admin/settings/write.html.erb
-  l.store "Send trackbacks", "Trackbacks verschicken"
-  l.store "When publishing articles, Typo can send trackbacks to websites that you link to. This should be disabled for private blogs as it will leak non-public information to sites that you're discussing. For public blogs, there's no real point in disabling this.", "Typo kann Trackbacks zu anderen Websites schicken, zu denen Sie in veröffentlichten Artikeln verlinken. Das sollte für private Blogs deaktiviert werden, weil sonst nicht-öffentliche Informationen mit dem Trackback Ping nach außen zu den Seiten gehen, die Sie in Ihren Artikeln diskutieren. Für öffentliche Blogs jedoch besteht kein wirklicher Grund, das zu deaktivieren."
-  l.store "URLs to ping automatically", "Automatisch diese URLs anpingen"
-  l.store "Latitude, Longitude", "geografische Breite, Länge"
-  l.store "your lattitude and longitude", "Ihrer geografischen Breite und Länge"
-  l.store "exemple", "Beispiel"
-  l.store "Write", "Schreiben"
+  l.store "Send trackbacks", "Siųsti dienoraščių nuorodas"
+  l.store "When publishing articles, Typo can send trackbacks to websites that you link to. This should be disabled for private blogs as it will leak non-public information to sites that you're discussing. For public blogs, there's no real point in disabling this.", "Publikuojant straipsnius Typo gali siųsti dienoraščių nuorodas į puslapius, į kuriuos jūs rodote. Tai gali būti išjungta ant privačių dienoraščių, bet viešuose nėra priežasties išjungti šio nustatymo" # need fix
+  l.store "URLs to ping automatically", "URL adresai į kuriuos pranešti automatiškai"
+  l.store "Latitude, Longitude", "Geografinė platuma, ilguma"
+  l.store "your lattitude and longitude", "Tavo geografinė platuma ir ilguma"
+  l.store "exemple", "Pavyzdys"
+  l.store "Write", "Rašyti"
 
   # app/views/admin/sidebar/_availables.html.erb
   l.store "You have no plugins installed", "Sie haben keine Plugins installiert"
@@ -454,7 +454,7 @@ Localization.define("de_DE") do |l|
   l.store "Publish changes", "Änderungen veröffentlichen"
 
   # app/views/admin/tags/_form.html.erb
-  l.store "Display name", "Anzeigename"
+  l.store "Display name", "Rodomas vardas"
 
   # app/views/admin/tags/destroy.html.erb
   l.store "Are you sure you want to delete the tag", ""
@@ -533,44 +533,44 @@ Localization.define("de_DE") do |l|
   l.store "Add User", ""
 
   # app/views/articles/_article.html.erb
-  l.store "Posted by", "Angelegt von"
-  l.store "Continue reading", "Weiter lesen"
+  l.store "Posted by", "Parašė"
+  l.store "Continue reading", ""
 
   # app/views/articles/_comment.html.erb
-  l.store "said", "sagte"
-  l.store "This comment has been flagged for moderator approval.  It won't appear on this blog until the author approves it", "Dieser Kommentar wurde für die Moderatorfreigabe markiert. Er wird erst nach Freigabe durch den Moderator in diesem Blog erscheinen"
+  l.store "said", "pasakė"
+  l.store "This comment has been flagged for moderator approval.  It won't appear on this blog until the author approves it", "Komentaras laukia moderatoriaus patvirtinimo" # sutrumpinua, man rodos logiskaiu
 
   # app/views/articles/_comment_box.html.erb
-  l.store "Your name", "Mein Name"
-  l.store "Your email", "Meine Email"
-  l.store "Your message", "Meine Nachricht"
-  l.store "Comment Markup Help", "Hilfe zu Kommentar Markup"
-  l.store "Preview comment", "Kommentar Vorschau"
+  l.store "Your name", "Tavo vardas"
+  l.store "Your email", "Tavo el. pašto adresas"
+  l.store "Your message", "Tavo žinutė"
+  l.store "Comment Markup Help", "Komentaro sintaksės žymėjimo pagalba"
+  l.store "Preview comment", "Peržiūrėti komentarą"
   l.store "leave url/email", ""
 
   # app/views/articles/_comment_failed.html.erb
   l.store "Oops, something wrong happened, the comment could not be saved", ""
 
   # app/views/articles/_trackback.html.erb
-  l.store "From", "Von"
+  l.store "From", "Nuo"
 
   # app/views/articles/archives.html.erb
-  l.store "No articles found", "Keine Artikel gefunden"
+  l.store "No articles found", "Straipsnių nėra"
   l.store "posted in", ""
 
   # app/views/articles/comment_preview.html.erb
-  l.store "is about to say", "will sagen"
+  l.store "is about to say", "pasakoja apie"
 
   # app/views/articles/groupings.html.erb
-  l.store "There are", "Es gibt"
+  l.store "There are", "Čia yra"
 
   # app/views/articles/read.html.erb
-  l.store "Leave a response", "Einen Kommentar hinterlassen"
+  l.store "Leave a response", "Palikti atsakymą"
   l.store "Trackbacks", ""
-  l.store "Use the following link to trackback from your own site", "Verwenden Sie den folgenden Link zur Rückverlinkung von Ihrer eigenen Seite"
-  l.store "RSS feed for this post", "RSS Feed für diesen Artikel"
+  l.store "Use the following link to trackback from your own site", "Dienoraščio nuoroda (trackback)"
+  l.store "RSS feed for this post", "šio įrašo RSS"
   l.store "trackback uri", "Trackback URI"
-  l.store "Comments are disabled", "Kommentare sind deaktiviert"
+  l.store "Comments are disabled", "Komentavimas išjungtas"
 
   # app/views/authors/show.html.erb
   l.store "Web site:", ""
@@ -684,7 +684,7 @@ Localization.define("de_DE") do |l|
   l.store "Next", ""
 
   # vendor/plugins/archives_sidebar/views/content.rhtml
-  l.store "Archives", "Archive"
+  l.store "Archives", "Archyvas"
 
   # vendor/plugins/authors_sidebar/views/content.rhtml
   l.store "Authors", ""
@@ -695,176 +695,176 @@ Localization.define("de_DE") do |l|
   l.store "Tag %s", ""
 
   # Obsolete translations
-  l.store "%d Articles", ["Artikel", "%d Artikel"]
-  l.store "%d Categories", ["Kategorie", "%d Kategorien"]
-  l.store "%d Comments", ["Kommentar", "%d Kommentare"]
-  l.store "%d Tags", ["Tag", "%d Tags"]
-  l.store "%d Trackbacks", ["Trackback", "%d Trackbacks"]
-  l.store "%d Users", ["Benutzer", "%d Benutzer"]
+  l.store "%d Articles", ["Straipsnis", "%d Straipsniai"]
+  l.store "%d Categories", ["Kategorija", "%d Kategorijos"]
+  l.store "%d Comments", ["Komentaras", "%d Komentarai"]
+  l.store "%d Tags", ["Žymė", "%d Žymės"]
+  l.store "%d Trackbacks", ["dienoraščio nuoroda", "%d dienoraščių nuorodos"]
+  l.store "%d Users", ["Vartotojas", "%d Vartotojai"]
   l.store "AIM Presence", "AIM Anwesenheit"
   l.store "AIM Status", "AIM Status"
   l.store "Action", "Aktion"
   l.store "Activate", "Aktivieren"
   l.store "Add MetaData", "Metadaten hinzufügen"
-  l.store "Add category", "Kategorie hinzufügen"
+  l.store "Add category", "Pridėti kategoriją"
   l.store "Add new user", "Neuen Benutzer anlegen"
-  l.store "Add pattern", "Muster hinzufügen"
+  l.store "Add pattern", "Pridėti šabloną" #
   l.store "Allow non-ajax comments", "non-AJAX Kommentare erlauben"
   l.store "Are you sure you want to delete this filter", "Sind sie sicher, diesen Textfilter zu löschen"
-  l.store "Are you sure you want to delete this item?", "Diesen Eintrag löschen, sind Sie sicher?"
-  l.store "Article Attachments", "Artikel Anhänge"
-  l.store "Article Body", "Artikel"
-  l.store "Article Content", "Artikel Inhalt"
-  l.store "Article Options", "Artikel Optionen"
-  l.store "Articles in", "Artikel in"
-  l.store "Attachments", "Anhänge"
-  l.store "Back to the blog", "Zurück zum Blog"
-  l.store "Blacklist", "Blacklist"
-  l.store "Blacklist Patterns", "Blacklist Muster"
-  l.store "Blog settings", "Blog Einstellungen"
-  l.store "Body", "Text"
+  l.store "Are you sure you want to delete this item?", "Ar jūs tikrai nori ištrinti šį įrašą?" #
+  l.store "Article Attachments", "Straipsnio prikabinti failai"
+  l.store "Article Body", "Straipsnio tekstas" #straipsnio kūnas niekur nesako, reikia tinkamesnio
+  l.store "Article Content", "Straipsnio turinys"
+  l.store "Article Options", "Straipsnio nustatymai"
+  l.store "Articles in", "Straipsniai"
+  l.store "Attachments", "Prikabinta"
+  l.store "Back to the blog", "Grįžti į dienoraštį"
+  l.store "Blacklist", "Juodasis sąrašas"
+  l.store "Blacklist Patterns", "Juodojo sąrašo šablonas"
+  l.store "Blog settings", "Dienoraščio nustatymai"
+  l.store "Body", "Tekstas"
   l.store "Cache", "Cache"
-  l.store "Category title", "Name der Kategorie"
-  l.store "Choose password", "Passwort"
-  l.store "Comments and Trackbacks for", "Kommentare und Trackbacks für"
-  l.store "Confirm password", "Passwort bestätigen"
+  l.store "Category title", "kategorijos pavadinimas"
+  l.store "Choose password", "Pasirinkite slaptažodį"
+  l.store "Comments and Trackbacks for", "Komentarai ir dienoraščių nuorodos"
+  l.store "Confirm password", "Pakartokite slaptažodį"
   l.store "Copyright Information", "Copyright Informationen"
-  l.store "Create new Blacklist", "Neue Blacklist anlegen"
-  l.store "Create new category", "Neue Kategorie anlegen"
+  l.store "Create new Blacklist", "Kurti naują juodajį sąrašą"
+  l.store "Create new category", "Kurti naują kategoriją"
   l.store "Create new page", "Neue Seite anlegen"
   l.store "Create new text filter", "Neuen Textfilter anlegen"
-  l.store "Creating comment", "Kommentar anlegen"
+  l.store "Creating comment", "Kuriamas komentaras"
   l.store "Creating text filter", "Textfilter anlegen"
   l.store "Creating trackback", "Trackback anlegen"
   l.store "Creating user", "Benutzer anlegen"
-  l.store "Currently this article is listed in following categories", "Aktuell ist dieser Artikel den folgenden Kategorien zugeordnet"
+  l.store "Currently this article is listed in following categories", "Šiuo metu šis straipsnis yra sekančiose kategorijose"
   l.store "Customize Sidebar", "Seitenleiste einstellen"
   l.store "Delete this filter", "Diesen Textfilter löschen"
-  l.store "Design", "Design"
-  l.store "Desired login", "Benutzername"
-  l.store "Discuss", "Diskussion"
-  l.store "Do you want to go to your blog?", "Möchten Sie zum Blog gehen?"
+  l.store "Design", "Dizainas"
+  l.store "Desired login", "Trokštamas prisijungimo vardas"
+  l.store "Discuss", "Diskusijos"
+  l.store "Do you want to go to your blog?", "Jūs norėtumėte eiti į jūsų dienoraštį?"
   l.store "Duration", "Dauer"
-  l.store "Edit Article", "Artikel bearbeiten"
+  l.store "Edit Article", "Redaguoti straipsnį"
   l.store "Edit MetaData", "Metadaten bearbeiten"
-  l.store "Edit this article", "Diesen Artikel bearbeiten"
-  l.store "Edit this category", "Diese Kategorie bearbeiten"
+  l.store "Edit this article", "Redaguoti šį straipsnį"
+  l.store "Edit this category", "Redaguoti šią kategoriją"
   l.store "Edit this filter", "Filter bearbeiten"
   l.store "Edit this page", "Diese Seite bearbeiten"
   l.store "Edit this trackback", "Trackback bearbeiten"
   l.store "Editing User", "Aufbereitung des Benutzers"
-  l.store "Editing category", "Kategorie bearbeiten"
-  l.store "Editing comment", "Kommentar bearbeiten"
+  l.store "Editing category", "Kategorijos redagavimas"
+  l.store "Editing comment", "Redaguojamas komentaras"
   l.store "Editing page", "Seite bearbeiten"
-  l.store "Editing pattern", "Muster bearbeiten"
+  l.store "Editing pattern", "Redaguoti šabloną"
   l.store "Editing textfilter", "Textfilter bearbeiten"
   l.store "Editing trackback", "Trackback bearbeiten"
   l.store "Empty Fragment Cache", "Cache leeren"
   l.store "Explicit", "Explizit"
-  l.store "Extended Content", "Erweiterter Inhalt"
-  l.store "Feedback Search", "Suche"
+  l.store "Extended Content", "Išplėstas turinys"
+  l.store "Feedback Search", "Atsiliepimų paieška"
   l.store "Filters", "Filter"
-  l.store "General Settings", "Allgemeine Einstellungen"
-  l.store "IP", "IP-Adresse"
+  l.store "General Settings", "Pagrindiniai nustatymai"
+  l.store "IP", "IP adresas"
   l.store "Jabber", "Jabber"
   l.store "Jabber account", "Jabber Account"
   l.store "Jabber account to use when sending Jabber notifications", "Jabber Account für das Senden von Jabber Benachrichtigungen"
   l.store "Jabber password", "Jabber Passwort"
   l.store "Key Words", "Schlagwörter"
-  l.store "Last updated", "Zuletzt aktualisiert"
-  l.store "Limit to unconfirmed", "Einschränken auf Unbestätigte"
-  l.store "Limit to unconfirmed spam", "Einschränken auf unbestätigten Spam"
+  l.store "Last updated", "Paskutinis atnaujinimas"
+  l.store "Limit to unconfirmed", "Nepatvirtintų limitas"
+  l.store "Limit to unconfirmed spam", "Nepatvirtinto spamo limitas"
   l.store "Location", "Adresse"
-  l.store "Logoff", "Logoff"
+  l.store "Logoff", "Atsijungti"
   l.store "Macro Filter Help", "Hilfe zu Makrofilter"
   l.store "Macros", "Makros"
-  l.store "Manage", "Verwalten"
-  l.store "Manage Articles", "Artikel verwalten"
-  l.store "Manage Categories", "Kategorien verwalten"
-  l.store "Manage Pages", "Seiten verwalten"
-  l.store "Manage Resources", "Ressourcen verwalten"
+  l.store "Manage", "Valdyti"
+  l.store "Manage Articles", "Valdyti Straipsnius"
+  l.store "Manage Categories", "Valdyti kategorijas"
+  l.store "Manage Pages", "Valdyti puslapius"
+  l.store "Manage Resources", "Valdyti resursus"
   l.store "Manage Text Filters", "Textfilter verwalten"
   l.store "Markup", "Markup"
   l.store "Markup type", "Markup Typ"
   l.store "MetaData", "Metadaten"
   l.store "Not published by Apple", "Nicht von Apple publiziert"
-  l.store "Notification", "Benachrichtigung"
+  l.store "Notification", "Priminimai"
   l.store "Notified", "Benachrichtigt"
   l.store "Notify on new articles", "Benachrichtigung bei neuen Artikeln"
   l.store "Notify on new comments", "Benachrichtigung bei neuen Kommentaren"
   l.store "Notify via email", "Benachrichtigung via Email"
   l.store "Number of Articles", "Anzahl Artikel"
   l.store "Number of Comments", "Anzahl Kommentare"
-  l.store "Offline", "Offline"
-  l.store "Older posts", "Weitere Artikel"
+  l.store "Offline", "Nepasiekiamas"
+  l.store "Older posts", "Senesni straipsniai"
   l.store "Optional Name", "Optionaler Name"
   l.store "Page Body", "Seiteninhalt"
   l.store "Page Options", "Seiten Optionen"
   l.store "Parameters", "Parameter"
   l.store "Password Confirmation", "Passwort bestätigen"
-  l.store "Pattern", "Muster"
-  l.store "Pictures from", "Bilder von"
-  l.store "Post title", "Titel des Artikels"
+  l.store "Pattern", "Šablonas" # pavyzdys forma ?
+  l.store "Pictures from", "Paveiksliukai iš"
+  l.store "Post title", "Žinutės pavadinimas"
   l.store "Post-processing filters", "Filter für Post-Processing"
-  l.store "Posted at", "Veröffentlicht am"
-  l.store "Posted date", "Angelegt am"
-  l.store "Preview Article", "Artikel Vorschau "
-  l.store "Read", "Lesen"
-  l.store "Read more", "Mehr lesen"
+  l.store "Posted at", "publikuota"
+  l.store "Posted date", "Publikavimo data"
+  l.store "Preview Article", "Peržiūrėti straipsnį "
+  l.store "Read", "Skaityti"
+  l.store "Read more", "Plačiau"
   l.store "Rebuild cached HTML", "Im Cache gespeicherte HTML Seiten neu generieren"
-  l.store "Recent comments", "Neueste Kommentare"
-  l.store "Recent trackbacks", "Neueste Trackbacks"
-  l.store "Regex", "Regulärer Ausdruck"
+  l.store "Recent comments", "Paskutiniai komentarai"
+  l.store "Recent trackbacks", "paskutinės dienoraščių nuorodos"
+  l.store "Regex", "Reguliarioji išraiška" # kvailai skamba bet kaip kitaip ?
   l.store "Remove iTunes Metadata", "iTunes Metadaten entfernen"
   l.store "Resource MetaData", "Metadaten der Ressource"
-  l.store "Resource Settings", "Einstellungen für Ressourcen"
-  l.store "Save Settings", "Einstellungen speichern"
+  l.store "Resource Settings", "Resursų nustatymai"
+  l.store "Save Settings", "Išsaugoti nustatymus"
   l.store "See help text for this filter", "Hilfe für diesen Filter"
   l.store "Set iTunes metadata for this enclosure", "iTunes Metadaten für diesen Anhang festlegen"
   l.store "Setting for channel", "Kanaloptionen"
-  l.store "Settings", "Einstellungen"
+  l.store "Settings", "Nustatymai"
   l.store "Show Help", "Hilfe"
-  l.store "Show this article", "Diesen Artikel anzeigen"
-  l.store "Show this category", "Kategorie anzeigen"
-  l.store "Show this comment", "Diesen Kommentar anzeigen"
+  l.store "Show this article", "Rodyti šį straipsnį"
+  l.store "Show this category", "Rodyti šią kategoriją"
+  l.store "Show this comment", "Rodyti šį komentarą"
   l.store "Show this page", "Diese Seite anzeigen"
-  l.store "Show this pattern", "Muster anzeigen"
+  l.store "Show this pattern", "Rodyti šį šabloną"
   l.store "Show this user", "Diesen Benutzer anzeigen"
-  l.store "Spam Protection", "Spamschutz"
+  l.store "Spam Protection", "Spamo apsauga"
   l.store "Spam protection", "Spamschutz"
-  l.store "String", "Zeichenkette"
+  l.store "String", "Eilutė"
   l.store "Subtitle", "Untertitel"
   l.store "Summary", "Zusammenfassung"
   l.store "Text Filter Details", "Details zum Textfilter"
   l.store "Text Filters", "Textfilter"
-  l.store "Textfilter", "Textfilter"
+  l.store "Textfilter", "Teksto filtras"
   l.store "The below settings act as defaults when you choose to publish an enclosure with iTunes metadata", "Folgende Einstellungen wirken als Voreinstellungen, wenn Sie einen Anhang mit iTunes Metadaten veröffentlichen"
   l.store "There are %d entries in the cache", "Es sind %d Einträge im Cache"
-  l.store "Things you can do", "Folgendes können Sie tun ..."
+  l.store "Things you can do", "Jūs galite daryti ..."
   l.store "This option let you choose between the simple admin interface or the complete one, displaying much more options and therefore more complicated to use. For advanced users only!","This option let you choose between the simple admin interface or the complete one, displaying much more options and therefore more complicated to use. For advanced users only!" #Need translate
-  l.store "Toggle Extended Content", "Erweiterten Inhalt umschalten"
-  l.store "Type", "Typ"
-  l.store "Typo admin", "Typo Administrator"
+  l.store "Toggle Extended Content", "Sutraukti išplėsta turinį"
+  l.store "Type", "Tipas"
+  l.store "Typo admin", "Typo administravimas"
   l.store "Upload a new File", "Eine neue Datei hochladen"
   l.store "Upload a new Resource", "Eine neue Ressource hochladen"
   l.store "Uploaded", "Upload beendet"
   l.store "User's articles", "Artikel des Benutzers"
-  l.store "View article on your blog", "Artikel in Ihrem Blog anschauen"
-  l.store "View comment on your blog", "Kommentar in Ihrem Blog anschauen"
+  l.store "View article on your blog", "Rodyti straipsnį dienoraštyje"
+  l.store "View comment on your blog", "Rodyti komentarą dienoraštyje"
   l.store "View page on your blog", "Seite in Ihrem Blog anschauen"
-  l.store "Which settings group would you like to edit", "Welche Einstellungsgruppe möchten Sie bearbeiten"
-  l.store "Write a Page", "Eine Seite schreiben"
-  l.store "Write an Article", "Einen Artikel schreiben"
+  l.store "Which settings group would you like to edit", "Kurią nustatymų grupę norėtum redaguoti"
+  l.store "Write a Page", "Kurti puslapį"
+  l.store "Write an Article", "Kurti straipsnį"
   l.store "XML Syndication", "XML Syndikat"
-  l.store "You are now logged out of the system", "Sie sind nun vom System abgemeldet"
-  l.store "You can add it to the following categories", "Sie können ihn zu den folgenden Kategorien hinzufügen"
+  l.store "You are now logged out of the system", "Jūs esate prisijungęs prie sistemos"
+  l.store "You can add it to the following categories", "Jūs galite pridėti jį į sekančias kategorijas"
   l.store "You can enable site wide feedback moderation. If you do so, no comment or trackback will appear on your blog unless you validate it", "Sie können die Moderation von Kommentaren auf der gesamten Website aktivieren. Dann erscheinen keine Kommentare oder Trackbacks in Ihrem Blog, die sie nicht überprüft haben"
   l.store "You can optionally disable non-Ajax comments. Typo will always use Ajax for comment submission if Javascript is enabled, so non-Ajax comments are either from spammers or users without Javascript.", "Sie können optional non-Ajax Kommentare verbieten. Typo verwendet immer Ajax für die Übertragung von Kommentaren, sofern Javascript eingeschaltet ist. non-Ajax Kommentare stamme somit entweder von Spammern oder von Anwendern ohne aktiviertes Javascript."
   l.store "by", "bei"
-  l.store "log out", "Abmelden"
-  l.store "on", "über"
+  l.store "log out", "Atsijungti"
+  l.store "on", "įjungta"
   l.store "seperate with spaces", "mit Leerzeichen trennen"
   l.store "via email", "per Email"
-  l.store "with %s Famfamfam iconset %s", "mit %s Famfamfam Icons %s"
-  l.store "your blog", "Ihr Blog"
+  l.store "with %s Famfamfam iconset %s", "su %s Famfamfam ikonomis %s"
+  l.store "your blog", "Tavo dienoraštis"
 end

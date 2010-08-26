@@ -16,12 +16,11 @@ class LangaugeFile
       end
     end
 
-
     stringAll = []
     executeStage "Generating #{filename}" do
       rc  = ""
       rc += "Localization.define(\"#{language}\") do |l|"
-      Dir.glob("**/*.{erb,rhtml,rb}").collect do |ff|
+      Dir.glob("**/*.{erb,rhtml,rb}").sort.collect do |ff|
         strings   = File.read(ff).scan(/_\([ ]*["](.*?)["]/)
         strings  += File.read(ff).scan(/_\([ ]*['](.*?)[']/)
         if strings.length > 0
@@ -39,6 +38,7 @@ class LangaugeFile
               else
                 if stringMap.has_key?(key)
                   rc += "\n  l.store \"#{key}\",#{stringMap[key]}"
+                  stringMap.delete(key)
                 else
                   rc += "\n  l.store \"#{key}\", \"\""
                 end
@@ -47,7 +47,13 @@ class LangaugeFile
           end
         end
       end
-      rc += "\nend"
+      if stringMap.size > 0
+        rc += "\n\n  # Obsolete translations"
+        stringMap.keys.sort.each do |key|
+          rc += "\n  l.store \"#{key}\",#{stringMap[key]}"
+        end
+      end
+      rc += "\nend\n"
       ff = File.new(filename,"w")
       ff.write(rc)
       ff.close()
