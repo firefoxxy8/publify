@@ -1,10 +1,9 @@
-require File.dirname(__FILE__) + '/../../spec_helper'
+require 'spec_helper'
 
 require 'http_mock'
 
 describe Admin::ContentController do
   integrate_views
-
 
   # Like it's a shared, need call everywhere
   describe 'index action', :shared => true do
@@ -320,12 +319,13 @@ describe Admin::ContentController do
 
       it 'should add resource' do
         art_id = contents(:article1).id
-        get :resource_add, :id => art_id, :resource_id => resources(:resource1).id
+        resource = Factory(:resource)
+        get :resource_add, :id => art_id, :resource_id => resource.id
 
         response.should render_template('_show_resources')
         assigns(:article).should be_valid
         assigns(:resource).should be_valid
-        assert Article.find(art_id).resources.include?(resources(:resource1))
+        assert Article.find(art_id).resources.include?(resource)
         assert_not_nil assigns(:article)
         assert_not_nil assigns(:resource)
         assert_not_nil assigns(:resources)
@@ -337,12 +337,13 @@ describe Admin::ContentController do
 
       it 'should remove resource' do
         art_id = contents(:article1).id
-        get :resource_remove, :id => art_id, :resource_id => resources(:resource1).id
+        resource = Factory(:resource)
+        get :resource_remove, :id => art_id, :resource_id => resource.id
 
         response.should render_template('_show_resources')
         assert assigns(:article).valid?
         assert assigns(:resource).valid?
-        assert !Article.find(art_id).resources.include?(resources(:resource1))
+        assert !Article.find(art_id).resources.include?(resource)
         assert_not_nil assigns(:article)
         assert_not_nil assigns(:resource)
         assert_not_nil assigns(:resources)
@@ -350,6 +351,12 @@ describe Admin::ContentController do
     end
 
     describe 'auto_complete_for_article_keywords action' do
+      before do
+        Factory(:tag, :name => 'foo', :articles => [Factory(:article)])
+        Factory(:tag, :name => 'bazz', :articles => [Factory(:article)])
+        Factory(:tag, :name => 'bar', :articles => [Factory(:article)])
+      end
+
       it 'should return foo for keywords fo' do
         get :auto_complete_for_article_keywords, :article => {:keywords => 'fo'}
         response.should be_success
@@ -362,7 +369,7 @@ describe Admin::ContentController do
         response.body.should == '<ul></ul>'
       end
 
-      it 'should return bar and baz for ba keyword' do
+      it 'should return bar and bazz for ba keyword' do
         get :auto_complete_for_article_keywords, :article => {:keywords => 'ba'}
         response.should be_success
         response.body.should == '<ul><li>bar</li><li>bazz</li></ul>'
@@ -435,9 +442,6 @@ describe Admin::ContentController do
           response.should redirect_to(:action => 'index')
         end
       end
-
     end
-
   end
-
 end

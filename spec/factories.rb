@@ -1,4 +1,6 @@
-require 'factory_girl'
+Factory.sequence :name do |n|
+  "name_#{n}"
+end
 
 Factory.sequence :user do |n|
   "user#{n}"
@@ -6,6 +8,10 @@ end
 
 Factory.sequence :guid do |n|
   "deadbeef#{n}"
+end
+
+Factory.sequence :file_name do |f|
+  "file_name_#{f}"
 end
 
 Factory.define :user do |u|
@@ -66,4 +72,15 @@ Factory.define :category do |c|
   c.name 'SoftwareFactory'
   c.permalink 'softwarefactory'
   c.position 1
+end
+
+Factory.define :tag do |tag|
+  tag.name {Factory.next(:name)}
+  tag.display_name {Factory.next(:name)}
+end
+
+Factory.define :resource do |r|
+  r.filename {Factory.next(:file_name)}
+  r.mime 'image/jpeg'
+  r.size 110
 end

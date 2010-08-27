@@ -213,9 +213,11 @@ describe Article do
   end
 
   it "test_find_published_by_tag_name" do
-    @articles = Tag.find_by_name(tags(:foo).name).published_articles
-
-    assert_results_are(:article1, :article2, :publisher_article)
+    art1 = Factory(:article)
+    art2 = Factory(:article)
+    Factory(:tag, :name => 'foo', :articles => [art1, art2])
+    articles = Tag.find_by_name('foo').published_articles
+    assert_equal 2, articles.size
   end
 
 
@@ -301,8 +303,10 @@ describe Article do
 
   it "test_destroy_file_upload_associations" do
     a = contents(:article1)
+    Factory(:resource, :article => a)
+    Factory(:resource, :article => a)
     assert_equal 2, a.resources.size
-    a.resources << resources(:resource3)
+    a.resources << Factory(:resource)
     assert_equal 3, a.resources.size
     a.destroy
     assert_equal 0, Resource.find(:all, :conditions => "article_id = #{a.id}").size
