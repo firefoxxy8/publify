@@ -1,6 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper'
-
-require 'flickr_mock'
+require 'spec_helper'
 
 describe TextfilterController do
   before do

@@ -76,7 +76,7 @@ def display_comments_counter(article)
 end
 
 def show_pages_links
-  html = ''
+  html = ''.html_safe
   pages = Page.find(:all, :conditions => {:published => true})
   pages.each do |page|
     html << content_tag(:li, link_to_permalink(page, page.title, nil, render_active_page(page.name)))

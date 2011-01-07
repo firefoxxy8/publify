@@ -1,7 +1,7 @@
-require File.dirname(__FILE__) + '/../../spec_helper'
+require 'spec_helper'
 
 describe Admin::ThemesController do
-  integrate_views
+  render_views
 
   before do
     request.session = { :user => users(:tobi).id }
@@ -26,7 +26,7 @@ describe Admin::ThemesController do
   it "shows a list of css and erb files for the :editor action" do
     get :editor
     assert_response :success
-    response.should have_tag("a", :text => "colors.css")
-    response.should have_tag("a", :text => "default.html.erb")
+    response.should have_selector("a", :content => "colors.css")
+    response.should have_selector("a", :content => "default.html.erb")
   end
 end

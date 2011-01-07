@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper'
+require 'spec_helper'
 
 describe Tag do
   it 'we can Tag.get by name' do
@@ -10,7 +10,7 @@ describe Tag do
     lambda {Tag.create!(:name => 'test')}.should_not raise_error
     test_tag = Tag.new(:name => 'test')
     test_tag.should_not be_valid
-    test_tag.errors.on(:name).should == 'has already been taken'
+    test_tag.errors[:name].should == ['has already been taken']
   end
 
   it 'display names with spaces can be found by joinedupname' do
@@ -48,8 +48,11 @@ describe Tag do
     tags.last.article_counter.should == 2
   end
 
-  it 'permalink_url should be of form /tag/<name>' do
-    Tag.get('foo').permalink_url.should == 'http://myblog.net/tag/foo'
+  describe 'permalink_url' do
+    subject { Tag.get('foo').permalink_url }
+    it 'should be of form /tag/<name>' do
+      should == 'http://myblog.net/tag/foo'
+    end
   end
 end
 

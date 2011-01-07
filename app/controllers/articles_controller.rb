@@ -48,8 +48,8 @@ class ArticlesController < ContentController
     return error(_("No posts found..."), :status => 200) if @articles.empty?
     respond_to do |format|
       format.html { render :action => 'search' }
-      format.rss { render :partial => "articles/rss20_feed", :object => @articles }
-      format.atom { render :partial => "articles/atom_feed", :object => @articles }
+      format.rss { render :partial => "articles/rss20_feed", :locals => { :items => @articles } }
+      format.atom { render :partial => "articles/atom_feed", :locals => { :items => @articles } }
     end
   end
 
@@ -79,10 +79,10 @@ class ArticlesController < ContentController
     part.delete('') # delete all par of / where no data. Avoid all // or / started
     params[:from].delete('')
     if params[:from].last =~ /\.atom$/
-      params[:format] = 'atom'
+      request.format = 'atom'
       params[:from].last.gsub!(/\.atom$/, '')
     elsif params[:from].last =~ /\.rss$/
-      params[:format] = 'rss'
+      request.format = 'rss'
       params[:from].last.gsub!(/\.rss$/, '')
     end
     zip_part = part.zip(params[:from])
@@ -145,7 +145,7 @@ class ArticlesController < ContentController
 
     if(r)
       path = r.to_path
-      url_root = self.class.relative_url_root
+      url_root = this_blog.root_path
       path = url_root + path unless url_root.nil? or path[0,url_root.length] == url_root
       redirect_to path, :status => 301
     else
@@ -237,7 +237,7 @@ class ArticlesController < ContentController
 
   def send_feed(format)
     if this_blog.feedburner_url.empty? or request.env["HTTP_USER_AGENT"] =~ /FeedBurner/i
-      render :partial => "articles/#{format}_feed", :object => @articles
+      render :partial => "articles/#{format}_feed", :locals => { :items => @articles }
     else
       redirect_to "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
     end
@@ -245,7 +245,7 @@ class ArticlesController < ContentController
 
   # TODO: Merge with send_feed?
   def render_feed(type)
-    render :partial => "/articles/#{type}_feed", :object => @article.published_feedback
+    render :partial => "/articles/#{type}_feed", :locals => { :items => @article.published_feedback }
   end
 
   def set_headers
@@ -264,30 +264,32 @@ class ArticlesController < ContentController
   end
 
   def index_title
-    returning('') do |page_title|
-      page_title << formatted_date_selector(_('Archives for '))
+    page_title = formatted_date_selector(_('Archives for '))
 
-      if params[:page]
-        page_title << 'Older posts' if page_title.blank?
-        page_title << ", page " << params[:page]
-      end
+    if params[:page]
+      page_title << 'Older posts' if page_title.blank?
+      page_title << ", page " << params[:page]
     end
+
+    page_title
   end
 
   def index_description
-    returning('') do |page_description|
-      if this_blog.meta_description.empty?
+    page_description = ''
+
+    if this_blog.meta_description.empty?
       page_description << "#{this_blog.blog_name} #{this_blog.blog_subtitle}"
-      else
-        page_description << this_blog.meta_description
-      end
-
-      page_description << formatted_date_selector(_(', Articles for '))
-
-      if params[:page]
-        page_description << ", page " << params[:page]
-      end
+    else
+      page_description << this_blog.meta_description
     end
+
+    page_description << formatted_date_selector(_(', Articles for '))
+
+    if params[:page]
+      page_description << ", page " << params[:page]
+    end
+
+    page_description
   end
 
   def time_delta(year, month = nil, day = nil)

@@ -1,7 +1,7 @@
 <% @page_heading =  _("Feedback") %>
 <% subtabs_for(:content) %>
 
-<% form_tag({:action => 'index'}, :method => :get) do %>
+<%= form_tag({:action => 'index'}, :method => :get) do %>
 <div class='settings'>
   <h4><label for="search"><%= _("Search Comments and Trackbacks that contain")%>...:</label></h4>
   <div class='input_text'>
@@ -11,14 +11,14 @@
 </div>
 <% end %>
 
-<% form_tag({:action => 'bulkops'}, :method => :post) do %>
+<%= form_tag({:action => 'bulkops'}, :method => :post) do %>
 <%= render :partial => 'button', :locals => { :position => 'top' } %>
 
 <%= hidden_field_tag "search", params[:search]%>
 <%= hidden_field_tag "page", params[:page]%>
-<table class='settings'>
+<table>
   <tr>
-    <th class='first'><input type="checkbox" name="checkall" id="checkall" onclick="check_all(this);"/></th>
+    <th><input type="checkbox" name="checkall" id="checkall" onclick="check_all(this);"/></th>
     <th><%= _("Status")%></th>
     <th><%= _("Comment Author")%></th>
     <th><%= _("Comment")%></th>
@@ -38,7 +38,11 @@
   <% end %>
 
   <%= display_pagination(@feedback, 5) %>
+  <tr>
+    <th colspan='5'><%= _("Select all") %><input type="checkbox" name="checkall" id="checkall" onclick="check_all(this);"/></th>
+  </tr>
 </table>
 
 <%= render :partial => 'button', :locals => { :position => 'bottom' } %>
 <% end %>
+<br class='clear' />

@@ -2,7 +2,6 @@ class AccountsController < ApplicationController
 
   before_filter :verify_config
   before_filter :verify_users, :only => [:login, :recover_password]
-  filter_parameter_logging "password"
 
   def login
     if session[:user_id] && session[:user_id] == self.current_user.id
@@ -11,8 +10,8 @@ class AccountsController < ApplicationController
     end
 
     @page_title = "#{this_blog.blog_name} - #{_('login')}"
-    case request.method
-      when :post
+
+    if request.post?
       self.current_user = User.authenticate(params[:user][:login], params[:user][:password])
 
       if logged_in?

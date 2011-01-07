@@ -1,6 +1,8 @@
-require File.dirname(__FILE__) + '/../../spec_helper'
+require 'spec_helper'
 
 describe Admin::ResourcesController do
+  render_views
+
   before do
     @request.session = { :user => users(:tobi).id }
   end
@@ -9,16 +11,16 @@ describe Admin::ResourcesController do
     get :index
     assert_response :success
     assert_template 'index'
-    assert_template_has 'resources'
-    assert_not_nil assigns(:resources)
+    assigns(:resources).should_not be_nil
   end
 
   it "test_images" do
+    3.times { Factory(:resource) }
     get :images
     assert_response :success
     assert_template 'images'
-    assert_template_has 'resources'
-    assert_not_nil assigns(:resources)
+    assigns(:resources).should_not be_nil
+    assigns(:resources).size.should == 3
   end
 
   it "test_destroy_image" do

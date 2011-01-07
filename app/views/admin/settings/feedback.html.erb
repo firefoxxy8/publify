@@ -1,7 +1,7 @@
 <% @page_heading = _('Feedback settings') %>
 <% subtabs_for(:settings) %>
 
-<% form_tag :action => 'update' do %>
+<%= form_tag :action => 'update' do %>
 <div class='ui-accordion ui-widget ui-helper-reset ui-accordion-icons settings'>
   <h3 class='ui-accordion-header ui-helper-reset ui-state-default ui-corner-top'><span class='ui-icon ui-icon-gear'></span> <%= _("Feedback")%></h3>
   <div class='ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom ui-accordion-content-active'>
@@ -33,9 +33,11 @@
       </div>
     </div>
     <div class='setting clear'>
-      <label class="float" for="setting_use_gravatar"><%= _("Enable gravatars")%></label>
+      <label class="float" for="setting_use_gravatar"><%= _("Avatars provider")%></label>
       <div class='input_text'>
-        <%= check_box(:setting, :use_gravatar)%>
+        <select name="setting[plugin_avatar]" id="plugin_avatar">
+          <%= options_for_select plugin_options(:avatar), this_blog.plugin_avatar %>
+        </select>
       </div>
     </div>
     <div class='setting clear'>

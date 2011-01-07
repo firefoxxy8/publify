@@ -4,8 +4,8 @@
 class ApplicationController < ActionController::Base
   include ::LoginSystem
   protect_from_forgery :only => [:edit, :update, :delete]
-
-  before_filter :reset_local_cache, :fire_triggers, :load_lang
+ 
+  before_filter :reset_local_cache, :fire_triggers, :load_lang, :set_paths
   after_filter :reset_local_cache
 
   class << self
@@ -26,9 +26,13 @@ class ApplicationController < ActionController::Base
 
   protected
 
+  def set_paths
+   prepend_view_path "#{::Rails.root.to_s}/themes/#{this_blog.theme}/views"
+  end 
+
   def setup_themer
     # Ick!
-    self.view_paths = ::ActionController::Base.view_paths.dup.unshift("#{RAILS_ROOT}/themes/#{this_blog.theme}/views")
+    self.class.view_paths = ::ActionController::Base.view_paths.dup.unshift("#{::Rails.root.to_s}/themes/#{this_blog.theme}/views")
   end
 
   def error(message = "Record not found...", options = { })
@@ -75,7 +79,4 @@ class ApplicationController < ActionController::Base
     cookies[name] = { :value => value, :path => path || "/#{controller_name}",
                        :expires => 6.weeks.from_now }
   end
-
-  # Scrub sensitive parameters from your log
-  filter_parameter_logging :password
 end

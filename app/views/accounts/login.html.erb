@@ -2,7 +2,7 @@
 
 <div id="flash"><%= render_the_flash %></div>
 
-<% form_tag :action=> "login" do %>
+<%= form_tag :action=> "login" do %>
   <h3><label for="user_login"><%= _('Login')%></label></h3>
   <p class='input_text_title'>
     <%= text_field(:user, :login, {:class => 'title large'})%>
@@ -19,7 +19,7 @@
   </p>
 
   <p>
-    <small><%= link_to "&laquo; #{_('Back to ')} #{this_blog.blog_name}", this_blog.base_url %></small><br />
-    <small><%= link_to "#{_("I've lost my password")} &raquo;", :action => 'recover_password' %></small>
+    <small><%= link_to "&laquo; #{_('Back to ')} #{this_blog.blog_name}".html_safe, this_blog.base_url %></small><br />
+    <small><%= link_to "#{_("I've lost my password")} &raquo;".html_safe, :action => 'recover_password' %></small>
   </p>
 <% end %>

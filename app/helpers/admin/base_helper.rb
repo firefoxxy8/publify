@@ -11,7 +11,7 @@ module Admin::BaseHelper
   end
 
   def subtab(label, options = {})
-    return content_tag :li, "<span class='subtabs'>#{label}</span>" if options.empty?
+    return content_tag :li, "<span class='subtabs'>#{label}</span>".html_safe if options.empty?
     content_tag :li, link_to(label, options)
   end
 
@@ -34,22 +34,22 @@ module Admin::BaseHelper
    '<input type="submit" value="' + val + '" />'
   end
 
-  def link_to_edit(label, record, controller = @controller.controller_name)
+  def link_to_edit(label, record, controller = controller.controller_name)
     link_to label, :controller => controller, :action => 'edit', :id => record.id
   end
 
-  def link_to_edit_with_profiles(label, record, controller = @controller.controller_name)
+  def link_to_edit_with_profiles(label, record, controller = controller.controller_name)
     if current_user.admin? || current_user.id == record.user_id
       link_to label, :controller => controller, :action => 'edit', :id => record.id
     end
   end
 
-  def link_to_destroy(record, controller = @controller.controller_name)
+  def link_to_destroy(record, controller = controller.controller_name)
     link_to image_tag('admin/delete.png', :alt => _("delete"), :title => _("Delete content")),
       :controller => controller, :action => 'destroy', :id => record.id
   end
 
-  def link_to_destroy_with_profiles(record, controller = @controller.controller_name)
+  def link_to_destroy_with_profiles(record, controller = controller.controller_name)
     if current_user.admin? || current_user.id == record.user_id
       link_to(_("delete"),
         { :controller => controller, :action => 'destroy', :id => record.id }, :confirm => _("Are you sure?"), :method => :post, :title => _("Delete content"))
@@ -66,6 +66,13 @@ module Admin::BaseHelper
     TextFilter.find(:all).collect do |filter|
       [ filter.description, filter.id ]
     end
+  end
+
+  def plugin_options(kind, blank = true)
+    r = TypoPlugins::Keeper.available_plugins(kind).collect do |plugin|
+      [ plugin.name, plugin.to_s ]
+    end
+    blank ? r << [_("none"),''] : r
   end
 
   def alternate_class
@@ -225,20 +232,21 @@ module Admin::BaseHelper
   def build_editor_link(label, action, id, update, editor)
     link = link_to_remote(label,
             :url => { :action => action, 'editor' => editor},
+            :class => 'ui-button-text',
             :loading => "new Element.show('update_spinner_#{id}')",
             :success => "new Element.toggle('update_spinner_#{id}')",
-            :update => "#{update}")
+            :update => "#{update}")      
     link << image_tag("spinner-blue.gif", :id => "update_spinner_#{id}", :style => 'display:none;')
   end
 
   def display_pagination(collection, cols)
-    if WillPaginate::ViewHelpers.total_pages_for_collection(collection) > 1
+    if collection.total_pages > 1
       return "<tr><td colspan=#{cols} class='paginate'>#{will_paginate(collection)}</td></tr>"
     end
   end
 
   def show_thumbnail_for_editor(image)
-    thumb = "#{RAILS_ROOT}/public/files/thumb_#{image.filename}"
+    thumb = "#{::Rails.root.to_s}/public/files/thumb_#{image.filename}"
     picture = "#{this_blog.base_url}/files/#{image.filename}"
 
     image.create_thumbnail unless File.exists? thumb

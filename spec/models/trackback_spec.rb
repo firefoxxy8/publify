@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper'
+require 'spec_helper'
 
 describe Trackback, 'With the various trackback filters loaded and DNS mocked out appropriately' do
   before(:each) do
@@ -15,7 +15,7 @@ describe Trackback, 'With the various trackback filters loaded and DNS mocked ou
                        :excerpt => 'Excerpt',
                        :article_id => contents(:article1).id)
     tb.should_not be_valid
-    tb.errors.should be_invalid('url')
+    tb.errors['url'].should be_any
 
     tb.url = 'http://foo.com'
     tb.should be_valid

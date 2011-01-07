@@ -26,6 +26,16 @@ class Admin::FeedbackController < Admin::BaseController
       conditions.last.merge!(:state => 'ham')
     end
 
+    if params[:presumed_ham] == 'f'
+      conditions.first << ' AND state = :state '
+      conditions.last.merge!(:state => 'presumed_ham')
+    end
+
+    if params[:presumed_spam] == 'f'
+      conditions.first << ' AND state = :state '
+      conditions.last.merge!(:state => 'presumed_spam')
+    end
+
     # no need params[:page] if empty of == 0, there are a crash otherwise
     if params[:page].blank? || params[:page] == "0"
       params.delete(:page)
@@ -46,6 +56,8 @@ class Admin::FeedbackController < Admin::BaseController
   end
 
   def destroy
+    @feedback = Feedback.find params[:id]
+    
     if request.post?
       begin
         @feedback.destroy
@@ -53,15 +65,15 @@ class Admin::FeedbackController < Admin::BaseController
       rescue ActiveRecord::RecordNotFound
         flash[:notice] = _("Not found")
       end
-    end
-    respond_to do |format|
-      format.html do
-        redirect_to :action => 'article', :id => @feedback.article.id
-      end
-      format.js do
-        render :update do |page|
-          page.visual_effect(:puff,
-                             "#{@feedback.class.to_s.underscore}-#{@feedback.id}")
+      respond_to do |format|
+        format.html do
+          redirect_to :action => 'article', :id => @feedback.article.id
+        end
+        format.js do
+          render :update do |page|
+            page.visual_effect(:puff,
+                               "#{@feedback.class.to_s.underscore}-#{@feedback.id}")
+          end
         end
       end
     end

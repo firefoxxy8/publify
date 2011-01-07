@@ -47,10 +47,10 @@ class Article < Content
 
   has_and_belongs_to_many :tags, :foreign_key => 'article_id'
 
-  named_scope :category, lambda {|category_id| {:conditions => ['categorizations.category_id = ?', category_id], :include => 'categorizations'}}
-  named_scope :drafts, :conditions => ['state = ?', 'draft']
-  named_scope :without_parent, {:conditions => {:parent_id => nil}}
-  named_scope :child_of, lambda { |article_id| {:conditions => {:parent_id => article_id}} }
+  scope :category, lambda {|category_id| {:conditions => ['categorizations.category_id = ?', category_id], :include => 'categorizations'}}
+  scope :drafts, :conditions => ['state = ?', 'draft']
+  scope :without_parent, {:conditions => {:parent_id => nil}}
+  scope :child_of, lambda { |article_id| {:conditions => {:parent_id => article_id}} }
 
   def has_child?
     Article.exists?({:parent_id => self.id})
@@ -70,9 +70,8 @@ class Article < Content
             :initial_state =>  :new,
             :handles       => [:withdraw,
                                :post_trigger,
-                               :after_save, :send_pings, :send_notifications,
+                               :send_pings, :send_notifications,
                                :published_at=, :just_published?])
-
 
   include Article::States
 
@@ -165,10 +164,10 @@ class Article < Content
 
   def param_array
     @param_array ||=
-      returning([published_at.year,
+      [published_at.year,
                  sprintf('%.2d', published_at.month),
                  sprintf('%.2d', published_at.day),
-                 permalink]) \
+                 permalink].tap \
       do |params|
         this = self
         k = class << params; self; end
@@ -360,9 +359,9 @@ class Article < Content
     state.published = cast_to_boolean(newval)
   end
 
-  # Bloody rails reloading. Nasty workaround.
+  # FIXME: Bloody rails reloading. Nasty workaround.
   def allow_comments=(newval)
-    returning(cast_to_boolean(newval)) do |val|
+    cast_to_boolean(newval).tap do |val|
       if self[:allow_comments] != val
         changed if published?
         self[:allow_comments] = val
@@ -371,7 +370,7 @@ class Article < Content
   end
 
   def allow_pings=(newval)
-    returning(cast_to_boolean(newval)) do |val|
+    cast_to_boolean(newval).tap do |val|
       if self[:allow_pings] != val
         changed if published?
         self[:allow_pings] = val
