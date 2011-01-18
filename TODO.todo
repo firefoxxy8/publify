@@ -1,0 +1,34 @@
+# This file is better viewed with Textmate tasks plugin
+
+Before release:
+- change wiki documentation
+- select 20 themes to be kept and added to typogarden github account. Other themes will just be discontinued
+- generate release note
+- update website
+- generate typo archive
+- improve French translation (maybe)
+
+setup:
+- reduce setup width
+- add some margin above the error block
+
+general admin:
+- make info and confirmation message blocks a different color (yellow and green)
+- Move helps under text fields 
+- chose a different typo for labels and helps
+
+settings:
+  general settings:
+  - make all fields the same width
+  write:
+  - Make the url to ping box bigger
+  - Update URLS (no one use technorati anymore huh)
+  feedback:
+  - item
+  
+Admin/tags:
+- Allow merge of taggings. IIRC there's a ticket with a patch waiting for us as a good start
+  
+bugs:
+- Publishing bug with Rails3 handling timezone on date field. TODO: convert what's displayed according to the timezone. I think this will need a bunch of specs.
+- Tags randomly lost when editing a post

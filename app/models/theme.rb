@@ -8,11 +8,18 @@ class Theme
     @name, @path = name, path
   end
 
+  # TODO: Remove check for old-fashioned theme layout.
   def layout(action=:default)
     if action.to_s == 'view_page'
+      if File.exists? "#{::Rails.root.to_s}/themes/#{name}/views/layouts/pages.html.erb"
+        return "layouts/pages.html.erb"
+      end
       if File.exists? "#{::Rails.root.to_s}/themes/#{name}/layouts/pages.html.erb"
         return "#{::Rails.root.to_s}/themes/#{name}/layouts/pages.html.erb"
       end
+    end
+    if File.exists? "#{::Rails.root.to_s}/themes/#{name}/views/layouts/default.html.erb"
+      return "layouts/default.html.erb"
     end
     "#{::Rails.root.to_s}/themes/#{name}/layouts/default.html.erb"
   end

@@ -3,6 +3,7 @@ class Admin::ThemesController < Admin::BaseController
   require 'time'
   require 'rexml/document'
 
+  layout 'administration'
   cache_sweeper :blog_sweeper
 
   def index
@@ -38,7 +39,7 @@ class Admin::ThemesController < Admin::BaseController
         return
       end
     when "layout"
-      path = this_blog.current_theme.path + "/layouts/"
+      path = this_blog.current_theme.path + "/views/layouts/"
       if params[:file] =~ /rhtml$|erb$/
         filename = params[:file]
       else

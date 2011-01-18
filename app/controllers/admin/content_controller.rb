@@ -100,7 +100,6 @@ class Admin::ContentController < Admin::BaseController
       @article.parent_id      = parent_id
     end
 
-    params[:article] ||= {}
     @article.attributes = params[:article]
     @article.published = false
     set_article_author
@@ -140,15 +139,20 @@ class Admin::ContentController < Admin::BaseController
   def new_or_edit
     get_or_build_article
 
+    if request.post?
+      unless params[:article][:draft]
+        if not @article.parent_id.nil?
+          @article = Article.find(@article.parent_id)
+        end
+      end
+    end
+
     @macros = TextFilter.available_filters.select { |filter| TextFilterPlugin::Macro > filter }
     @article.published = true
 
-    # TODO Test if we can delete the next line. It's delete on nice_permalinks branch
-    params[:article] ||= {}
-
     @resources = Resource.find(:all, :conditions => "mime NOT LIKE '%image%'", :order => 'filename')
     @images = Resource.paginate :page => params[:page], :conditions => "mime LIKE '%image%'", :order => 'created_at DESC', :per_page => 10
-    @article.keywords = @article.tags.map { |tag| tag.display_name }.sort.join(", ")
+    @article.keywords = Tag.collection_to_string @article.tags
     @article.attributes = params[:article]
 
     if request.post?
@@ -226,7 +230,7 @@ class Admin::ContentController < Admin::BaseController
 
   def get_or_build_article
     params[:id] = params[:article][:id] if params[:article] and params[:article][:id]
-    
+
     @article = case params[:id]
              when nil
                Article.new.tap do |art|

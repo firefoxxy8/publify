@@ -5,6 +5,12 @@ require 'rspec/rails'
 require 'factory_girl'
 Factory.find_definitions
 
+User
+class User
+  alias real_send_create_notification send_create_notification
+  def send_create_notification; end
+end
+
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
 Dir[Rails.root.join("spec/support/**/*.rb")].each {|f| require f}
@@ -15,7 +21,7 @@ RSpec.configure do |config|
   config.use_instantiated_fixtures  = false
   config.fixture_path = "#{::Rails.root}/test/fixtures"
   config.global_fixtures =
-    %w{ blogs contents feedback profiles text_filters users }
+    %w{ feedback profiles text_filters users }
 
   config.before(:each) do
     Localization.lang = :default
