@@ -1,25 +1,25 @@
 # This file is better viewed with Textmate tasks plugin
 
-Before release:
-- change wiki documentation
-- select 20 themes to be kept and added to typogarden github account. Other themes will just be discontinued
-- generate release note
-- update website
-- generate typo archive
-- improve French translation (maybe)
+neuro for 6.0.2:
+- finish French translation
+- add a check on current version to alert users about new releases 
+
+mvz for 6.0.2
+- fix bug 136: Clicking Save as draft in published article unpublishes it
+- fix bug 193: Provide documentation on how to set up Typo on Debian and Ubuntu.
+- enable Rails multi-treading support.
+- avoid accidentally creating published articles with a permalink like draft-article-123
+- continued clean-ups and spec improvements.
 
 setup:
 - reduce setup width
 - add some margin above the error block
 
 general admin:
-- make info and confirmation message blocks a different color (yellow and green)
-- Move helps under text fields 
-- chose a different typo for labels and helps
 
 settings:
   general settings:
-  - make all fields the same width
+  
   write:
   - Make the url to ping box bigger
   - Update URLS (no one use technorati anymore huh)
@@ -31,4 +31,7 @@ Admin/tags:
   
 bugs:
 - Publishing bug with Rails3 handling timezone on date field. TODO: convert what's displayed according to the timezone. I think this will need a bunch of specs.
-- Tags randomly lost when editing a post
+
+under the hood:
+- Use standard rails localization
+- Split CSS between colors and structure so we can create 2 admin themes

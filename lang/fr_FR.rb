@@ -8,7 +8,7 @@ Localization.define("fr_FR") do |l|
   l.store "Successfully logged out", "Vous êtes maintenant déconnecté"
   l.store "login", "identifiant"
   l.store "signup", "s'identifier"
-  l.store "Recover your password", ""
+  l.store "Recover your password", "Je n'arrive pas à me connecter"
 
   # app/controllers/admin/categories_controller.rb
   l.store "Category was successfully saved.", "La catégorie a été enregistrée avec succès"
@@ -186,7 +186,7 @@ Localization.define("fr_FR") do |l|
   l.store "Categories", "Catégories"
 
   # app/views/admin/categories/index.html.erb
-  l.store "New Category", ""
+  l.store "New Category", "Nouvelle Catégorie"
 
   # app/views/admin/categories/new.html.erb
   l.store "%s Category", "%s catégories"
@@ -205,19 +205,20 @@ Localization.define("fr_FR") do |l|
   l.store "Drafts", ""
 
   # app/views/admin/content/_form.html.erb
-  l.store "Publish settings", ""
+  l.store "Publish settings", "Paramètres"
   l.store "Allow comments", "Autoriser les commentaires"
   l.store "Allow trackbacks", "Autoriser les rétroliens"
-  l.store "Password:", ""
+  l.store "Password:", "Mot de passe"
   l.store "Publish", "Publier"
-  l.store "Excerpt", "Extraît"
-  l.store "Excerpts are posts summaries that are shown on your blog homepage only but won’t appear on the post itself", ""
+  l.store "Excerpt", "Extrait"
+  l.store "Excerpts are posts summaries that are shown on your blog homepage only but won’t appear on the post itself", "Les résumés vous permettent d'afficher un texte descriptif de votre article à la place de ce dernier sur la page d'accueil de votre blog"
   l.store "Uploads", "Pièces jointes"
   l.store "Post settings", "Paramètres de l'article"
   l.store "Publish at", "Publié le"
   l.store "Permalink", "Lien permanent"
   l.store "Article filter", "Mise en forme des billets"
   l.store "Save as draft", "Sauver comme brouillon"
+  l.store "Visual", "Visuel"
 
   # app/views/admin/content/destroy.html.erb
   l.store "Are you sure you want to delete this article", "Êtes-vous certain de vouloir supprimer cet article"
@@ -232,7 +233,8 @@ Localization.define("fr_FR") do |l|
   l.store "Date", "Date"
   l.store "Feedback", "Commentaires"
   l.store "Filter", "Filtrer"
-  l.store "Manage articles", "Gérer les articles"
+  l.store "Manage articles", "Articles"
+  l.store "New Article", "Nouvel Article"
 
   # app/views/admin/dashboard/_comments.html.erb
   l.store "Latest Comments", "Derniers commentaires"
@@ -246,21 +248,25 @@ Localization.define("fr_FR") do |l|
   l.store "You have no internet connection", "Vous n'avez pas de connection à internet"
 
   # app/views/admin/dashboard/_overview.html.erb
-  l.store "This place gives you a quick overview of what happens on your Typo blog and what you can do. Maybe will you want to %s, %s or %s.", "Voici un rapide aperçu de ce que peux faire votre blog Typo. Peux-être voulez vous %s, %s ou %s"
+  l.store "This place gives you a quick overview of what happens on your Typo blog and what you can do. Maybe will you want to %s, %s or %s.", "Voici un rapide aperçu de ce que peut faire votre blog Typo. Peux-être voulez vous %s, %s ou %s"
   l.store "update your profile or change your password", "mettre votre profil à jour ou changer votre mot de passe"
   l.store "You can also do a bit of design, %s or %s.", "Vous pouvez également faire un peu de personnalisation, %s, %s"
   l.store "change your blog presentation", "changer l'apparence de votre blog"
   l.store "enable plugins", "activer des plugins"
   l.store "write a post", "écrire un article"
   l.store "write a page", "publier une page statique"
+  l.store "If you need help, %s. You can also browse our %s or %s to customize your Typo blog.", "Si vous avez besoin d'aide, n'hésitez pas à %s. Vous pouvez aussi visiter notre %s ou %s afin de personnaliser votre blog sous Typo"
+  l.store "read our documentation", "consulter notre documentation"
+  l.store "theme catalogue", "catalogue de thèmes"
+  l.store "download some plugins", "installer des plugins"
 
   # app/views/admin/dashboard/_popular.html.erb
   l.store "Most popular", "Billets les plus populaires"
   l.store "Nothing to show yet", "Rien à déclarer"
 
   # app/views/admin/dashboard/_posts.html.erb
-  l.store "Latest Posts", ""
-  l.store "No posts yet, why don't you start and write one", "Vous n'avez encore écrit aucun billet, pourquoi ne pas commencer par là"
+  l.store "Latest Posts", "Derniers articles"
+  l.store "No posts yet, why don't you start and write one", "Vous n'avez encore écrit aucun article, pourquoi ne pas commencer par là"
 
   # app/views/admin/dashboard/_typo_dev.html.erb
   l.store "Latest news from the Typo development blog", "Dernières nouvelles du blog officiel de Typo"
@@ -268,15 +274,16 @@ Localization.define("fr_FR") do |l|
 
   # app/views/admin/dashboard/_welcome.html.erb
   l.store "Welcome back, %s!", "Bienvenue, %s !"
-  l.store "%d articles and %d comments were posted since your last connexion", ""
+  l.store "%d articles and %d comments were posted since your last connexion", "Depuis votre dernière connexion, %d articles et %d commentaires ont été publiés"
   l.store "You're running Typo %s", "Vous utilisez Typo %s"
   l.store "Total posts : %d", "Nombre total d'articles : %d"
   l.store "Your posts : %d", "Vous avez publié : %d articles "
   l.store "Total comments : %d", "Nombre total de commentaires : %d"
   l.store "Spam comments : %d", "Nombre total de spam : %d"
+  l.store "In your spam queue : %d", "En attente de modération : %d"
 
   # app/views/admin/feedback/_button.html.erb
-  l.store "Select action", ""
+  l.store "Select action", "Choisir de..."
   l.store "Delete Checked Items", "Supprimer les commentaires sélectionnés"
   l.store "Delete all spam", "Supprimer tout le spam"
   l.store "Mark Checked Items as Spam", "Marquer ces commentaires comme du spam"
@@ -294,10 +301,10 @@ Localization.define("fr_FR") do |l|
   l.store "This comment by <strong>%s</strong> was flagged as spam, %s?", ""
 
   # app/views/admin/feedback/article.html.erb
-  l.store "Comments for %s", ""
+  l.store "Comments for %s", "Commentaire sur %s"
   l.store "Status", "État"
-  l.store "Comment Author", ""
-  l.store "Comment", ""
+  l.store "Comment Author", "Auteur"
+  l.store "Comment", "Commentaire"
 
   # app/views/admin/feedback/edit.html.erb
   l.store "Comments for", "Commentaires pour"
@@ -309,15 +316,15 @@ Localization.define("fr_FR") do |l|
   # app/views/admin/pages/_form.html.erb
   l.store "Online", "En ligne"
   l.store "Page settings", "Paramètres de la page"
-  l.store "Permanent link", ""
+  l.store "Permanent link", "Lien permanent"
 
   # app/views/admin/pages/destroy.html.erb
-  l.store "Pages","Gérer les pages"
+  l.store "Pages","Pages"
   l.store "Are you sure you want to delete the page", "Voulez-vous vraiment effacer cette page"
   l.store "Delete this page", "Supprimer cette page"
 
   # app/views/admin/pages/index.html.erb
-  l.store "New Page", ""
+  l.store "New Page", "Nouvelle page"
   l.store "Manage pages", "Administrer les pages"
 
   # app/views/admin/profiles/index.html.erb
@@ -348,6 +355,7 @@ Localization.define("fr_FR") do |l|
 
   # app/views/admin/resources/index.html.erb
   l.store "Filename", "Fichier"
+  l.store "Files", "Fichiers"
 
   # app/views/admin/settings/_submit.html.erb
   l.store "Update settings", ""
@@ -470,7 +478,7 @@ Localization.define("fr_FR") do |l|
 
   # app/views/admin/tags/index.html.erb
   l.store "Display Name", "Nom affiché"
-  l.store "Manage tags", "Gérer les tags"
+  l.store "Manage tags", "Mots clés"
 
   # app/views/admin/themes/catalogue.html.erb
   l.store "Sorry the theme catalogue is not available", "Désolé le catalogue de thèmes n'est pas disponible"
@@ -591,8 +599,8 @@ Localization.define("fr_FR") do |l|
 
   # app/views/layouts/administration.html.erb
   l.store "%s &raquo;", ""
-  l.store "is proudly powered by", ""
-  l.store "Dashboard", "Tableau de bord"
+  l.store "is proudly powered by", "tourne fièrement sous"
+  l.store "Dashboard", "Accueil"
 
   # app/views/setup/index.html.erb
   l.store "Welcome", ""
@@ -725,7 +733,7 @@ Localization.define("fr_FR") do |l|
   l.store "Copyright Information", "Informations sur le copyright"
   l.store "Dec", "Déc"
   l.store "December", "décembre"
-  l.store "Drafts:", "Brouillons"
+  l.store "Drafts", "Brouillons"
   l.store "Duration", "Durée"
   l.store "Edit MetaData", "Modifier les méta données"
   l.store "Editing pattern", "Éditer un motif"
@@ -782,7 +790,7 @@ Localization.define("fr_FR") do |l|
   l.store "September", "septembre"
   l.store "Set iTunes metadata for this enclosure", "Ajouter des méta données iTunes pour cette pièce jointe"
   l.store "Setting for channel", "Options des canaux"
-  l.store "Settings", "Configurations"
+  l.store "Settings", "Configuration"
   l.store "Show content", "Afficher le contenu"
   l.store "Statistics", "Statistiques"
   l.store "String", "Chaîne de caractères"
