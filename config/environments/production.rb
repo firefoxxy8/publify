@@ -18,8 +18,6 @@ TypoBlog::Application.configure do
   # Use a different cache store in production
   # config.cache_store = :mem_cache_store
 
-  config.action_controller.relative_url_root = "/blog"
-
   # Enable serving of images, stylesheets, and javascripts from an asset server
   # config.action_controller.asset_host = "http://assets.example.com"
 
