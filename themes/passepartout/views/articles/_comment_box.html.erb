@@ -1,10 +1,12 @@
-<% form_remote_tag :url => @article.comment_url,
+<%= form_remote_tag :url => @article.comment_url,
                     :position=> :bottom,
                     :update => {:success => 'commentList'},
                     :loading => "loading()",
                     :complete => "complete(request)",
                     :failure => "failure(request)",
-                    :html => {:id=>"commentform",:class=>"commentform"} do %>
+                    :html => {:id=>"commentform",:class=>"commentform"} \
+   do %>
+
 
 <div class="comment-box">
   <div id="errors"></div>
@@ -14,7 +16,7 @@
 
 
       <p><label for="comment_author"><%= _("Your name")%></label>
-      <%= text_field "comment", "author", :size => 20 %> <small><%= link_to_function("(leave url/email &#187;)", "Element.toggle('guest_url'); Element.toggle('guest_email')") %></small>
+      <%= text_field "comment", "author", :size => 20 %> <small><%= link_to_function("(#{_('leave url/email')} &#187;)".html_safe, "Element.toggle('guest_url'); Element.toggle('guest_email')") %></small>
     </p>
     <p id="guest_url" style="display:none;">
       <label for="comment_url"><%= _("Your blog")%></label>
