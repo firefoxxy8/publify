@@ -1,6 +1,8 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
 describe LocalController do
+  render_views
+
   it 'front page' do
     Factory(:blog)
     get :frontpage
