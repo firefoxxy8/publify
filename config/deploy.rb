@@ -68,7 +68,7 @@ end
 
 namespace :bundler do
   task :bundle_new_release, :roles => :app do
-    run "cd #{release_path} && bundle install --without test"
+    run "cd #{release_path} && /var/lib/gems/1.8/bin/bundle install --without test"
   end
 end
 
