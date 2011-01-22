@@ -16,7 +16,7 @@
           <% else -%>
           <h1 id="sitename"><%= link_to this_blog.blog_name, this_blog.base_url %></h1>
           <% end -%>
-      <%= @content_for_layout %>
+      <%= yield %>
       <%= javascript_tag 'show_dates_as_local_time()' %>
     </div>
 
