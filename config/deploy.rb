@@ -66,5 +66,11 @@ EOF
   end
 end
 
+namespace :bundler do
+  task :bundle_new_release, :roles => :app do
+    run "cd #{release_path} && bundle install --without test"
+  end
+end
+
 after "deploy:setup", "deploy:post_setup"
-after "deploy:update_code", "deploy:link_db_config", "deploy:fix_public_dir"
+after "deploy:update_code", "deploy:link_db_config", "deploy:fix_public_dir", "bundler:bundle_new_release
