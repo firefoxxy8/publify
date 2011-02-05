@@ -1,3 +1,4 @@
+# FIXME: This class is not a model anymore. Move elsewhere?
 class PageCache
   def self.logger
     ::Rails.logger
@@ -24,39 +25,10 @@ class PageCache
     # Ensure no one is going to wipe his own blog public directory
     # It happened once on a release and was no fun at all
     return if public_path == "#{::Rails.root.to_s}/public"
-    srcs = paths.inject([]) { |o,v|
-      o + Dir.glob(public_path + "/#{v}")
+    paths.each {|v|
+      FileUtils.rm_rf(Dir.glob(public_path + "/#{v}"))
     }
-    return true if srcs.empty?
-    trash = ::Rails.root.to_s + "/tmp/typodel.#{UUIDTools::UUID.random_create}"
-    FileUtils.makedirs(trash)
-    FileUtils.mv(srcs, trash, :force => true)
-    FileUtils.rm_rf(trash)
-  end
-
-
-  # DEPRECATED
-  #
-  # It's now deprecated. It's use only in migration
-  # (20090311160502_create_cache_informations.rb)
-  # Doesn't use anyway. The cache is now manage by CacheInformation
-  # Method to swepp_all cache is allways self.sweep_all
-  #
-  # DEPRECATED
-  def self.old_sweep_all
-    logger.debug "PageCache - sweep_all called by #{caller[1].inspect}"
-    unless Blog.default.nil?
-      self.zap_pages(%w{index.* articles.* pages page
-                     pages.* feedback feedback.*
-                     comments comments.*
-                     category categories.* xml
-                     sitemap.xml
-                     *.rss *.atom
-                     tag tags.* category archives.*})
-
-      self.zap_pages((1990..2020))
-      self.zap_pages([*1990..2020].collect { |y| "#{y}.*" })
-    end
+    return true
   end
 
 end

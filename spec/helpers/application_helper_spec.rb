@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe ApplicationHelper do
-  before(:each) { Factory(:blog) }
+  before(:each) { @blog = Factory(:blog) }
   describe '#render_flash' do
     it 'should render empty string if no flash' do
       render_flash.should == ''
@@ -33,4 +33,25 @@ describe ApplicationHelper do
       end
     end
   end
+  
+  describe '#display_date' do
+    before(:each) { 
+      @article = Factory.create(:article, :body => "hello world and im herer") 
+    }
+
+    ['%d/%m/%y', '%m/%m/%y', '%d %b %Y', '%b %d %Y'].each do |spec|
+      it "should return date with format #{spec}" do
+        @blog.date_format = spec
+        display_date(@article.published_at).should == @article.published_at.strftime(spec)
+      end
+    end
+        
+    ['%I:%M%p', '%H:%M', '%Hh%M'].each do |spec|
+      it "should return time with format #{spec}" do
+        @blog.time_format = spec
+        display_time(@article.published_at).should == @article.published_at.strftime(spec)
+      end
+    end    
+  end
+  
 end

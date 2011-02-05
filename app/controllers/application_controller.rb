@@ -14,14 +14,6 @@ class ApplicationController < ActionController::Base
         ActionController::Base.view_paths.last
       end
     end
-
-    # Log all path in file path_cache in Rails.root
-    # When we sweep all cache. We just need delete this file
-    def cache_page_with_log_page(content, path)
-      return unless perform_caching
-      cache_page_without_log_page(content, path)
-    end
-    alias_method_chain :cache_page, :log_page
   end
 
   protected
@@ -62,13 +54,6 @@ class ApplicationController < ActionController::Base
     @current_user = nil
   end
 
-  # Helper method to get the blog object.
-  def this_blog
-    @blog ||= Blog.default
-  end
-
-  helper_method :this_blog
-
   # The base URL for this request, calculated by looking up the URL for the main
   # blog index page.
   def blog_base_url
@@ -78,5 +63,9 @@ class ApplicationController < ActionController::Base
   def add_to_cookies(name, value, path=nil, expires=nil)
     cookies[name] = { :value => value, :path => path || "/#{controller_name}",
                        :expires => 6.weeks.from_now }
+  end
+
+  def this_blog
+    @blog ||= Blog.default
   end
 end

@@ -260,7 +260,7 @@ end
 
 describe ArticlesController, "previewing" do
   render_views
-  before(:each) { Factory(:blog) }
+  before(:each) { @blog = Factory(:blog) }
 
   describe 'with non logged user' do
     before :each do
@@ -268,7 +268,7 @@ describe ArticlesController, "previewing" do
       get :preview, :id => Factory(:article).id
     end
 
-    it 'should be redirect to login' do
+    it 'should redirect to login' do
       response.should redirect_to(:controller => "accounts/login", :action => :index)
     end
   end
@@ -281,7 +281,7 @@ describe ArticlesController, "previewing" do
 
     with_each_theme do |theme, view_path|
       it "should render template #{view_path}/articles/read" do
-        this_blog.theme = theme if theme
+        @blog.theme = theme if theme
         get :preview, :id => @article.id
         response.should render_template('articles/read')
       end
@@ -301,27 +301,6 @@ describe ArticlesController, "previewing" do
 end
 
 describe ArticlesController, "redirecting" do
-
-  it 'should split routing path' do
-    assert_routing "foo/bar/baz", {
-      :from => ["foo", "bar", "baz"],
-      :controller => 'articles', :action => 'redirect'}
-  end
-
-  it 'should redirect from articles_routing' do
-    assert_routing "articles", {
-      :from => ["articles"],
-      :controller => 'articles', :action => 'redirect'}
-    assert_routing "articles/foo", {
-      :from => ["articles", "foo"],
-      :controller => 'articles', :action => 'redirect'}
-    assert_routing "articles/foo/bar", {
-      :from => ["articles", "foo", "bar"],
-      :controller => 'articles', :action => 'redirect'}
-    assert_routing "articles/foo/bar/baz", {
-      :from => ["articles", "foo", "bar", "baz"],
-      :controller => 'articles', :action => 'redirect'}
-  end
 
   describe "with explicit redirects" do
     it 'should redirect from known URL' do
@@ -347,8 +326,8 @@ describe ArticlesController, "redirecting" do
     describe 'and non-empty relative_url_root' do
       before do
         b = Factory(:blog, :base_url => "http://test.host/blog")
-  # XXX: The following has no effect anymore.
-  # request.env["SCRIPT_NAME"] = "/blog"
+        # XXX: The following has no effect anymore.
+        # request.env["SCRIPT_NAME"] = "/blog"
       end
 
       it 'should redirect' do
@@ -420,33 +399,50 @@ describe ArticlesController, "redirecting" do
   end
 
   describe 'with permalink_format like %title%.html' do
-    render_views
 
     before(:each) do
       b = Factory(:blog, :permalink_format => '/%title%.html')
 
-      article = Factory(:article, :permalink => 'second-blog-article',
-        :published_at => Date.new(2004, 4, 1))
+      @article = Factory(:article, :permalink => 'second-blog-article',
+        :published_at => '2004-04-01 02:00:00',
+        :updated_at => '2004-04-01 02:00:00',
+        :created_at => '2004-04-01 02:00:00')
     end
 
-    it 'should redirect from default URL format' do
-      get :redirect, :from => ["2004", "04", "01", "second-blog-article"]
-      assert_response 301
-      response.should redirect_to("http://myblog.net/second-blog-article.html")
+    describe "accessing various non-matching URLs" do
+      it "should not find '.htmlsecond-blog-article'" do
+        get :redirect, :from => [".html#{@article.permalink}"]
+        assert_response 404
+      end
+
+      it "should not find 'second-blog-article.html.html'" do
+        get :redirect, :from => ["#{@article.permalink}.html.html"]
+        assert_response 404
+      end
+
+      it "should not find 'second-blog-article.html/foo'" do
+        get :redirect, :from => ["#{@article.permalink}.html", "foo"]
+        assert_response 404
+      end
     end
 
-    it 'should redirect from old-style URL format with "articles" part' do
-      get :redirect, :from => ["articles", "2004", "04", "01", "second-blog-article"]
-      assert_response 301
-      response.should redirect_to("http://myblog.net/second-blog-article.html")
+    describe "accessing legacy URLs" do
+      it 'should redirect from default URL format' do
+        get :redirect, :from => ["2004", "04", "01", "second-blog-article"]
+        assert_response 301
+        response.should redirect_to("http://myblog.net/second-blog-article.html")
+      end
+
+      it 'should redirect from old-style URL format with "articles" part' do
+        get :redirect, :from => ["articles", "2004", "04", "01", "second-blog-article"]
+        assert_response 301
+        response.should redirect_to("http://myblog.net/second-blog-article.html")
+      end
     end
 
-    describe 'render article' do
-
-      render_views
+    describe 'accessing an article' do
 
       before(:each) do
-        @article = Factory(:article)
         get :redirect, :from => ["#{@article.permalink}.html"]
       end
 
@@ -458,23 +454,27 @@ describe ArticlesController, "redirecting" do
         assigns(:article).should == @article
       end
 
-      it 'should have good rss feed link' do
-        response.should have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.rss\"]")
-      end
+      describe "the resulting page" do
+        render_views
 
-      it 'should have good atom feed link' do
-        response.should have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.atom\"]")
+        it 'should have good rss feed link' do
+          response.should have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.rss\"]")
+        end
+
+        it 'should have good atom feed link' do
+          response.should have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.atom\"]")
+        end
       end
 
     end
 
     describe 'rendering as atom feed' do
+      render_views
+
       before(:each) do
-        article = Factory.create(:article,
-          :created_at => Time.now - 1.day)
-        Factory.create(:trackback, :article => article, :published_at => Time.now - 1.day,
+        Factory.create(:trackback, :article => @article, :published_at => Time.now - 1.day,
           :published => true)
-        get :redirect, :from => ["#{article.permalink}.html.atom"]
+        get :redirect, :from => ["#{@article.permalink}.html.atom"]
       end
 
       it 'should render atom partial' do
@@ -487,8 +487,10 @@ describe ArticlesController, "redirecting" do
     end
 
     describe 'rendering as rss feed' do
+      render_views
+
       before(:each) do
-        get :redirect, :from => ["#{Factory(:article).permalink}.html.rss"]
+        get :redirect, :from => ["#{@article.permalink}.html.rss"]
       end
 
       it 'should render rss20 partial' do
@@ -501,8 +503,9 @@ describe ArticlesController, "redirecting" do
     end
 
     describe 'rendering comment feed with problematic characters' do
+      render_views
+
       before(:each) do
-        @article = Factory(:article)
         @comment = Factory(:comment, :article => @article)
         @comment.body = "&eacute;coute! 4 < 2, non?"
         @comment.save!
@@ -513,6 +516,56 @@ describe ArticlesController, "redirecting" do
         assigns(:article).should == @article
         assert_feedvalidator response.body
       end
+    end
+  end
+
+  describe "with a format containing a fixed component" do
+    before(:each) do
+      b = Factory(:blog, :permalink_format => '/foo/%title%')
+
+      @article = Factory(:article)
+    end
+
+    it "should find the article if the url matches all components" do
+      get :redirect, :from => ["foo", @article.permalink]
+      response.should be_success
+    end
+
+    it "should not find the article if the url does not match the fixed component" do
+      get :redirect, :from => ["bar", @article.permalink]
+      assert_response 404
+    end
+  end
+
+  describe "with a custom format with several fixed parts and several variables" do
+    before(:each) do
+      b = Factory(:blog, :permalink_format => '/foo/bar/%year%/%month%/%title%')
+
+      @article = Factory(:article)
+    end
+
+    it "should find the article if the url matches all components" do
+      get :redirect, :from => ["foo", "bar", @article.year_url, @article.month_url, @article.permalink]
+      response.should be_success
+    end
+
+    # FIXME: Documents current behavior; Blog URL format is only meant for one article shown
+    it "should not find the article if the url only matches some components" do
+      get :redirect, :from => ["foo", "bar", @article.year_url, @article.month_url]
+      assert_response 404
+    end
+
+    # TODO: Think about allowing this, and changing find_by_params_hash to match.
+    if false
+    it "should find the article if the url matches all fixed parts and no variable components" do
+      get :redirect, :from => ["foo", "bar"]
+      response.should be_success
+    end
+
+    it "should not find the article if the url does not match all fixed component" do
+      get :redirect, :from => ["foo"]
+      assert_response 404
+    end
     end
   end
 end

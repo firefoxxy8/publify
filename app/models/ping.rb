@@ -13,10 +13,10 @@ class Ping < ActiveRecord::Base
         @response = Net::HTTP.get_response(URI.parse(ping.url))
         send_pingback or send_trackback
       rescue Timeout::Error => err
-        RAILS_DEFAULT_LOGGER.info "Sending pingback or trackback timed out"
+        logger.info "Sending pingback or trackback timed out"
         return
       rescue => err
-        RAILS_DEFAULT_LOGGER.info "Sending pingback or trackback failed with error: #{err}"
+        logger.info "Sending pingback or trackback failed with error: #{err}"
       end
     end
 

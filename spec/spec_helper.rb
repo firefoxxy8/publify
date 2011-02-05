@@ -3,6 +3,7 @@ ENV["RAILS_ENV"] ||= 'test'
 require File.expand_path("../../config/environment", __FILE__)
 require 'rspec/rails'
 require 'factory_girl'
+require 'rexml/document'
 Factory.find_definitions
 
 User
@@ -50,10 +51,6 @@ def assert_xml(xml)
   assert_nothing_raised do
     assert REXML::Document.new(xml)
   end
-end
-
-def this_blog
-  Blog.default || Blog.create!
 end
 
 # test standard view and all themes

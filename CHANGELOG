@@ -1,88 +1,11 @@
-commit 36697da357206506abfb9e663836160f1b513868
+commit 700849a520ba50a87d8fb415bca1b788fc4d5b27
 Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 08:15:36 2011 +0100
+Date:   Tue Feb 1 20:38:32 2011 +0100
 
-    Fixing static sidebar. Old, deprecated code silently breaking. We need to find a way to test them
+    Fixes themes AJAX posting, sidebar config, categories reorder, posts filtering, themes form design
 
-commit a56235f6def39f9a09e6debea29ed4f8b68d4365
+commit 71e9cca8745936d1953a19357b261841a63f2365
 Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 08:20:12 2011 +0100
+Date:   Tue Feb 1 21:17:10 2011 +0100
 
-    Fixes plain editor: Image tag is inserted even if cancel is clicked.
-
-commit 1abbf208a16d1d1c1ab67f3efa20f8225a2caf8f
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 12:48:09 2011 +0100
-
-    Fix broken sidebars
-
-commit d56fe4b35561834e140954f934be19651ec46d00
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 13:45:55 2011 +0100
-
-    Improving dashboard adding some figures about spam
-
-commit 26a7a96be1ef0850660aa204bb25bd8c8ef6c8bc
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 13:50:21 2011 +0100
-
-    Fixes a 404 in the admin CSS
-
-commit 0f28fc40aceed70f2b127366522a1d8104134edd
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 14:06:24 2011 +0100
-
-    Improves French translation
-
-commit 22cb79fd4f68081a56525c08a4cfd50c5411dac5
-Author: Luuk Hendriks <luuk@luukhendriks.eu>
-Date:   Wed Jan 19 18:41:06 2011 +0100
-
-    (fix_themes) Added html_safe in scribbish, dirtylicious and typographic themes
-
-commit f2e9e80ebe8458c97e4aad4b0c75c76788a36be2
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 22:44:08 2011 +0100
-
-    Merges both files and resources view in the admin, first step to a (much) better file upload thing
-
-commit 59edfef7a2ddc2978443b88f9e0db5468744f855
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 23:30:35 2011 +0100
-
-    Adding an info class for info block
-
-commit 64cee956a670c5610b6f8bde1b2de9a438d40e9a
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 23:30:56 2011 +0100
-
-    Dashboard internationalization
-
-commit 1786e5fcb9b7064e402e519e7f930fcdb3058687
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 23:31:15 2011 +0100
-
-    Improve French translation
-
-commit 0240b5c1508f21509281fb867e632f953cabef16
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Wed Jan 19 23:47:35 2011 +0100
-
-    chose a different typo for labels and helps + Move helps under text fields
-
-commit f4eeaaa847b4c00cfe3508317401bea480f18116
-Author: Frédéric de Villamil <frederic@de-villamil.com>
-Date:   Thu Jan 20 13:20:10 2011 +0100
-
-    Removes some dead code
-
-commit 25e75851e435c1909ed567153a25cec4ae6a3e88
-Author: Matijs van Zuijlen <matijs@matijs.net>
-Date:   Fri Jan 21 16:26:32 2011 +0100
-
-    Comprehensively fix bug #192: multi-byte permalinks.
-    
-    - Do not escape the title upon conversion to permalink slug.
-    - Escape permalink sluk upon creation of permalink url.
-    - Search article by permalink and by escaped permalink to support legacy
-      permalink slugs.
+    Fixes comment preview
