@@ -163,7 +163,9 @@ class Admin::ContentController < Admin::BaseController
     @resources = Resource.find(:all, :conditions => "mime NOT LIKE '%image%'", :order => 'filename')
     @images = Resource.paginate :page => params[:page], :conditions => "mime LIKE '%image%'", :order => 'created_at DESC', :per_page => 10
     @article.keywords = Tag.collection_to_string @article.tags
+
     @article.attributes = params[:article]
+    @article.published_at = Time.parse(params[:article][:published_at]).utc rescue nil
 
     if request.post?
       set_article_author
@@ -173,6 +175,7 @@ class Admin::ContentController < Admin::BaseController
       if @article.save
         destroy_the_draft unless @article.draft
         set_article_categories
+        set_shortened_url if @article.published
         set_the_flash
         redirect_to :action => 'index'
         return
@@ -227,6 +230,19 @@ class Admin::ContentController < Admin::BaseController
         @article.categories << cat
       end
     end
+  end
+  
+  def set_shortened_url
+    # In a very short time, I'd like to have permalink modification generate a 301 redirect as well to
+    # So I set this up the big way now
+    
+    return unless Redirect.find_by_to_path(@article.permalink_url).nil?
+    
+    red = Redirect.new
+    red.from_path = red.shorten
+    red.to_path = @article.permalink_url
+    red.save
+    @article.redirects << red
   end
 
   def def_build_body

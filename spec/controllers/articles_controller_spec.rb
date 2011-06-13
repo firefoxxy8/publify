@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'spec_helper'
 
 describe ArticlesController do
@@ -36,6 +37,10 @@ describe ArticlesController do
     it 'should have good link feed atom' do
       response.should have_selector('head>link[href="http://test.host/articles.atom"]')
     end
+    
+    it 'should have a canonical url' do
+      response.should have_selector('head>link[href="http://test.host/"]')
+    end    
   end
 
 
@@ -66,6 +71,10 @@ describe ArticlesController do
 
       it 'should have good feed atom link' do
         response.should have_selector('head>link[href="http://test.host/search/a.atom"]')
+      end
+
+      it 'should have a canonical url' do
+        response.should have_selector('head>link[href="http://test.host/search/a"]')
       end
 
       it 'should have content markdown interpret and without html tag' do
@@ -140,12 +149,15 @@ describe ArticlesController do
     response.should render_template(:archives)
     assigns[:articles].should_not be_nil
     assigns[:articles].should_not be_empty
+    
+    response.should have_selector('head>link[href="http://test.host/archives"]')
+    
   end
 
   describe 'index for a month' do
 
     before :each do
-      Factory(:article, :published_at => Date.new(2004, 4, 23))
+      Factory(:article, :published_at => Time.utc(2004, 4, 23))
       get 'index', :year => 2004, :month => 4
     end
 
@@ -157,6 +169,10 @@ describe ArticlesController do
       assigns[:articles].should_not be_nil
       assigns[:articles].should_not be_empty
     end
+    
+    it 'should have a canonical url' do
+      response.should have_selector('head>link[href="http://test.host/2004/4/"]')
+    end    
   end
 
 end
@@ -349,7 +365,7 @@ describe ArticlesController, "redirecting" do
   it 'should get good article with utf8 slug' do
     Factory(:blog)
     utf8article = Factory.create(:utf8article, :permalink => 'ルビー',
-      :published_at => Date.new(2004, 6, 2))
+      :published_at => Time.utc(2004, 6, 2))
     get :redirect, :from => ['2004', '06', '02', 'ルビー']
     assigns(:article).should == utf8article
   end
@@ -358,7 +374,7 @@ describe ArticlesController, "redirecting" do
   it 'should get good article with pre-escaped utf8 slug using unescaped slug' do
     Factory(:blog)
     utf8article = Factory.create(:utf8article, :permalink => '%E3%83%AB%E3%83%93%E3%83%BC',
-      :published_at => Date.new(2004, 6, 2))
+      :published_at => Time.utc(2004, 6, 2))
     get :redirect, :from => ['2004', '06', '02', 'ルビー']
     assigns(:article).should == utf8article
   end
@@ -464,6 +480,11 @@ describe ArticlesController, "redirecting" do
         it 'should have good atom feed link' do
           response.should have_selector("head>link[href=\"http://myblog.net/#{@article.permalink}.html.atom\"]")
         end
+        
+        it 'should have a canonical url' do
+          response.should have_selector("head>link[href='http://myblog.net/#{@article.permalink}.html']")
+        end
+        
       end
 
     end

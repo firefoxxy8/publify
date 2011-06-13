@@ -78,28 +78,16 @@ module Admin::BaseHelper
     @class = @class != '' ? '' : 'class="shade"'
   end
 
-#  def reset_alternation
-#    @class = nil
-#  end
-
-#  def task_quickpost(title)
-#    link_to_function(title, toggle_effect('quick-post', 'Effect.BlindUp', "duration:0.4", "Effect.BlindDown", "duration:0.4"))
-#  end
-
   def task_overview
-    content_tag :li, link_to(_('Back to overview'), :action => 'index')
-  end
-
-  def task_edit_resource_mime(title,id)
-    link_to_function(title, toggle_effect('edit-resource-mime-' + id.to_s, 'Effect.BlindUp', "duration:0.4", "Effect.BlindDown", "duration:0.4"))
+    content_tag :li, link_to(_('Back to list'), :action => 'index')
   end
 
   def class_tab
-    'ui-state-default ui-corner-top'
+    ''
   end
 
   def class_selected_tab
-    'ui-state-default ui-corner-top ui-tabs-selected ui-state-active'
+    'active'
   end
 
   def class_write
@@ -111,7 +99,7 @@ module Admin::BaseHelper
 
   def class_content
     if controller.controller_name  =~ /content|pages|categories|resources|feedback/
-      return class_selected_tab if controller.action_name =~ /list|index|show|article/
+      return class_selected_tab if controller.action_name =~ /list|index|show|article|destroy/
     end
     class_tab
   end
@@ -170,16 +158,22 @@ module Admin::BaseHelper
     return result
   end
 
+    def get_short_url(item)
+      return "" if item.short_url.nil?
+      sprintf("<small>%s %s</small>", _("Short url:"), link_to(item.short_url, item.short_url))
+    end
+
   def show_actions item
     html = <<-HTML
       <div class='action'>
         <small>#{link_to _("Edit"), :action => 'edit', :id => item.id}</small> |
         <small>#{link_to_published item}</small> |
         <small>#{link_to _("Delete"), :action => 'destroy', :id => item.id}</small>
+        #{get_short_url item}
     </div>
     HTML
   end
-
+  
   def format_date(date)
     date.strftime('%d/%m/%Y')
   end
@@ -200,7 +194,7 @@ module Admin::BaseHelper
 
   def macro_help_popup(macro, text)
     unless current_user.editor == 'visual'
-      "<a rel='lightbox' href=\"#{url_for :controller => 'textfilters', :action => 'macro_help', :id => macro.short_name}\" onclick=\"return popup(this, 'Typo Macro Help')\">#{text}</a>"
+      "<a href=\"#{url_for :controller => 'textfilters', :action => 'macro_help', :id => macro.short_name}\" onclick=\"return popup(this, 'Typo Macro Help')\">#{text}</a>"
     end
   end
 

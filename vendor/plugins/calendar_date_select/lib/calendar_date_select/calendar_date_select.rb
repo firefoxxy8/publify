@@ -54,7 +54,7 @@ module CalendarDateSelect
   }
 
   # Returns the default_options hash.  These options are by default provided to every calendar_date_select control, unless otherwise overrided.
-  # 
+  #
   # Example:
   #   # At the bottom of config/environment.rb:
   #   CalendarDateSelect.default_options.update(
@@ -90,7 +90,7 @@ module CalendarDateSelect
   end
 
   def self.date_format_string(time = false)
-    format[:date] + (time ? format[:time] : "")
+    format[:date] + (time ? (format[:time] + " GMT%z (%Z)" ) : "")
   end
 
   def self.format_date(date)
