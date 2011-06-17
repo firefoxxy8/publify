@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   end
 
   # Front page
-  map.connect 'frontpage', :controller  => 'local', :action => 'frontpage'
+  match 'frontpage', :to => 'local#frontpage'
 
   # for CK Editor
   match 'fm/filemanager(/:action(/:id))', :to => 'Fm::Filemanager', :format => false
