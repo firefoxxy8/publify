@@ -1,27 +1,32 @@
 class AddArticleUserId < ActiveRecord::Migration
-  class BareArticle < ActiveRecord::Base
-    include BareMigration
+  class Article < ActiveRecord::Base
   end
 
-  class BareUser < ActiveRecord::Base
-    include BareMigration
+  class User < ActiveRecord::Base
   end
 
   def self.up
-    STDERR.puts "Linking article authors to users"
-    modify_tables_and_update(:add_column, BareArticle, :user_id, :integer) do |art|
-      art.user_id = (BareUser.find_by_name(art.author).id rescue nil)
-    end
-    user_first = BareUser.first
-    if user_first.nil?
-      user_id = 1
-    else
-      user_id = user_first.id
-    end
+    say_with_time "Linking article authors to users" do
+      add_column :articles, :user_id, :integer
 
-    BareArticle.find(:all, :conditions => 'user_id IS NULL').each do |art|
-      art.user_id = user_id
-      art.save!
+      Article.reset_column_information
+
+      Article.all.each do |art|
+        art.user_id = (User.find_by_name(art.author).id rescue nil)
+      end
+
+      user_first = User.first
+
+      if user_first.nil?
+        user_id = 1
+      else
+        user_id = user_first.id
+      end
+
+      Article.find(:all, :conditions => 'user_id IS NULL').each do |art|
+        art.user_id = user_id
+        art.save!
+      end
     end
   end
 

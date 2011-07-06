@@ -1,5 +1,5 @@
 class AddPermalink < ActiveRecord::Migration
-  class BareArticle < ActiveRecord::Base
+  class Article < ActiveRecord::Base
     include BareMigration
 
     def stripped_title(title)
@@ -9,7 +9,7 @@ class AddPermalink < ActiveRecord::Migration
     end
   end
 
-  class BareCategory < ActiveRecord::Base
+  class Category < ActiveRecord::Base
     include BareMigration
 
     def stripped_name
@@ -19,11 +19,11 @@ class AddPermalink < ActiveRecord::Migration
   end
 
   def self.up
-    STDERR.puts "Adding categories permalink"
-    modify_tables_and_update([:add_column, BareCategory, :permalink, :string],
-                             [:add_index,  BareCategory, :permalink]) do
-      BareCategory.find_and_update {|c| c.permalink ||= c.stripped_name }
-      BareArticle.find_and_update  {|a| a.permalink ||= a.stripped_title }
+    say_with_time "Adding categories permalink" do
+    add_column :categories, :permalink, :string
+    add_index :categories, :permalink
+      Category.find_and_update {|c| c.permalink ||= c.stripped_name }
+      Article.find_and_update  {|a| a.permalink ||= a.stripped_title }
     end
   end
 
