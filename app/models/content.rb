@@ -332,7 +332,7 @@ class Content < ActiveRecord::Base
   def get_rss_description
     return "" unless blog.rss_description
     return "" unless respond_to?(:user) && self.user && self.user.name
-    
+
     rss_desc = blog.rss_description_text
     rss_desc.gsub!('%author%', self.user.name)
     rss_desc.gsub!('%blog_url%', blog.base_url)
@@ -342,7 +342,7 @@ class Content < ActiveRecord::Base
   end
 
   def rss_description(xml)
-    post = html(blog.show_extended_on_rss ? :all : :body)
+    post = html(blog.hide_extended_on_rss ? :body : :all)
     post = "<p>This article is password protected. Please <a href='#{permalink_url}'>fill in your password</a> to read it</p>" unless self.class.name == 'Article' and (self.password.nil?  or self.password.empty?)
 
     post = post + get_rss_description
@@ -373,13 +373,13 @@ class Content < ActiveRecord::Base
   def normalized_permalink_url
     @normalized_permalink_url ||= Addressable::URI.parse(permalink_url).normalize
   end
-  
+
   def short_url
     # Double check because of crappy data in my own old database
     return unless self.published and self.redirects.count > 0
     URI.join(blog.base_url, self.redirects.first.from_path).to_s
   end
-  
+
 end
 
 class Object

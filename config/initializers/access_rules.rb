@@ -66,7 +66,7 @@ AccessControl.map :require => [ :admin, :publisher, :contributor ]  do |map|
     project.submenu "Articles",         { :controller => "admin/content",    :action => "index" }
     project.submenu "Comments",         { :controller => "admin/feedback" }
 	  project.submenu "Pages",            { :controller => "admin/pages",      :action => "index" }
-	  project.submenu "Categories",       { :controller => "admin/categories", :action => "index" }
+	  project.submenu "Categories",       { :controller => "admin/categories", :action => "new" }
 	  project.submenu "Files",            { :controller => "admin/resources",  :action => "index" }
 	  project.submenu "Tags",             { :controller => "admin/tags",       :action => "index" }
 	  project.submenu "",                      { :controller => "admin/comments", :action => "show" }
@@ -97,7 +97,6 @@ AccessControl.map :require => [ :admin, :publisher, :contributor ]  do |map|
     project.submenu "General settings", { :controller => "admin/settings", :action => "index" }
     project.submenu "Write",            { :controller => "admin/settings", :action => "write" }
     project.submenu "Feedback",         { :controller => "admin/settings", :action => "feedback" }
-    project.submenu "SEO",              { :controller => "admin/settings", :action => "seo" }
     project.submenu "Cache",            { :controller => "admin/cache", :action => "index" }
     project.submenu "Users",            { :controller => "admin/users", :action => "index" }
     project.submenu "Redirects",        { :controller => "admin/redirects", :action => "index" }
@@ -108,5 +107,11 @@ AccessControl.map :require => [ :admin, :publisher, :contributor ]  do |map|
     project.submenu "",                 { :controller => "admin/users", :action => "new" }
     project.submenu "",                 { :controller => "admin/users", :action => "edit" }
     project.submenu "",                 { :controller => "admin/users", :action => "destroy" }
+  end
+
+  map.project_module :seo, nil do |project|
+    project.menu    "SEO",              { :controller => "admin/seo", :action => "index" }
+    project.submenu "Global settings",  { :controller => "admin/seo", :action => "index" }
+
   end
 end

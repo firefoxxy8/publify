@@ -253,7 +253,7 @@ Localization.define("fr_FR") do |l|
 
   # app/views/admin/dashboard/_comments.html.erb
   l.store "Latest Comments", "Derniers commentaires"
-  l.store "No comments yet", "Aucun commentaire"
+  l.store "No comments yet", "Aucun commentaire pour l'instant"
   l.store "By %s on %s", "Par %s le %s"
 
   # app/views/admin/dashboard/_inbound.html.erb
@@ -414,7 +414,7 @@ Localization.define("fr_FR") do |l|
   l.store "Display", "Afficher"
   l.store "articles on my homepage by default", "billet sur ma page d'accueil params par défaut"
   l.store "articles in my news feed by default", "billets dans mon flux RSS par défaut"
-  l.store "Show full article on feed", "Afficher la totalité du billet dans le flux RSS"
+  l.store "Show only article excerpt on feed", "Tronquer les articles dans le flux RSS"
   l.store "Feedburner ID", "Identifiant Feedburner"
   l.store "General settings", "Options générales"
   l.store "You can use your Google Feedburner account instead of Typo feed URL. To enable this, fill this form with your Feedburner ID.", "Vous pouvez utiliser votre compte Google Feedburner plutôt que votre adresse de flux Typo. Pour l'autoriser, remplissez ce formulaire avec votre identifiant Feedburner."
@@ -431,10 +431,10 @@ Localization.define("fr_FR") do |l|
   l.store "Meta description", "Meta description"
   l.store "Meta keywords", "Meta mots-clés"
   l.store "Use RSS description", "Utilisation de la description RSS"
-  l.store "Index categories", "Index des catégories"
-  l.store "Unchecking this box will add <code>noindex, follow</code> meta tags in every category page, removing them from search engines and preventing duplicate content issues", "Désélectionner cette option ajoutera le métalabel <code>noindex, follow</code> dans toutes les pages de chaque categorie. Cela les enlevera des moteurs de recherches et préviendra ainsi des problèmes de contenu dupliqué."
-  l.store "Index tags", "Index des labels"
-  l.store "Unchecking this box will add <code>noindex, follow</code> meta tags in every tags page, removing them from search engines and preventing duplicate content issues", "Désélectionner cette option ajoutera le métalabel <code>noindex, follow</code> dans toutes les pages de chaque label. Cela les enlevera des moteurs de recherches et préviendra ainsi des problèmes de contenu dupliqué."
+  l.store "Do not index categories", "Ne pas indexer les catégories"
+  l.store "Checking this box will add <code>noindex, follow</code> meta tags in every category page, removing them from search engines and preventing duplicate content issues", "Sélectionner cette option ajoutera le métalabel <code>noindex, follow</code> dans toutes les pages de chaque categorie. Cela les enlevera des moteurs de recherches et préviendra ainsi des problèmes de contenu dupliqué."
+  l.store "Do not index tags", "Ne pas indexer les labels"
+  l.store "Checking this box will add <code>noindex, follow</code> meta tags in every tags page, removing them from search engines and preventing duplicate content issues", "Sélectionner cette option ajoutera le métalabel <code>noindex, follow</code> dans toutes les pages de chaque label. Cela les enlevera des moteurs de recherches et préviendra ainsi des problèmes de contenu dupliqué."
   l.store "Robots.txt", "Robots.txt"
   l.store "Your robots.txt file is not writeable. Typo won't be able to write it", "Votre fichier Robots.txt n'est pas écrivable. Typo ne peux donc pas y écrire."
   l.store "Search Engine Optimization", "Optimisation pour les moteurs de recherche"

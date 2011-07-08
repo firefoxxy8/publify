@@ -39,8 +39,8 @@ class GroupingController < ContentController
 
     return render_empty if @grouping.nil?
 
-    # For some reasons, the permalink_url does not take the pagination. 
-    suffix = params[:page].nil? ? "/" : "/page/#{params[:page]}/" 
+    # For some reasons, the permalink_url does not take the pagination.
+    suffix = params[:page].nil? ? "/" : "/page/#{params[:page]}/"
 
     @canonical_url = @grouping.permalink_url + suffix
     @page_title = "#{_(self.class.to_s.sub(/Controller$/,'').singularize)} #{@grouping.name}, "
@@ -61,7 +61,10 @@ class GroupingController < ContentController
 
     @page_title << " page " << params[:page] if params[:page]
     @description = (@grouping.description.blank?) ? "" : @grouping.description
-    @keywords = (@grouping.keywords.blank?) ? "" : @grouping.keywords
+    @keywords = "" 
+    @keywords << @grouping.keywords unless @grouping.keywords.blank?
+    @keywords << this_blog.meta_keywords unless this_blog.meta_keywords.blank?
+    
     @articles = @grouping.articles.paginate(:page => params[:page], :conditions => { :published => true}, :per_page => 10)
     render_articles
   end
@@ -86,7 +89,7 @@ class GroupingController < ContentController
         unless template_exists? "#{self.class.to_s.sub(/Controller$/,'').downcase}/index"
           @grouping_class = self.class.grouping_class
           @groupings = groupings
-          render :template => 'articles/groupings'
+          render 'articles/groupings'
         end
       end
     end
@@ -100,7 +103,7 @@ class GroupingController < ContentController
           return
         end
 
-        render :template => 'articles/index' unless template_exists? 'show'
+        render 'articles/index' unless template_exists? 'show'
       end
 
       format.atom { render_feed 'atom_feed',  @articles }
@@ -121,8 +124,8 @@ class GroupingController < ContentController
   private
   def set_noindex
     # irk there must be a better way to do this
-    @noindex = 1 if (grouping_class.to_s.downcase == "tag" and this_blog.index_tags == false)
-    @noindex = 1 if (grouping_class.to_s.downcase == "category" and this_blog.index_categories == false)
+    @noindex = 1 if (grouping_class.to_s.downcase == "tag" and this_blog.unindex_tags)
+    @noindex = 1 if (grouping_class.to_s.downcase == "category" and this_blog.unindex_categories)
     @noindex = 1 unless params[:page].blank?
   end
 end

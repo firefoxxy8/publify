@@ -29,13 +29,6 @@ describe Admin::SettingsController do
     end
   end
 
-  describe 'seo action' do
-    it 'should be success' do
-      get :seo
-      assert_template 'seo'
-    end
-  end
-
   describe 'redirect action' do
     it 'should be success' do
       get :redirect
@@ -49,7 +42,7 @@ describe Admin::SettingsController do
       post :update, {"from"=>"seo",
         "authenticity_token"=>"f9ed457901b96c65e99ecb73991b694bd6e7c56b",
         "setting"=>{"permalink_format"=>"/%title%.html",
-          "index_categories"=>"1",
+          "unindex_categories"=>"1",
           "google_analytics"=>"",
           "meta_keywords"=>"my keywords",
           "meta_description"=>"",
@@ -66,9 +59,8 @@ describe Admin::SettingsController do
 
     it 'should not save blog with bad permalink format' do
       @blog = Blog.default
-      good_update "setting" => {"permalink_format" => "title"}
-      response.should be_success
-      response.should render_template(:seo)
+      good_update "setting" => {"permalink_format" => "/%month%"}
+      response.should redirect_to(:action => 'seo')
       @blog.should == Blog.default
     end
   end

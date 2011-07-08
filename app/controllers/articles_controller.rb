@@ -32,7 +32,7 @@ class ArticlesController < ContentController
     @keywords = (this_blog.meta_keywords.empty?) ? "" : this_blog.meta_keywords
 
     suffix = (params[:page].nil? and params[:year].nil?) ? "" : "/"
-      
+
     @canonical_url = url_for(:only_path => false, :controller => 'articles', :action => 'index', :page => params[:page], :year => params[:year], :month => params[:month], :day => params[:day]) + suffix
     respond_to do |format|
       format.html { render_paginated_index }
@@ -51,7 +51,7 @@ class ArticlesController < ContentController
     @articles = this_blog.articles_matching(params[:q], :page => params[:page], :per_page => @limit)
     return error(_("No posts found..."), :status => 200) if @articles.empty?
     respond_to do |format|
-      format.html { render :action => 'search' }
+      format.html { render 'search' }
       format.rss { render :partial => "articles/rss20_feed", :locals => { :items => @articles } }
       format.atom { render :partial => "articles/atom_feed", :locals => { :items => @articles } }
     end
@@ -60,20 +60,20 @@ class ArticlesController < ContentController
   def live_search
     @search = params[:q]
     @articles = Article.search(@search)
-    render :layout => false, :action => :live_search
+    render :live_search, :layout => false
   end
 
   def preview
     @article = Article.last_draft(params[:id])
     @canonical_url = ""
-    render :action => 'read'
+    render 'read'
   end
 
   def check_password
     return unless request.xhr?
     @article = Article.find(params[:article][:id])
     if @article.password == params[:article][:password]
-      render :partial => 'articles/article_content'
+      render :partial => 'articles/full_article_content'
     else
       render :partial => 'articles/password_form', :locals => { :article => @article }
     end
@@ -163,7 +163,7 @@ class ArticlesController < ContentController
 
     auto_discovery_feed
     respond_to do |format|
-      format.html { render :template => '/articles/read' }
+      format.html { render '/articles/read' }
       format.atom { render_feed('atom') }
       format.rss  { render_feed('rss20') }
       format.xml  { render_feed('atom') }
@@ -171,7 +171,7 @@ class ArticlesController < ContentController
   rescue ActiveRecord::RecordNotFound
     error("Post not found...")
   end
-  
+
 
   def article_meta
     @keywords = ""
@@ -209,7 +209,7 @@ class ArticlesController < ContentController
       @auto_discovery_url_rss = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
       @auto_discovery_url_atom = "http://feeds2.feedburner.com/#{this_blog.feedburner_url}"
     end
-    render :action => 'index'
+    render 'index'
   end
 
   def index_title

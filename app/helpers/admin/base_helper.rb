@@ -3,11 +3,11 @@ module Admin::BaseHelper
 
   def subtabs_for(current_module)
     output = []
-    AccessControl.project_module(current_user.profile.label, current_module).submenus.each_with_index do |m,i|
+    AccessControl.project_module(current_user.profile_label, current_module).submenus.each_with_index do |m,i|
       current =
       output << subtab(_(m.name), (m.url[:controller] == params[:controller] && m.url[:action] == params[:action]) ? '' : m.url)
     end
-    content_for(:tasks) { output.join("\n") }
+    content_for(:tasks) { output.join("\n").html_safe }
   end
 
   def subtab(label, options = {})
@@ -56,13 +56,13 @@ module Admin::BaseHelper
   end
 
   def text_filter_options
-    TextFilter.find(:all).collect do |filter|
+    TextFilter.all.collect do |filter|
       [ filter.description, filter ]
     end
   end
 
   def text_filter_options_with_id
-    TextFilter.find(:all).collect do |filter|
+    TextFilter.all.collect do |filter|
       [ filter.description, filter.id ]
     end
   end
@@ -124,6 +124,11 @@ module Admin::BaseHelper
     class_tab
   end
 
+  def class_seo
+    return class_selected_tab if controller.controller_name  =~ /seo/
+    class_tab
+  end
+
   def collection_select_with_current(object, method, collection, value_method, text_method, current_value, prompt=false)
     result = "<select name='#{object}[#{method}]'>\n"
 
@@ -173,7 +178,7 @@ module Admin::BaseHelper
     </div>
     HTML
   end
-  
+
   def format_date(date)
     date.strftime('%d/%m/%Y')
   end
@@ -223,7 +228,7 @@ module Admin::BaseHelper
             :class => 'ui-button-text',
             :loading => "new Element.show('update_spinner_#{id}')",
             :success => "new Element.toggle('update_spinner_#{id}')",
-            :update => "#{update}")      
+            :update => "#{update}")
     link << image_tag("spinner-blue.gif", :id => "update_spinner_#{id}", :style => 'display:none;')
   end
 
@@ -248,4 +253,7 @@ module Admin::BaseHelper
     return picture
   end
 
+  def save_settings
+    "<p class='settings'>#{save(_("Update settings"))}</p>".html_safe
+  end
 end

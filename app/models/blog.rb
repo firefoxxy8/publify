@@ -16,6 +16,8 @@ class Blog < ActiveRecord::Base
     end
   }
 
+  validates :blog_name, :presence => true
+
   serialize :settings, Hash
 
   # Description
@@ -41,9 +43,10 @@ class Blog < ActiveRecord::Base
   setting :default_allow_comments,     :boolean, true
   setting :default_moderate_comments,  :boolean, false
   setting :link_to_author,             :boolean, false
-  setting :show_extended_on_rss,       :boolean, true
+  setting :show_extended_on_rss,       :boolean, true # deprecated but still needed for backward compatibility
+  setting :hide_extended_on_rss,       :boolean, false
   setting :theme,                      :string, 'true-blue-3'
-  setting :plugin_avatar,              :string, '' 
+  setting :plugin_avatar,              :string, ''
   setting :global_pings_disable,       :boolean, false
   setting :ping_urls,                  :string, "http://blogsearch.google.com/ping/RPC2\nhttp://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
   setting :send_outbound_pings,        :boolean, true
@@ -64,12 +67,17 @@ class Blog < ActiveRecord::Base
   setting :rss_description_text,       :string, "<hr /><p><small>Original article writen by %author% and published on <a href='%blog_url%'>%blog_name%</a> | <a href='%permalink_url%'>direct link to this article</a> | If you are reading this article elsewhere than <a href='%blog_url%'>%blog_name%</a>, it has been illegally reproduced and without proper authorization.</small></p>"
   setting :permalink_format,           :string, '/%year%/%month%/%day%/%title%'
   setting :robots,                     :string, ''
-  setting :index_categories,           :boolean, true
-  setting :index_tags,                 :boolean, true
+  setting :index_categories,           :boolean, true # deprecated but still needed for backward compatibility
+  setting :unindex_categories,         :boolean, false
+  setting :index_tags,                 :boolean, true # deprecated but still needed for backward compatibility
+  setting :unindex_tags,               :boolean, true
   setting :admin_display_elements,     :integer, 10
   setting :google_verification,        :string, ''
-  setting :nofollowify,                :boolean, true
+  setting :nofollowify,                :boolean, true # deprecated but still needed for backward compatibility
+  setting :dofollowify,                :boolean, false
   setting :use_canonical_url,          :boolean, false
+  setting :use_meta_keyword,           :boolean, true
+  
 
   validate :permalink_has_identifier
 

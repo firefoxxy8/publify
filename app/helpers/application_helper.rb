@@ -152,7 +152,6 @@ module ApplicationHelper
   end
 
   def use_canonical
-
     "<link rel='canonical' href='#{@canonical_url}' />".html_safe unless @canonical_url.nil?
   end
 
@@ -174,7 +173,7 @@ module ApplicationHelper
   #{ meta_tag 'robots', 'noindex, follow' unless @noindex.nil? }
   #{ meta_tag 'google-site-verification', this_blog.google_verification unless this_blog.google_verification.blank?}
   <meta name="generator" content="Typo #{TYPO_VERSION}" />
-  #{ meta_tag 'keywords', @keywords unless @keywords.blank? }
+  #{ show_meta_keyword }
   <link rel="EditURI" type="application/rsd+xml" title="RSD" href="#{ url_for :controller => '/xml', :action => 'rsd' }" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="#{ feed_atom }" />
   <link rel="alternate" type="application/rss+xml" title="RSS" href="#{ feed_rss }" />
@@ -238,28 +237,33 @@ module ApplicationHelper
       []
     end
   end
-  
+
   def new_js_distance_of_time_in_words_to_now(date)
     time = _(date.utc.strftime(_("%%a, %%d %%b %%Y %%H:%%M:%%S GMT", date.utc)))
     timestamp = date.utc.to_i ;
     "<span class=\"typo_date date gmttimestamp-#{timestamp}\" title=\"#{time}\" >#{time}</span>"
   end
-  
+
   def display_date(date)
     date.strftime(this_blog.date_format)
   end
-  
+
   def display_time(time)
     time.strftime(this_blog.time_format)
-  end  
-  
+  end
+
   def display_date_and_time(timestamp)
     return new_js_distance_of_time_in_words_to_now(timestamp) if this_blog.date_format == 'distance_of_time_in_words'
     "#{display_date(timestamp)} #{_('at')} #{display_time(timestamp)}"
   end
-  
+
   def js_distance_of_time_in_words_to_now(date)
     display_date_and_time date
+  end
+
+  def show_meta_keyword
+    return unless this_blog.use_meta_keyword 
+    meta_tag 'keywords', @keywords unless @keywords.blank?
   end
 
   def this_blog

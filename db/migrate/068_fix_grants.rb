@@ -21,7 +21,7 @@ class FixGrants < ActiveRecord::Migration
   end
 
   def self.up
-    STDERR.puts "Creating users rights"
+    say "Creating users rights"
     drop_table :profiles_to_rights
 
     create_table :profiles_rights, :force => true do |t|
@@ -108,8 +108,7 @@ class FixGrants < ActiveRecord::Migration
   end
 
   def self.down
-    drop_table :rights
-    drop_table :profiles_rights
+    rename_table :profiles_rights, :profiles_to_rights
   end
 end
 

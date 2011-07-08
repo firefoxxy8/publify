@@ -138,5 +138,70 @@ describe CategoriesController, "password protected article" do
 
     assert_tag :tag => "input",
       :attributes => { :id => "article_password" }
+  end  
+end
+
+describe CategoriesController, "SEO Options" do
+  render_views
+
+  before(:each) do 
+    @blog = Factory(:blog)
+    @cat = Factory(:category, :permalink => 'personal')
+    @cat.articles << Factory(:article)
+    @cat.save!
   end
+
+  it 'should have rel nofollow' do
+    @blog.unindex_categories = true
+    @blog.save
+    
+    get 'show', :id => 'personal'
+    response.should have_selector('head>meta[content="noindex, follow"]')
+  end
+
+  it 'should not have rel nofollow' do
+    @blog.unindex_categories = false
+    @blog.save
+
+    get 'show', :id => 'personal'
+    response.should_not have_selector('head>meta[content="noindex, follow"]')
+  end
+    
+  it 'category with keywords and activated option should have meta keywords' do
+    @blog.use_meta_keyword = true
+    @blog.save
+    @cat.keywords = "some, keywords"
+    @cat.save
+    
+    get 'show', :id => 'personal'
+    response.should have_selector('head>meta[name="keywords"]')
+  end
+  
+  it 'category without meta keywords and activated should not have meta keywords' do
+    @blog.use_meta_keyword = true
+    @blog.save
+    
+    get 'show', :id => 'personal'
+    response.should_not have_selector('head>meta[name="keywords"]')
+  end
+    
+  it 'category without meta keywords and activated options should not have meta keywords' do
+    @blog.use_meta_keyword = true
+    @blog.save
+    
+    get 'show', :id => 'personal'
+    response.should_not have_selector('head>meta[name="keywords"]')
+  end
+
+  it 'category with meta keywords and deactivated options should not have meta keywords' do
+    @blog.use_meta_keyword = false
+    @blog.save
+    @cat.keywords = "some, keywords"
+    @cat.save
+    
+    get 'show', :id => 'personal'
+    response.should_not have_selector('head>meta[name="keywords"]')
+  end
+  
+  
 end

@@ -10,10 +10,7 @@ describe Admin::CategoriesController do
 
   it "test_index" do
     get :index
-    assert_template 'index'
-    assigns(:categories).should_not be_nil
-    assert_tag :tag => "div",
-      :attributes => { :id => "category_container" }
+    assert_response :redirect, :action => 'index'
   end
 
   it "test_create" do
@@ -23,11 +20,21 @@ describe Admin::CategoriesController do
     end.should change(Category, :count)
   end
 
+  it "test_new" do
+    get :new
+    assert_template 'new'
+    assert_tag :tag => "div",
+    :attributes => { :id => "category_container" }
+  end
+
   it "test_edit" do
     get :edit, :id => Factory(:category).id
     assert_template 'new'
     assigns(:category).should_not be_nil
     assert assigns(:category).valid?
+    assigns(:categories).should_not be_nil
+    assert_tag :tag => "div",
+    :attributes => { :id => "category_container" }
   end
 
   it "test_update" do
@@ -50,23 +57,24 @@ describe Admin::CategoriesController do
   end
 
   it "test_order" do
-    second_cat = Factory(:category, :name => 'b')
-    first_cat = Factory(:category, :name => 'a')
-    third_cat = Factory(:category, :name => 'c')
-    assert_equal second_cat, Category.find(:first, :order => :position)
+    second_cat = Factory(:category, :name => 'b', :position => 1)
+    first_cat = Factory(:category, :name => 'a', :position => 3)
+    third_cat = Factory(:category, :name => 'c', :position => 2)
+    
+    assert_equal second_cat, Category.first
     get :order, :category_list => [first_cat.id, second_cat.id, third_cat.id]
     assert_response :success
-    assert_equal first_cat, Category.find(:first, :order => :position)
+    assert_equal first_cat, Category.first
   end
 
   it "test_asort sort by alpha" do
-    second_cat = Factory(:category, :name => 'b')
-    first_cat = Factory(:category, :name => 'a')
-    assert_equal second_cat, Category.find(:first, :order => :position)
+    second_cat = Factory(:category, :name => 'b', :position => 1)
+    first_cat = Factory(:category, :name => 'a', :position => 2)
+    assert_equal second_cat, Category.first
     get :asort
     assert_response :success
     assert_template "_categories"
-    assert_equal first_cat, Category.find(:first, :order => :position)
+    assert_equal first_cat, Category.first
   end
 
   it "test_category_container" do
