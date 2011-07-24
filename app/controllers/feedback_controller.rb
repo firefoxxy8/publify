@@ -33,8 +33,8 @@ class FeedbackController < ApplicationController
           render :text => 'this space left blank'
         end
       end
-      format.atom { render :partial => 'articles/atom_feed', :locals => { :items => get_feedback } }
-      format.rss { render :partial => 'articles/rss20_feed', :locals => { :items => get_feedback } }
+      format.atom { render_feed 'atom', get_feedback }
+      format.rss { render_feed 'rss', get_feedback }
     end
   end
 
@@ -46,5 +46,11 @@ class FeedbackController < ApplicationController
     else
       this_blog.published_feedback.find(:all, this_blog.rss_limit_params.merge(:order => 'created_at DESC'))
     end
+  end
+
+  def render_feed(format, collection)
+    ivar_name = "@#{self.class.to_s.sub(/Controller$/, '').underscore}"
+    instance_variable_set(ivar_name, collection)
+    render "index_#{format}_feed"
   end
 end

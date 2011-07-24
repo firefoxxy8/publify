@@ -35,9 +35,11 @@ Factory.define :user do |u|
   u.name 'Bond'
   u.notify_via_email false
   u.notify_on_new_articles false
-  u.notify_watch_my_articles false
   u.notify_on_comments false
   u.password 'top-secret'
+  u.settings({})
+  u.state 'active'
+  u.profile {Factory(:profile_contributor)}
 end
 
 def some_user
@@ -56,6 +58,11 @@ Factory.define :article do |a|
   a.allow_comments true
   a.published true
   a.allow_pings true
+end
+
+Factory.define :unpublished_article, :parent => :article do |a|
+  a.published_at nil
+  a.published false
 end
 
 def some_article
@@ -119,7 +126,6 @@ Factory.define :blog do |b|
   b.use_canonical_url true
 end
 
-
 Factory.define :profile_admin, :class => :profile do |l|
   l.label {Factory.next(:label)}
   l.nicename 'Typo administrator'
@@ -132,7 +138,7 @@ Factory.define :profile_publisher, :class => :profile do |l|
   l.modules [:dashboard, :write, :content, :feedback, :profile]
 end
 Factory.define :profile_contributor, :class => :profile do |l|
-  l.label 'contributor'
+  l.label {Factory.next(:label)}
   l.nicename 'Contributor'
   l.modules [:dashboard, :profile]
 end
@@ -145,6 +151,7 @@ end
 
 Factory.define :tag do |tag|
   tag.name {Factory.next(:name)}
+  tag.display_name { |a| a.name }
 end
 
 Factory.define :resource do |r|
@@ -189,7 +196,6 @@ Factory.define :page do |p|
 end
 
 Factory.define :trackback do |t|
-  t.article { some_article }
   t.published true
   t.state 'ham'
   t.status_confirmed true
@@ -198,4 +204,6 @@ Factory.define :trackback do |t|
   t.url 'http://www.example.com'
   t.excerpt 'This is an excerpt'
   t.guid 'dsafsadffsdsf'
+  t.created_at Time.now
+  t.updated_at Time.now
 end

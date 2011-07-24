@@ -1,5 +1,6 @@
 class Tag < ActiveRecord::Base
   has_and_belongs_to_many :articles, :order => 'created_at DESC'
+
   validates_uniqueness_of :name
 
   # Satisfy GroupingController needs.
@@ -77,14 +78,6 @@ class Tag < ActiveRecord::Base
       :id => permalink,
       :only_path => only_path
     )
-  end
-
-  def to_atom(xml)
-    xml.category :term => display_name, :scheme => permalink_url
-  end
-
-  def to_rss(xml)
-    xml.category display_name
   end
 
   def to_param

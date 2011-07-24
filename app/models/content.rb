@@ -239,7 +239,7 @@ class Content < ActiveRecord::Base
   # The default text filter.  Generally, this is the filter specified by blog.text_filter,
   # but comments may use a different default.
   def default_text_filter
-    blog.text_filter.to_text_filter
+    blog.text_filter_object
   end
 
   # Grab the text filter for this object.  It's either the filter specified by
@@ -301,34 +301,6 @@ class Content < ActiveRecord::Base
     return true
   end
 
-  def to_atom xml
-    xml.entry self, :url => permalink_url do |entry|
-      atom_author(entry)
-      atom_title(entry)
-      atom_groupings(entry)
-      atom_enclosures(entry)
-      atom_content(entry)
-    end
-  end
-
-  def to_rss(xml)
-    xml.item do
-      rss_title(xml)
-      rss_description(xml)
-      xml.pubDate published_at.rfc822
-      xml.guid "urn:uuid:#{guid}", :isPermaLink => "false"
-      rss_author(xml)
-      rss_comments(xml)
-      rss_groupings(xml)
-      rss_enclosure(xml)
-      rss_trackback(xml)
-      xml.link normalized_permalink_url
-    end
-  end
-
-  def rss_comments(xml)
-  end
-
   def get_rss_description
     return "" unless blog.rss_description
     return "" unless respond_to?(:user) && self.user && self.user.name
@@ -341,34 +313,6 @@ class Content < ActiveRecord::Base
     return rss_desc
   end
 
-  def rss_description(xml)
-    post = html(blog.hide_extended_on_rss ? :body : :all)
-    post = "<p>This article is password protected. Please <a href='#{permalink_url}'>fill in your password</a> to read it</p>" unless self.class.name == 'Article' and (self.password.nil?  or self.password.empty?)
-
-    post = post + get_rss_description
-
-    xml.description(post)
-  end
-
-  def rss_groupings(xml)
-  end
-
-  def rss_enclosure(xml)
-  end
-
-  def rss_trackback(xml)
-  end
-
-  def atom_groupings(xml)
-  end
-
-  def atom_enclosures(xml)
-  end
-
-  def atom_content(entry)
-    entry.content(html(:all), :type => 'html')
-  end
-
   # TODO: Perhaps permalink_url should produce valid URI's instead of IRI's
   def normalized_permalink_url
     @normalized_permalink_url ||= Addressable::URI.parse(permalink_url).normalize
@@ -377,7 +321,7 @@ class Content < ActiveRecord::Base
   def short_url
     # Double check because of crappy data in my own old database
     return unless self.published and self.redirects.count > 0
-    URI.join(blog.base_url, self.redirects.first.from_path).to_s
+    blog.url_for(redirects.first.from_path, :only_path => false)
   end
 
 end

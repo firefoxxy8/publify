@@ -4,6 +4,9 @@ require 'net/http'
 
 class Article < Content
   include TypoGuid
+  include ConfigManager
+  extend ActiveSupport::Memoizable
+  serialize :settings, Hash
 
   content_fields :body, :extended
 
@@ -52,6 +55,18 @@ class Article < Content
   scope :drafts, :conditions => ['state = ?', 'draft']
   scope :without_parent, {:conditions => {:parent_id => nil}}
   scope :child_of, lambda { |article_id| {:conditions => {:parent_id => article_id}} }
+
+  setting :password,                   :string, ''
+
+  def initialize(*args)
+    super
+    # Yes, this is weird - PDC
+    begin
+      self.settings ||= {}
+    rescue Exception => e
+      self.settings = {}
+    end
+  end
 
   def has_child?
     Article.exists?({:parent_id => self.id})
@@ -429,73 +444,12 @@ class Article < Content
     self.extended = parts[1] || ''
   end
 
-  ## Feed Stuff
-  def rss_trackback(xml)
-    return unless allow_pings?
-    xml.trackback :ping, trackback_url
-  end
-
-  def rss_enclosure(xml)
-    return if resources.empty?
-    res = resources.first
-    xml.enclosure(:url    => blog.file_url(res.filename),
-                  :length => res.size,
-                  :type   => res.mime)
-  end
-
-  def rss_groupings(xml)
-    categories.each { |v| v.to_rss(xml) }
-    tags.each       { |v| v.to_rss(xml) }
-  end
-
-  def rss_author(xml)
-    if link_to_author?
-      xml.author("#{user.email} (#{user.name})")
-    end
-  end
-
-  def rss_comments(xml)
-    xml.comments(normalized_permalink_url + "#comments")
-  end
-
   def link_to_author?
     !user.email.blank? && blog.link_to_author
   end
 
-  def rss_title(xml)
-    xml.title title
-  end
-
-  def atom_author(xml)
-    xml.author { xml.name user.name }
-  end
-
-  def atom_title(xml)
-    xml.title title, "type" => "html"
-  end
-
-  def atom_groupings(xml)
-    categories.each {|v| v.to_atom(xml) }
-    tags.each { |v| v.to_atom(xml) }
-  end
-
-  def atom_enclosures(xml)
-    resources.each do |value|
-      xml.with_options(value.size > 0 ? { :length => value.size } : { }) do |xm|
-        xm.link "rel" => "enclosure",
-        :type => value.mime,
-        :title => title,
-        :href => blog.file_url(value.filename)
-      end
-    end
-  end
-
-  def atom_content(entry)
-    post = blog.hide_extended_on_rss ? post = html(:body) : post = html(:all)
-    post = "<p>This article is password protected. Please <a href='#{permalink_url}'>fill in your password</a> to read it</p>" unless password.nil? or password.empty?
-
-    content = blog.rss_description ? post + get_rss_description : post
-    entry.content(content, :type => "html")
+  def password_protected?
+    not password.blank?
   end
 
   def add_comment(params)

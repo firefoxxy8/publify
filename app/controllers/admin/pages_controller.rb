@@ -10,10 +10,6 @@ class Admin::PagesController < Admin::BaseController
     @pages = Page.search_paginate(@search, :page => params[:page], :per_page => this_blog.admin_display_elements)
   end
 
-  def show
-    @page = Page.find(params[:id])
-  end
-
   accents = { ['á','à','â','ä','ã','Ã','Ä','Â','À'] => 'a',
     ['é','è','ê','ë','Ë','É','È','Ê'] => 'e',
     ['í','ì','î','ï','I','Î','Ì'] => 'i',
@@ -83,8 +79,8 @@ class Admin::PagesController < Admin::BaseController
   end
 
   def insert_editor
-    return unless params[:editor].to_s =~ /simple|visual/
-    current_user.editor = params[:editor].to_s
+    editor = (params[:editor].to_s =~ /simple|visual/) ? params[:editor].to_s : "visual"
+    current_user.editor = editor
     current_user.save!
 
     render :partial => "#{params[:editor].to_s}_editor"

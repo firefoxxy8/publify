@@ -28,19 +28,15 @@ class Comment < Feedback
     blog.comment_text_filter.to_text_filter
   end
 
-  def atom_author(xml)
-    xml.author { xml.name author }
-  end
-
   def rss_author(xml)
   end
 
-  def atom_title(xml)
-    xml.title "Comment on #{article.title} by #{author}", :type => 'html'
+  def rss_title(xml)
+    xml.title feed_title
   end
 
-  def rss_title(xml)
-    xml.title "Comment on #{article.title} by #{author}"
+  def feed_title
+    "Comment on #{article.title} by #{author}"
   end
 
   protected

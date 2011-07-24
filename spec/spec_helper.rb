@@ -53,6 +53,45 @@ def assert_xml(xml)
   end
 end
 
+def assert_atom10 feed, count
+  doc = Nokogiri::XML.parse(feed)
+  root = doc.css(':root').first
+  root.name.should == "feed"
+  root.namespace.href.should == "http://www.w3.org/2005/Atom"
+  root.css('entry').count.should == count
+end
+
+def assert_rss20 feed, count
+  doc = Nokogiri::XML.parse(feed)
+  root = doc.css(':root').first
+  root.name.should == "rss"
+  root['version'].should == "2.0"
+  root.css('channel item').count.should == count
+end
+
+def stub_default_blog
+  blog = stub_model(Blog, :base_url => "http://myblog.net")
+  view.stub(:this_blog) { blog }
+  Blog.stub(:default) { blog }
+  blog
+end
+
+def stub_full_article(time=Time.now)
+  author = stub_model(User, :name => "User Name")
+  text_filter = Factory.build(:textile)
+
+  a = stub_model(Article, :published_at => time, :user => author,
+                 :created_at => time, :updated_at => time,
+                 :title => "Foo Bar", :permalink => 'foo-bar',
+                 :guid => time.hash)
+  a.stub(:categories) { [Factory.build(:category)] }
+  a.stub(:published_comments) { [] }
+  a.stub(:resources) { [Factory.build(:resource)] }
+  a.stub(:tags) { [Factory.build(:tag)] }
+  a.stub(:text_filter) { text_filter }
+  a
+end
+
 # test standard view and all themes
 def with_each_theme
   yield nil, ""
@@ -163,3 +202,25 @@ module Webrat #:nodoc:
   end
 end
 
+def test_tabs(active)
+  ["Dashboard", "Articles", "Pages", "Media", "Design", "Settings", "SEO"].each do |l|
+    next if l == active
+    response.should_not have_selector(".active", :content => "#{l}")
+  end
+  response.should have_selector(".active", :content => "#{active}")
+end
+
+def test_subtabs(tabs, active)
+  tabs.each do |t|
+    if t == active
+      response.should_not have_selector("ul#subtabs>li>a", :content => active)
+      response.should have_selector("ul#subtabs>li", :content => active)      
+    else
+      response.should have_selector("ul#subtabs>li>a", :content => "#{t}")
+    end
+  end
+end
+
+def test_back_to_list
+  response.should have_selector("ul#subtabs>li>a", :content => "Back to list")
+end

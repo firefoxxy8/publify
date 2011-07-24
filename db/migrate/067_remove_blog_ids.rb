@@ -1,4 +1,15 @@
 class RemoveBlogIds < ActiveRecord::Migration
+  class Content < ActiveRecord::Base
+    set_inheritance_column :bogustype
+  end
+
+  class Feedback < ActiveRecord::Base
+    set_table_name "feedback"
+  end
+
+  class Sidebar < ActiveRecord::Base
+  end
+
   def self.up
     if adapter_name == 'PostgreSQL'
       indexes(:contents).each do |index|

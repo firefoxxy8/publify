@@ -11,9 +11,8 @@ class XmlController < ApplicationController
     'atom' => 'application/atom+xml',
     'googlesitemap' => 'application/xml' }
 
-  before_filter :adjust_format
-
   def feed
+    adjust_format
     @format = params[:format]
 
     unless @format
@@ -23,54 +22,41 @@ class XmlController < ApplicationController
     # TODO: Move redirects into config/routes.rb, if possible
     case params[:type]
     when 'feed'
-      redirect_to :controller => 'articles', :action => 'index', :format => @format, :status => 301
+      redirect_to :controller => 'articles', :action => 'index', :format => @format, :status => :moved_permanently
     when 'comments'
-      head :moved_permanently, :location => admin_comments_url(:format => @format)
+      redirect_to admin_comments_url(:format => @format), :status => :moved_permanently
     when 'article'
-      head :moved_permanently, :location => Article.find(params[:id]).permalink_by_format(@format)
+      redirect_to Article.find(params[:id]).permalink_by_format(@format), :status => :moved_permanently
     when 'category', 'tag', 'author'
-      head :moved_permanently, \
-        :location => self.send("#{params[:type]}_url", params[:id], :format => @format)
-    else
-      @items = Array.new
-      @blog = this_blog
-      # We use @feed_title.<< to destructively modify @feed_title, below, so
-      # make sure we have our own copy to modify.
-      @feed_title = this_blog.blog_name.dup
-      @link = this_blog.base_url
-      @self_url = url_for(params)
+      redirect_to self.send("#{params[:type]}_url", params[:id], :format => @format), :status => :moved_permanently
+    when 'trackbacks'
+      redirect_to trackbacks_url(:format => @format), :status => :moved_permanently
+    when 'sitemap'
+      prep_sitemap
 
-      if respond_to?("prep_#{params[:type]}")
-        self.send("prep_#{params[:type]}")
-      else
-        render :text => 'Unsupported action', :status => 404
-        return
-      end
-
-      # TODO: Use templates from articles controller.
       respond_to do |format|
         format.googlesitemap
-        format.atom
-        format.rss
       end
+    else
+      return render(:text => 'Unsupported feed type', :status => 404)
     end
   end
 
   # TODO: Move redirects into config/routes.rb, if possible
   def articlerss
-    redirect_to :action => 'feed', :format => 'rss', :type => 'article', :id => params[:id]
+    redirect_to Article.find(params[:id]).permalink_by_format('rss'), :status => :moved_permanently
   end
 
   def commentrss
-    redirect_to :action => 'feed', :format => 'rss', :type => 'comments'
+    redirect_to admin_comments_url(:format => 'rss'), :status => :moved_permanently
   end
 
   def trackbackrss
-    redirect_to :action => 'feed', :format => 'rss', :type => 'trackbacks'
+    redirect_to trackbacks_url(:format => 'rss'), :status => :moved_permanently
   end
 
   def rsd
-
+    render "rsd.rsd.builder"
   end
 
   protected
@@ -93,45 +79,17 @@ class XmlController < ApplicationController
     @items += association.find_already_published(:all, :limit => limit, :order => order)
   end
 
-  def prep_feed
-    fetch_items(:articles)
-  end
-
-  def prep_comments
-    fetch_items(:comments)
-    @feed_title << " comments"
-  end
-
-  def prep_trackbacks
-    fetch_items(:trackbacks)
-    @feed_title << " trackbacks"
-  end
-
-  def prep_article
-    article = this_blog.articles.find(params[:id])
-    fetch_items(article.comments, 'published_at DESC', 25)
-    @items.unshift(article)
-    @feed_title << ": #{article.title}"
-    @link = article.permalink_url
-  end
-
-  def prep_category
-    category = Category.find_by_permalink(params[:id])
-    fetch_items(category.articles)
-    @feed_title << ": Category #{category.name}"
-    @link = category.permalink_url
-  end
-
-  def prep_tag
-    tag = Tag.find_by_name(params[:id])
-    fetch_items(tag.articles)
-    @feed_title << ": Tag #{tag.display_name}"
-    @link = tag.permalink_url
-  end
-
   def prep_sitemap
+    @items = Array.new
+    @blog = this_blog
+
+    @feed_title = this_blog.blog_name
+    @link = this_blog.base_url
+    @self_url = url_for(params)
+
     fetch_items(:articles, 'created_at DESC', 1000)
     fetch_items(:pages, 'created_at DESC', 1000)
+
     @items += Category.find_all_with_article_counters(1000) unless this_blog.unindex_categories
     @items += Tag.find_all_with_article_counters(1000) unless this_blog.unindex_tags
   end

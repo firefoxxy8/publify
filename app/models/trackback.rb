@@ -49,19 +49,12 @@ class Trackback < Feedback
   def rss_author(xml)
   end
 
-  def atom_author(xml)
-    xml.author do
-      xml.name blog_name
-      xml.uri url
-    end
-  end
-
-  def atom_title(xml)
-    xml.title "Trackback from #{blog_name}: #{title} on #{article.title}", :type => 'html'
-  end
-
   def rss_title(xml)
-    xml.title "Trackback from #{blog_name}: #{title} on #{article.title}"
+    xml.title feed_title
+  end
+
+  def feed_title
+    "Trackback from #{blog_name}: #{title} on #{article.title}"
   end
 end
 

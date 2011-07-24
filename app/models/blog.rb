@@ -10,6 +10,8 @@ class Blog < ActiveRecord::Base
   extend ActiveSupport::Memoizable
   include Rails.application.routes.url_helpers
 
+  attr_accessor :custom_permalink
+
   validate(:on => :create) { |blog|
     unless Blog.count.zero?
       blog.errors.add(:base, "There can only be one...")
@@ -33,6 +35,7 @@ class Blog < ActiveRecord::Base
   setting :sp_article_auto_close,      :integer, 0
   setting :sp_url_limit,               :integer, 0
   setting :sp_akismet_key,             :string, ''
+  setting :use_recaptcha,              :boolean, false
 
   # Mostly Behaviour
   setting :text_filter,                :string, 'markdown smartypants'
@@ -70,14 +73,14 @@ class Blog < ActiveRecord::Base
   setting :index_categories,           :boolean, true # deprecated but still needed for backward compatibility
   setting :unindex_categories,         :boolean, false
   setting :index_tags,                 :boolean, true # deprecated but still needed for backward compatibility
-  setting :unindex_tags,               :boolean, true
+  setting :unindex_tags,               :boolean, false
   setting :admin_display_elements,     :integer, 10
   setting :google_verification,        :string, ''
   setting :nofollowify,                :boolean, true # deprecated but still needed for backward compatibility
   setting :dofollowify,                :boolean, false
   setting :use_canonical_url,          :boolean, false
   setting :use_meta_keyword,           :boolean, true
-  
+
 
   validate :permalink_has_identifier
 
@@ -184,8 +187,8 @@ class Blog < ActiveRecord::Base
   end
 
   def permalink_has_identifier
-    unless permalink_format =~ /(%year%|%month%|%day%|%title%)/
-      errors.add(:permalink_format, _("You need a permalink format with an identifier : %%month%%, %%year%%, %%day%%, %%title%%"))
+    unless permalink_format =~ /(%title%)/
+      errors.add(:permalink_format, _("You need a permalink format with an identifier : %%title%%"))
     end
 
     # A permalink cannot end in .atom or .rss. it's reserved for the feeds
@@ -196,6 +199,10 @@ class Blog < ActiveRecord::Base
 
   def root_path
     split_base_url[:root_path]
+  end
+
+  def text_filter_object
+    text_filter.to_text_filter
   end
 
   private

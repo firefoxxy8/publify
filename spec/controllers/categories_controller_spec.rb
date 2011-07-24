@@ -1,14 +1,19 @@
 require 'spec_helper'
 
 describe CategoriesController, "/index" do
-  render_views
-
   before do
-    Factory(:blog)
-    3.times {
-      category = Factory(:category)
-      2.times { category.articles << Factory(:article) }
-    }
+    blog = stub_model(Blog, :base_url => "http://myblog.net", :theme => "typographic")
+    Blog.stub(:default) { blog }
+    Trigger.stub(:fire) { }
+
+    categories = 3.times.map do
+      Factory.build(:category).tap do |category|
+        articles = 2.times.map { stub_model(Article) }
+        category.stub(:published_articles) { articles }
+        category.stub(:display_name) { category.id.to_s }
+      end
+    end
+    Category.stub(:find) { categories }
   end
 
   describe "normally" do
@@ -19,7 +24,12 @@ describe CategoriesController, "/index" do
     specify { response.should be_success }
     specify { response.should render_template('articles/groupings') }
     specify { assigns(:groupings).should_not be_empty }
-    specify { response.body.should have_selector('ul.categorylist') }
+
+    describe "when rendered" do
+      render_views
+
+      specify { response.body.should have_selector('ul.categorylist') }
+    end
   end
 
   describe "if :index template exists" do
@@ -34,16 +44,20 @@ describe CategoriesController, "/index" do
   end
 end
 
-describe CategoriesController, '/articles/category/personal' do
-  render_views
-  
+describe CategoriesController, '#show' do
   before do
-    Factory(:blog)
-    cat = Factory(:category, :permalink => 'personal', :name => 'Personal')
-    cat.articles << Factory(:article)
-    cat.articles << Factory(:article)
-    cat.articles << Factory(:article)
-    cat.articles << Factory(:article)
+    blog = stub_model(Blog, :base_url => "http://myblog.net", :theme => "typographic",
+                      :use_canonical_url => true)
+    Blog.stub(:default) { blog }
+    Trigger.stub(:fire) { }
+
+    category = stub_model(Category, :permalink => 'personal', :name => 'Personal')
+    published_articles = 2.times.map { stub_full_article }
+    category.stub(:published_articles) { published_articles }
+    articles = published_articles + [ stub_full_article ]
+    category.stub(:articles) { articles }
+
+    Category.stub(:find_by_permalink) { category }
   end
 
   def do_get
@@ -51,20 +65,12 @@ describe CategoriesController, '/articles/category/personal' do
   end
 
   it 'should be successful' do
-    do_get()
+    do_get
     response.should be_success
   end
 
-  it 'should raise ActiveRecord::RecordNotFound' do
-    Category.should_receive(:find_by_permalink) \
-      .with('personal').and_raise(ActiveRecord::RecordNotFound)
-    lambda do
-      do_get
-    end.should raise_error(ActiveRecord::RecordNotFound)
-  end
-
-  it 'should render :show by default'
-  if false
+  it 'should render :show by default' do
+    pending "should use views to implement this"
     controller.stub!(:template_exists?) \
       .and_return(true)
     do_get
@@ -79,40 +85,52 @@ describe CategoriesController, '/articles/category/personal' do
   end
 
   it 'should show only published articles' do
-    Category.delete_all
-    c = Factory(:category, :permalink => 'personal')
-    3.times {Factory(:article, :categories => [c])}
-    Factory(:article, :categories => [c], :published_at => nil,
-      :published => false, :state => 'draft')
-    c = Category.find_by_permalink("personal")
-    c.articles.size.should == 4
-    c.published_articles.size.should == 3
     do_get
-    response.should be_success
-    assigns[:articles].size.should == 3
+    assigns(:articles).size.should == 2
   end
 
   it 'should set the page title to "Category Personal"' do
     do_get
     assigns[:page_title].should == 'Category Personal, everything about Personal'
-    response.should have_selector('head>link[href="http://myblog.net/category/personal/"]')
   end
 
-  it 'should have a canonical URL' do
-    do_get
-    response.should have_selector('head>link[href="http://myblog.net/category/personal/"]')
+  describe "when rendered" do
+    render_views
+  
+    it 'should have a canonical URL' do
+      do_get
+      response.should have_selector('head>link[href="http://myblog.net/category/personal/"]')
+    end
   end
 
   it 'should render the atom feed for /articles/category/personal.atom' do
     get 'show', :id => 'personal', :format => 'atom'
-    response.should render_template('articles/_atom_feed')
+    response.should render_template('articles/index_atom_feed')
+    @layouts.keys.compact.should be_empty
   end
 
   it 'should render the rss feed for /articles/category/personal.rss' do
     get 'show', :id => 'personal', :format => 'rss'
-    response.should render_template('articles/_rss20_feed')
+    response.should render_template('articles/index_rss_feed')
+    @layouts.keys.compact.should be_empty
+  end
+end
+
+describe CategoriesController, "#show with a non-existent category" do
+  before do
+    blog = stub_model(Blog, :base_url => "http://myblog.net", :theme => "typographic",
+                      :use_canonical_url => true)
+    Blog.stub(:default) { blog }
+    Trigger.stub(:fire) { }
   end
 
+  it 'should raise ActiveRecord::RecordNotFound' do
+    Category.should_receive(:find_by_permalink) \
+      .with('foo').and_raise(ActiveRecord::RecordNotFound)
+    lambda do
+      get 'show', :id => 'foo'
+    end.should raise_error(ActiveRecord::RecordNotFound)
+  end
 end
 
 describe CategoriesController, 'empty category life-on-mars' do
@@ -144,64 +162,45 @@ end
 describe CategoriesController, "SEO Options" do
   render_views
 
-  before(:each) do 
-    @blog = Factory(:blog)
-    @cat = Factory(:category, :permalink => 'personal')
-    @cat.articles << Factory(:article)
-    @cat.save!
-  end
-
-  it 'should have rel nofollow' do
-    @blog.unindex_categories = true
-    @blog.save
-    
-    get 'show', :id => 'personal'
-    response.should have_selector('head>meta[content="noindex, follow"]')
-  end
-
-  it 'should not have rel nofollow' do
-    @blog.unindex_categories = false
-    @blog.save
-
-    get 'show', :id => 'personal'
-    response.should_not have_selector('head>meta[content="noindex, follow"]')
-  end
-    
-  it 'category with keywords and activated option should have meta keywords' do
-    @blog.use_meta_keyword = true
-    @blog.save
-    @cat.keywords = "some, keywords"
-    @cat.save
-    
-    get 'show', :id => 'personal'
-    response.should have_selector('head>meta[name="keywords"]')
-  end
-  
-  it 'category without meta keywords and activated should not have meta keywords' do
-    @blog.use_meta_keyword = true
-    @blog.save
-    
-    get 'show', :id => 'personal'
-    response.should_not have_selector('head>meta[name="keywords"]')
-  end
-    
-  it 'category without meta keywords and activated options should not have meta keywords' do
-    @blog.use_meta_keyword = true
-    @blog.save
-    
+  it 'category without meta keywords and activated options (use_meta_keyword ON) should not have meta keywords' do
+    Factory(:blog, :use_meta_keyword => true)
+    cat = Factory(:category, :permalink => 'personal')
+    Factory(:article, :categories => [cat])
     get 'show', :id => 'personal'
     response.should_not have_selector('head>meta[name="keywords"]')
   end
 
-  it 'category with meta keywords and deactivated options should not have meta keywords' do
-    @blog.use_meta_keyword = false
-    @blog.save
-    @cat.keywords = "some, keywords"
-    @cat.save
-    
-    get 'show', :id => 'personal'
-    response.should_not have_selector('head>meta[name="keywords"]')
+  it 'category with keywords and activated option (use_meta_keyword ON) should have meta keywords' do
+    Factory(:blog, :use_meta_keyword => true)
+    after_build_category_should_have_selector('head>meta[name="keywords"]')
   end
-  
-  
+
+  it 'category with meta keywords and deactivated options (use_meta_keyword off) should not have meta keywords' do
+    Factory(:blog, :use_meta_keyword => false)
+    after_build_category_should_not_have_selector('head>meta[name="keywords"]')
+  end
+
+  it 'with unindex_categories (set ON), should have rel nofollow' do
+    Factory(:blog, :unindex_categories => true)
+    after_build_category_should_have_selector('head>meta[content="noindex, follow"]')
+  end
+
+  it 'without unindex_categories (set OFF), should not have rel nofollow' do
+    Factory(:blog, :unindex_categories => false)
+    after_build_category_should_not_have_selector('head>meta[content="noindex, follow"]')
+  end
+
+  def after_build_category_should_have_selector expected
+    cat = Factory(:category, :permalink => 'personal', :keywords => "some, keywords")
+    Factory(:article, :categories => [cat])
+    get 'show', :id => 'personal'
+    response.should have_selector(expected)
+  end
+
+  def after_build_category_should_not_have_selector expected
+    cat = Factory(:category, :permalink => 'personal', :keywords => "some, keywords")
+    Factory(:article, :categories => [cat])
+    get 'show', :id => 'personal'
+    response.should_not have_selector(expected)
+  end
 end

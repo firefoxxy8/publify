@@ -14,8 +14,9 @@ class CommentsController < FeedbackController
     end
 
     set_comment_cookies
+    use_recaptcha = Blog.default.settings["use_recaptcha"]
 
-    if @comment.save
+    if ((use_recaptcha && verify_recaptcha(:model => @comment)) || !use_recaptcha)  && @comment.save
       if request.xhr?
         render :partial => '/articles/comment', :object => @comment
       else

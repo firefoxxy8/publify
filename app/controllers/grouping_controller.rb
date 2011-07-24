@@ -24,7 +24,7 @@ class GroupingController < ContentController
   end
 
   def index
-    set_noindex
+    @noindex = set_noindex params[:page]
     self.groupings = grouping_class.paginate(:page => params[:page], :per_page => 100)
     @page_title = "#{self.class.to_s.sub(/Controller$/,'')}"
     @keywords = ""
@@ -34,38 +34,16 @@ class GroupingController < ContentController
   end
 
   def show
-    set_noindex
+    @noindex = set_noindex params[:page]
     @grouping = grouping_class.find_by_permalink(params[:id])
-
     return render_empty if @grouping.nil?
 
-    # For some reasons, the permalink_url does not take the pagination.
-    suffix = params[:page].nil? ? "/" : "/page/#{params[:page]}/"
+    @canonical_url = permalink_with_page @grouping, params[:page]
+    @page_title = show_page_title_for @grouping, params[:page]
+    @description = @grouping.description.to_s
+    @keywords = keyword_from @grouping
+    @articles = @grouping.published_articles.paginate(:page => params[:page], :per_page => 10)
 
-    @canonical_url = @grouping.permalink_url + suffix
-    @page_title = "#{_(self.class.to_s.sub(/Controller$/,'').singularize)} #{@grouping.name}, "
-
-    if @grouping.respond_to? :description and
-        not @grouping.description.nil?
-      @page_title += @grouping.description
-    else
-      @page_title += "#{_('everything about')} "
-
-      if @grouping.respond_to? :display_name and
-          not @grouping.display_name.nil?
-        @page_title += @grouping.display_name
-      else
-        @page_title += @grouping.name
-      end
-    end
-
-    @page_title << " page " << params[:page] if params[:page]
-    @description = (@grouping.description.blank?) ? "" : @grouping.description
-    @keywords = "" 
-    @keywords << @grouping.keywords unless @grouping.keywords.blank?
-    @keywords << this_blog.meta_keywords unless this_blog.meta_keywords.blank?
-    
-    @articles = @grouping.articles.paginate(:page => params[:page], :conditions => { :published => true}, :per_page => 10)
     render_articles
   end
 
@@ -81,6 +59,38 @@ class GroupingController < ContentController
 
   def groupings
     instance_variable_get(self.class.ivar_name)
+  end
+
+  def keyword_from grouping
+    keywords = ""
+    keywords << grouping.keywords unless grouping.keywords.blank?
+    keywords << this_blog.meta_keywords unless this_blog.meta_keywords.blank?
+    keywords
+  end
+
+  def show_page_title_for grouping, page
+    title = "#{_(self.class.to_s.sub(/Controller$/,'').singularize)} #{grouping.name}, "
+
+    if grouping.respond_to? :description and
+        not grouping.description.nil?
+      title += grouping.description
+    else
+      title += "#{_('everything about')} "
+      if grouping.respond_to? :display_name and
+          not grouping.display_name.nil?
+        title += grouping.display_name
+      else
+        title += grouping.name
+      end
+    end
+    title << " page " << page if page
+    title
+  end
+
+  # For some reasons, the permalink_url does not take the pagination.
+  def permalink_with_page grouping, page
+    suffix = page.nil? ? "/" : "/page/#{page}/"
+    grouping.permalink_url + suffix
   end
 
   def render_index(groupings)
@@ -106,14 +116,14 @@ class GroupingController < ContentController
         render 'articles/index' unless template_exists? 'show'
       end
 
-      format.atom { render_feed 'atom_feed',  @articles }
-      format.rss  { render_feed 'rss20_feed', @articles }
+      format.atom { render_feed 'atom', @articles }
+      format.rss  { render_feed 'rss', @articles }
     end
   end
 
-  def render_feed(template, collection)
-    articles = collection[0,this_blog.limit_rss_display]
-    render :partial => template.sub(%r{^(?:articles/)?}, 'articles/'), :locals => { :items => articles }
+  def render_feed(format, collection)
+    @articles = collection[0,this_blog.limit_rss_display]
+    render "articles/index_#{format}_feed", :layout => false
   end
 
   def render_empty
@@ -122,10 +132,10 @@ class GroupingController < ContentController
   end
 
   private
-  def set_noindex
+  def set_noindex page = nil
     # irk there must be a better way to do this
-    @noindex = 1 if (grouping_class.to_s.downcase == "tag" and this_blog.unindex_tags)
-    @noindex = 1 if (grouping_class.to_s.downcase == "category" and this_blog.unindex_categories)
-    @noindex = 1 unless params[:page].blank?
+    return 1 if (grouping_class.to_s.downcase == "tag" and this_blog.unindex_tags)
+    return 1 if (grouping_class.to_s.downcase == "category" and this_blog.unindex_categories)
+    return 1 unless page.blank?
   end
 end

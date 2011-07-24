@@ -73,14 +73,6 @@ class Category < ActiveRecord::Base
     )
   end
 
-  def to_atom(xml)
-    xml.category :term => permalink, :label => name, :scheme => permalink_url
-  end
-
-  def to_rss(xml)
-    xml.category name
-  end
-
   def to_param
     permalink
   end
