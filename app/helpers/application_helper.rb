@@ -83,7 +83,6 @@ module ApplicationHelper
         }, :class => "admintools") <<
       link_to('edit', {
         :controller => "admin/feedback",
-        :article_id => model.article.id,
         :action => "edit", :id => model.id
         }, :class => "admintools"),
       :id => "admin_#{type}_#{model.id}", :style => "display: none")
