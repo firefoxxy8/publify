@@ -20,7 +20,7 @@ Factory.sequence :file_name do |f|
 end
 
 Factory.sequence :category do |n|
-  "category_#{n}"
+  "c_#{n}"
 end
 
 basetime = Time.now
@@ -39,7 +39,8 @@ Factory.define :user do |u|
   u.password 'top-secret'
   u.settings({})
   u.state 'active'
-  u.profile {Factory(:profile_contributor)}
+  u.profile {Factory(:profile)}
+  u.text_filter {Factory(:textile)}
 end
 
 def some_user
@@ -104,7 +105,6 @@ Factory.define :blog do |b|
   b.base_url 'http://myblog.net'
   b.hide_extended_on_rss true
   b.blog_name 'test blog'
-  b.title_prefix 1
   b.limit_article_display 2
   b.sp_url_limit 3
   b.plugin_avatar ''
@@ -126,21 +126,25 @@ Factory.define :blog do |b|
   b.use_canonical_url true
 end
 
-Factory.define :profile_admin, :class => :profile do |l|
+Factory.define :profile, :class => :profile do |l|
   l.label {Factory.next(:label)}
-  l.nicename 'Typo administrator'
-  l.modules [:dashboard, :write, :content, :feedback, :themes, :sidebar, :users, :settings, :profile]
+  l.nicename 'Typo contributor'
+  l.modules [:dashboard, :profile]
 end
 
-Factory.define :profile_publisher, :class => :profile do |l|
-  l.label 'published'
-  l.nicename 'Blog publisher'
-  l.modules [:dashboard, :write, :content, :feedback, :profile]
-end
-Factory.define :profile_contributor, :class => :profile do |l|
+Factory.define :profile_admin, :parent => :profile do |l|
   l.label {Factory.next(:label)}
-  l.nicename 'Contributor'
-  l.modules [:dashboard, :profile]
+  l.nicename 'Typo administrator'
+  l.modules [:dashboard, :write, :articles, :pages, :feedback, :themes, :sidebar, :users, :seo, :media, :settings, :profile]
+end
+
+Factory.define :profile_publisher, :parent => :profile do |l|
+  l.label 'publisher'
+  l.nicename 'Blog publisher'
+  l.modules [:users, :dashboard, :write, :articles, :pages, :feedback, :media]
+end
+
+Factory.define :profile_contributor, :parent => :profile do |l|
 end
 
 Factory.define :category do |c|
@@ -198,6 +202,7 @@ end
 Factory.define :trackback do |t|
   t.published true
   t.state 'ham'
+  t.article { some_article }
   t.status_confirmed true
   t.blog_name 'Trackback Blog'
   t.title 'Trackback Entry'

@@ -121,6 +121,22 @@ class Sidebar < ActiveRecord::Base
   class << self
     attr_accessor :view_root
 
+    def find *args
+      begin
+        super
+      rescue ActiveRecord::SubclassNotFound => e
+        available = available_sidebars.map {|klass| klass.to_s}
+        set_inheritance_column :bogus
+        super.each do |record|
+          unless available.include? record.type
+            record.delete
+          end
+        end
+        set_inheritance_column :type
+        super
+      end
+    end
+
     def find_all_visible
       find :all, :conditions => 'active_position is not null', :order => 'active_position'
     end
@@ -175,6 +191,10 @@ class Sidebar < ActiveRecord::Base
 
     def short_name
       self.to_s.underscore.split(%r{_}).first
+    end
+
+    def path_name
+      self.to_s.underscore
     end
 
     def display_name(new_dn = nil)
@@ -249,7 +269,7 @@ class Sidebar < ActiveRecord::Base
   end
 
   def content_partial
-    "/sidebars/#{short_name}/content"
+    "/#{self.class.path_name}/content"
   end
 
   def to_locals_hash

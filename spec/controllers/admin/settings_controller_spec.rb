@@ -5,7 +5,10 @@ describe Admin::SettingsController do
 
   before(:each) do
     Factory(:blog)
-    request.session = { :user => users(:tobi).id }
+    #TODO Remove this line after remove FIXTURE
+    Profile.delete_all
+    alice = Factory(:user, :login => 'alice', :profile => Factory(:profile_admin, :label => Profile::ADMIN))
+    request.session = { :user => alice.id }
   end
 
   describe "#index" do
@@ -78,7 +81,6 @@ describe Admin::SettingsController do
           "google_analytics"=>"",
           "meta_keywords"=>"my keywords",
           "meta_description"=>"",
-          "title_prefix"=>"1",
           "rss_description"=>"1",
           "robots"=>"User-agent: *\r\nDisallow: /admin/\r\nDisallow: /page/\r\nDisallow: /cgi-bin \r\nUser-agent: Googlebot-Image\r\nAllow: /*",
           "index_tags"=>"1"}}.merge(options)
