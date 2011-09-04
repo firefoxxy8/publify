@@ -2,15 +2,11 @@ require 'spec_helper'
 
 describe Admin::UsersController, "rough port of the old functional test" do
   render_views
-  fixtures :users
 
   describe ' when you are admin' do
     before(:each) do
       Factory(:blog)
-      #TODO delete this after remove fixtures...
-      Profile.delete_all
-      User.delete_all
-      @admin = Factory(:user, :profile => Factory(:profile_admin, :label => Profile::ADMIN))
+            @admin = Factory(:user, :profile => Factory(:profile_admin, :label => Profile::ADMIN))
       request.session = { :user => @admin.id }
     end
 
@@ -25,11 +21,13 @@ describe Admin::UsersController, "rough port of the old functional test" do
       assert_template 'new'
 
       post :new, :user => { :login => 'errand', :email => 'corey@test.com',
-        :password => 'testpass', :password_confirmation => 'testpass', :profile_id => 1 }
+        :password => 'testpass', :password_confirmation => 'testpass', :profile_id => 1, 
+        :nickname => 'fooo', :firstname => 'bar' }
       response.should redirect_to(:action => 'index')
     end
 
     describe '#EDIT action' do
+
       describe 'with POST request' do
         it 'should redirect to index' do
           post :edit, :id => @admin.id, :user => { :login => 'errand',

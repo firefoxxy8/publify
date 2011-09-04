@@ -19,6 +19,9 @@ class Resource < ActiveRecord::Base
       if up.kind_of?(Tempfile) and !up.local_path.nil? and File.exist?(up.local_path)
         File.chmod(0600, up.local_path)
         FileUtils.copy(up.local_path, fullpath)
+      elsif up.kind_of?(ActionDispatch::Http::UploadedFile)
+        File.chmod(0600, up.path)
+        FileUtils.copy(up.path, fullpath)
       else
         bytes = up
         if up.kind_of?(StringIO)
@@ -29,6 +32,7 @@ class Resource < ActiveRecord::Base
       end
       File.chmod(0644, fullpath)
       self.size = File.stat(fullpath).size rescue 0
+      create_thumbnail
       update
       self
     rescue

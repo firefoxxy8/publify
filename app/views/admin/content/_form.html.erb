@@ -16,6 +16,7 @@
       <%= check_box 'article', 'published'  %>
       <label for="article_published"><%= _("Published") %></label><br />
       <label for="article_password"><%= _("Password:") %></label><br />
+      <%= get_post_types %><br />
       <%= password_field :article, :password, :class => 'small' %>
       <p class='right'>
         <input id='save_draft' type="submit" value="<%= _('Save as draft') %>" name="article[draft]" class='ed_button' />
@@ -29,12 +30,7 @@
 
   <div class='widget-container'>
     <h3 class='dark'><%= _("Categories") %></h3>
-    <div class='widget-content'>
-      <%- Category.all.each do |cat| %>
-        <%= check_box_tag('categories[]', cat.id, (@article.categories.map(&:id).include? cat.id), :id => "category_#{h(cat.id)}") %>
-        <%= label_tag "category_#{h(cat.id)}", h(cat.name) %><br />
-      <% end -%>
-    </div>
+    <%= render 'categories' %>
   </div>
 </div>
 
