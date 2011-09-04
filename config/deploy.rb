@@ -11,6 +11,7 @@ set :scm, :git
 
 set :deploy_via, :copy
 set :copy_strategy, :export
+set :copy_exclude, "**/*.psd"
 
 role :app, "mist.matijs.net"
 role :web, "mist.matijs.net"
@@ -68,7 +69,7 @@ end
 
 namespace :bundler do
   task :bundle_new_release, :roles => :app do
-    run "cd #{release_path} && /var/lib/gems/1.8/bin/bundle install --without test"
+    run "cd #{release_path} && /var/lib/gems/1.8/bin/bundle install --local --without test"
   end
 end
 
