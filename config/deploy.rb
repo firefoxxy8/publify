@@ -17,7 +17,6 @@ role :app, "mist.matijs.net"
 role :web, "mist.matijs.net"
 role :db,  "mist.matijs.net", :primary => true
 
-
 namespace :deploy do
   # FIXME: Make more descriptive name
   task :post_setup do
@@ -50,6 +49,7 @@ EOF
     sudo "chmod 750 #{deploy_to}/#{shared_dir}/config"
   end
 
+  desc "Give apache access to public directory"
   task :fix_public_dir do
     # Make public dir accessible to www-data
     sudo "chgrp -R www-data #{current_release}/public"
