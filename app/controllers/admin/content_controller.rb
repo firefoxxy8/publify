@@ -54,11 +54,12 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def insert_editor
-    editor = (params[:editor].to_s =~ /simple|visual/) ? params[:editor].to_s : "visual"
+    editor = 'visual'
+    editor = 'simple' if params[:editor].to_s == 'simple'
     current_user.editor = editor
     current_user.save!
 
-    render :partial => "#{params[:editor].to_s}_editor"
+    render :partial => "#{editor}_editor"
   end
 
   def category_add; do_add_or_remove_fu; end
@@ -77,8 +78,8 @@ class Admin::ContentController < Admin::BaseController
 
   def attachment_save(attachment)
     begin
-      Resource.create(:filename => attachment.original_filename,
-                      :mime => attachment.content_type.chomp, :created_at => Time.now).write_to_disk(attachment)
+      Resource.create(:filename => attachment.original_filename, :mime => attachment.content_type.chomp, 
+                      :created_at => Time.now).write_to_disk(attachment)
     rescue => e
       logger.info(e.message)
       nil
@@ -86,7 +87,10 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def autosave
-    get_or_build_article
+    id = params[:id]
+    id = params[:article][:id] if params[:article] && params[:article][:id]
+    @article = Article.get_or_build_article(id)
+    @article.text_filter = current_user.text_filter if current_user.simple_editor?
 
     # This is ugly, but I have to check whether or not the article is
     # published to create the dummy draft I'll replace later so that the
@@ -96,7 +100,6 @@ class Admin::ContentController < Admin::BaseController
       @article = Article.drafts.child_of(parent_id).first || Article.new
       @article.allow_comments = this_blog.default_allow_comments
       @article.allow_pings    = this_blog.default_allow_pings
-      @article.text_filter    = (current_user.editor == 'simple') ? current_user.text_filter : 1
       @article.parent_id      = parent_id
     end
 
@@ -137,7 +140,11 @@ class Admin::ContentController < Admin::BaseController
   def real_action_for(action); { 'add' => :<<, 'remove' => :delete}[action]; end
 
   def new_or_edit
-    get_or_build_article
+    id = params[:id]
+    id = params[:article][:id] if params[:article] && params[:article][:id]
+    @article = Article.get_or_build_article(id)
+    @article.text_filter = current_user.text_filter if current_user.simple_editor?
+
     @post_types = PostType.find(:all)
     if request.post?
       if params[:article][:draft]
@@ -147,7 +154,6 @@ class Admin::ContentController < Admin::BaseController
           @article = Article.drafts.child_of(parent_id).first || Article.new
           @article.allow_comments = this_blog.default_allow_comments
           @article.allow_pings    = this_blog.default_allow_pings
-          @article.text_filter    = (current_user.editor == 'simple') ? current_user.text_filter : 1
           @article.parent_id      = parent_id
         end
       else
@@ -157,17 +163,11 @@ class Admin::ContentController < Admin::BaseController
       end
     end
 
-    @macros = TextFilter.available_filters.select { |filter| TextFilterPlugin::Macro > filter }
     @article.published = true
-
-    @resources = Resource.find(:all, :conditions => "mime NOT LIKE '%image%'", :order => 'filename')
-    @images = Resource.paginate :page => params[:page], :conditions => "mime LIKE '%image%'", :order => 'created_at DESC', :per_page => 10
     @article.keywords = Tag.collection_to_string @article.tags
-
     @article.attributes = params[:article]
     # TODO: Consider refactoring, because double rescue looks... weird.
-    @article.published_at = DateTime.strptime(params[:article][:published_at], "%B %e, %Y %I:%M %p GMT%z").utc rescue
-                            Time.parse(params[:article][:published_at]).utc rescue nil
+    @article.published_at = DateTime.strptime(params[:article][:published_at], "%B %e, %Y %I:%M %p GMT%z").utc rescue Time.parse(params[:article][:published_at]).utc rescue nil
 
     if request.post?
       set_article_author
@@ -183,6 +183,10 @@ class Admin::ContentController < Admin::BaseController
         return
       end
     end
+
+    @images = Resource.images_by_created_at.paginate(:page => params[:page], :per_page => 10)
+    @resources = Resource.without_images_by_filename
+    @macros = TextFilter.macro_filters
     render 'new'
   end
 
@@ -256,21 +260,7 @@ class Admin::ContentController < Admin::BaseController
 
   end
 
-  def get_or_build_article
-    params[:id] = params[:article][:id] if params[:article] and params[:article][:id]
-    @article = case params[:id]
-             when nil
-               Article.new.tap do |art|
-                 art.allow_comments = this_blog.default_allow_comments
-                 art.allow_pings    = this_blog.default_allow_pings
-                 art.text_filter    = (current_user.editor == 'simple') ? current_user.text_filter : 1
-               end
-            else
-              Article.find(params[:id])
-            end
-  end
-
   def setup_resources
-    @resources = Resource.find(:all, :order => 'created_at DESC')
+    @resources = Resource.by_created_at
   end
 end

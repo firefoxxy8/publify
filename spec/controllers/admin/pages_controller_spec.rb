@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'spec_helper'
 
 describe Admin::PagesController do
@@ -157,6 +158,24 @@ describe Admin::PagesController do
     post(:new, 'page' => base_page({:published_at => (Time.now + 1.hour).to_s}))
     assigns(:page).redirects.count.should == 0
   end
+
+  describe 'insert_editor action' do
+    it 'should render _simple_editor' do
+      get(:insert_editor, :editor => 'simple')
+      response.should render_template('_simple_editor')
+    end
+
+    it 'should render _visual_editor' do
+      get(:insert_editor, :editor => 'visual')
+      response.should render_template('_visual_editor')
+    end
+
+    it 'should render _visual_editor even if editor param is set to unknow editor' do
+      get(:insert_editor, :editor => 'unknow')
+      response.should render_template('_visual_editor')
+    end
+  end
+
 
 
 end

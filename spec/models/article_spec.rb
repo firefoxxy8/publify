@@ -335,7 +335,6 @@ describe Article do
 
   describe "#default_text_filter" do
     it "returns the blog's text filter" do
-      Blog.any_instance.stub!(:text_filter_object).and_return(Factory(:textile))
       a = Article.new
       assert_equal @blog.text_filter, a.default_text_filter.name
     end
@@ -565,6 +564,39 @@ describe Article do
         a.should == @a
       end
     end
+  end
+
+  describe "#get_or_build" do
+    context "when no params given" do
+      before(:each) do
+        @article = Article.get_or_build_article
+      end
+
+      it "should return article" do
+        @article.should be_a(Article)
+      end
+
+      context "should have blog default value for" do
+        it "allow_comments" do
+          @article.allow_comments.should be == @blog.default_allow_comments
+        end
+        it "allow_pings" do
+          @article.allow_pings.should be == @blog.default_allow_pings
+        end
+        it "should have default text filter" do
+          @article.text_filter.should be == @blog.text_filter_object
+        end
+      end
+    end
+
+    context "when id params given" do
+      it "should return article" do
+        already_exist_article = Factory.create(:article)
+        article = Article.get_or_build_article(already_exist_article.id)
+        article.should be == already_exist_article
+      end
+    end
+
   end
 end
 

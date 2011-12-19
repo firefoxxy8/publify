@@ -125,8 +125,6 @@ describe Admin::ContentController do
 
     before do
       Factory(:blog)
-      #TODO delete this after remove fixture
-      Profile.delete_all
       @user = Factory(:user, :profile => Factory(:profile_admin, :label => Profile::ADMIN))
       request.session = { :user => @user.id }
     end
@@ -141,6 +139,10 @@ describe Admin::ContentController do
       response.should render_template('_visual_editor')
     end
 
+    it 'should render _visual_editor even if editor param is set to unknow editor' do
+      get(:insert_editor, :editor => 'unknow')
+      response.should render_template('_visual_editor')
+    end
   end
 
 
@@ -198,8 +200,7 @@ describe Admin::ContentController do
     end
 
     it 'should create article with no pings' do
-      post(:new, 'article' => {:allow_pings => '0'},
-                 'categories' => [Factory(:category).id])
+      post(:new, 'article' => {:allow_pings => '0', 'title' => 'my Title'}, 'categories' => [Factory(:category).id])
       assigns(:article).should be_allow_comments
       assigns(:article).should_not be_allow_pings
       assigns(:article).should be_published
@@ -212,9 +213,9 @@ describe Admin::ContentController do
     end
 
     it 'should create new published article' do
-      lambda do
-        post :new, 'article' => base_article
-      end.should change(Article, :count_published_articles)
+      Article.count.should be == 1
+      post :new, 'article' => base_article
+      Article.count.should be == 2
     end
 
     it 'should redirect to show' do
@@ -258,7 +259,7 @@ describe Admin::ContentController do
              :article =>  base_article(:published_at => (Time.now + 1.hour).to_s) )
         assert_response :redirect, :action => 'show'
         assigns(:article).should_not be_published
-      end.should_not change(Article, :count_published_articles)
+      end.should_not change(Article.published, :count)
       assert_equal 1, Trigger.count
       assigns(:article).redirects.count.should == 0
     end

@@ -21,10 +21,10 @@ class ArticlesController < ContentController
 
     unless params[:year].blank?
       @noindex = 1
-      @articles = Article.paginate :page => params[:page], :conditions => { :published_at => time_delta(*params.values_at(:year, :month, :day)), :published => true }, :order => 'published_at DESC', :per_page => @limit
+      @articles = Article.published_at(params.values_at(:year, :month, :day)).paginate :page => params[:page], :per_page => @limit
     else
       @noindex = 1 unless params[:page].blank?
-      @articles = Article.paginate :page => params[:page], :conditions => ['published = ? AND published_at < ?', true, Time.now], :order => 'published_at DESC', :per_page => @limit
+      @articles = Article.published.paginate :page => params[:page], :per_page => @limit
     end
 
     @page_title = index_title
@@ -75,7 +75,7 @@ class ArticlesController < ContentController
     return unless request.xhr?
     @article = Article.find(params[:article][:id])
     if @article.password == params[:article][:password]
-      render :partial => 'articles/full_article_content'
+      render :partial => 'articles/full_article_content', :locals => { :article => @article }
     else
       render :partial => 'articles/password_form', :locals => { :article => @article }
     end

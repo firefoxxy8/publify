@@ -1,3 +1,40 @@
+/* CSS Document */
+/*------------------------------------------------------------------
+[Master Stylesheet]
+
+Project:  Typo administration
+Version:  6.0.6
+Last change:  07/13/11 [complete refatoring]
+Assigned to:  Frédéric de Villamil (neuro)
+
+[Table of contents]
+
+1. Body
+  1.1. Links
+  1.2. Tables
+2. Wrappers
+  2.1. Core structure
+  2.2. Widgets
+  2.3. Menu
+3. Common styles
+  3.1. Forms
+  3.2. Utility classes
+  3.3. Status and info
+  3.4. Carousel
+4. Functionnal parts
+  4.1. Editor
+  4.2. Sidebars
+  4.3. Categories
+  4.4. Dashboard
+  4.5. Settings
+  4.6. Themes
+  4.7. Theme editor
+  4.8. Feedback
+  4.9. Pages
+  4.10. Resources uploads
+
+-------------------------------------------------------------------*/
+
 /*------------------------------------------------------------------
 1. Body
 */
@@ -6,6 +43,7 @@ body {
   margin: 0 0 50px 0;
   padding: 0 20px;
   font: 11px/17px 'Lucida Grande', 'Lucida Sans', 'Arial', sans-serif;
+  height: 100%;
 }
 
 
@@ -389,11 +427,19 @@ select {
 
 .top-layer {
   position: absolute;
-  background-color: transparent;
+  background-color: rgba(0,0,0,0.5);
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
+  padding-top: 50px;
+  z-index: 1;
+}
+
+.top-layer .close-button {
+  float: right;
+  width: 15px;
+  height: 15px;
 }
 
 .concrete {
@@ -573,7 +619,7 @@ span.help {
   border-radius: 3px;
   font-weight: bold;
   margin-top: -1px;
-  padding: 5px;
+  padding: 3px 2px;
 }
 
 .ed_button {
@@ -584,6 +630,14 @@ span.help {
   margin-right: 0.2em;
   padding: 0.2em 0.4em;
   cursor: pointer;
+}
+
+.ed_bold {
+  font-weight: bold;
+}
+
+.ed_italic {
+  font-style: italic;
 }
 
 #article_keywords_auto_complete {
@@ -603,53 +657,26 @@ span.help {
 }
 
 #ed_toolbar_article_body_and_extended, #ed_toolbar_page_body { 
-  margin: 5px 0;
+  margin: 0 0 1px 0;
   float: left; 
-  background: #fff;
-  padding: 1px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-  -webkit-border-radius: 3px;
-  
 }
 
 .ed_span {
   display: block;
   float: left;
-  padding: 3px 4px;
+  padding: 1px 4px 2px 4px;
   -moz-border-radius: 3px;
   border-radius: 3px;
   -webkit-border-radius: 3px;
+  margin-right: 2px;
 }
 
 .ed_style {
-  width: 16px;
   height: 16px;
   margin-top: 1px;
-  text-indent: -1000px;
   padding: 0;
   border: none;
 }
-
-.ed_li {
-  text-indent: 0;
-  color: #000;
-  font: 16px Arial,Helvetica,Tahoma,Verdana,Sans-Serif;
-}
-
-.ed_code, .ed_typocode {
-  width: auto;
-  text-indent: 0;
-  font-family: "courier new", courier, serif;
-  font-size: 14px;
-}
-
-.ed_large {
-  width: auto;
-  text-indent: 0;
-  font: 12px Arial,Helvetica,Tahoma,Verdana,Sans-Serif;
-}
-
 
 /*------------------------------------------------------------------
 4.2. Sidebars
@@ -720,10 +747,11 @@ span.help {
 4.4. Dashboard
 */
 .dashboard-left { 
-  width: 48%; 
+  width: 49%; 
   float: left; 
-  margin-right: 4%; 
+  margin-right: 5px; 
   margin-top: 20px;
+  padding-right: 0.5%;
 }
 
 .dashboard { 

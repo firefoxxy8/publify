@@ -46,6 +46,7 @@ class User < ActiveRecord::Base
   setting :show_yahoo,                 :boolean, false
   setting :show_twitter,               :boolean, false
   setting :show_jabber,                :boolean, false
+  setting :admin_theme,                :string,  'blue'
 
   # echo "typo" | sha1sum -
   @@salt = '20ac4d290c2293702c64b3b287ae5ea79b26a5c1'
@@ -139,6 +140,10 @@ class User < ActiveRecord::Base
 
   def self.to_prefix
     'author'
+  end
+
+  def simple_editor?
+    editor == 'simple'
   end
 
   def password=(newpass)
