@@ -1,3 +1,6 @@
+# Make bundler play nice:
+require "bundler/capistrano"
+
 # Magic incantation to give sudo a tty/pty/whatever.
 # See: http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1
 default_run_options[:pty] = true
@@ -16,6 +19,8 @@ set :copy_exclude, "**/*.psd"
 role :app, "mist.matijs.net"
 role :web, "mist.matijs.net"
 role :db,  "mist.matijs.net", :primary => true
+
+set :bundle_cmd, "/var/lib/gems/1.9.1/bin/bundle"
 
 namespace :deploy do
   # FIXME: Make more descriptive name
@@ -67,11 +72,6 @@ EOF
   end
 end
 
-namespace :bundler do
-  task :bundle_new_release, :roles => :app do
-    run "cd #{release_path} && /var/lib/gems/1.8/bin/bundle install --local --without test"
-  end
-end
 
 after "deploy:setup", "deploy:post_setup"
 after "deploy:update_code", "deploy:link_db_config", "deploy:fix_public_dir", "bundler:bundle_new_release"
