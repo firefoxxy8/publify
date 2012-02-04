@@ -21,6 +21,7 @@ role :web, "mist.matijs.net"
 role :db,  "mist.matijs.net", :primary => true
 
 set :bundle_cmd, "/var/lib/gems/1.9.1/bin/bundle"
+set :bundle_flags, "--quiet"
 
 namespace :deploy do
   # FIXME: Make more descriptive name
