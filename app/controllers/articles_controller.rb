@@ -21,10 +21,10 @@ class ArticlesController < ContentController
 
     unless params[:year].blank?
       @noindex = 1
-      @articles = Article.published_at(params.values_at(:year, :month, :day)).paginate :page => params[:page], :per_page => @limit
+      @articles = Article.published_at(params.values_at(:year, :month, :day)).page(params[:page]).per(@limit)
     else
       @noindex = 1 unless params[:page].blank?
-      @articles = Article.published.paginate :page => params[:page], :per_page => @limit
+      @articles = Article.published.page(params[:page]).per(@limit)
     end
 
     @page_title = index_title
@@ -97,7 +97,7 @@ class ArticlesController < ContentController
     r = Redirect.find_by_from_path(from.join("/"))
     return redirect_to r.full_to_path, :status => 301 if r
 
-    render :text => "Page not found", :status => 404
+    render "errors/404", :status => 404
   end
 
 
@@ -137,7 +137,7 @@ class ArticlesController < ContentController
       @keywords = (this_blog.meta_keywords.empty?) ? "" : this_blog.meta_keywords
       @canonical_url = @page.permalink_url
     else
-      render :nothing => true, :status => 404
+      render "errors/404", :status => 404
     end
   end
 

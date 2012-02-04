@@ -52,10 +52,12 @@ class Article < Content
   after_save :keywords_to_tags
 
   scope :category, lambda {|category_id| {:conditions => ['categorizations.category_id = ?', category_id], :include => 'categorizations'}}
-  scope :drafts, :conditions => ['state = ?', 'draft']
+  scope :drafts, lambda { { :conditions => { :state => 'draft' }, :order => 'created_at DESC' } }
   scope :without_parent, {:conditions => {:parent_id => nil}}
   scope :child_of, lambda { |article_id| {:conditions => {:parent_id => article_id}} }
   scope :published, lambda { { :conditions => { :published => true, :published_at => Time.at(0)..Time.now }, :order => 'published_at DESC' } }
+  scope :pending, lambda { { :conditions => ['state = ? and published_at > ?', 'publication_pending', Time.now], :order => 'published_at DESC' } }
+  scope :withdrawn, lambda { { :conditions => { :state => 'withdrawn' }, :order => 'published_at DESC' } }
   scope :published_at, lambda {|time_params| { :conditions => { :published => true, :published_at => Article.time_delta(*time_params) }, :order => 'published_at DESC' } }
 
   setting :password,                   :string, ''
@@ -97,15 +99,20 @@ class Article < Content
       article
     end
 
-    def search_no_draft_paginate(search_hash, paginate_hash)
-      list_function  = ["Article.no_draft"] + function_search_no_draft(search_hash)
+    def search_with_pagination(search_hash, paginate_hash)
+      
+      state = (search_hash[:state] and ["no_draft", "drafts", "published", "withdrawn", "pending"].include? search_hash[:state]) ? search_hash[:state] : 'no_draft'
+      
+      
+      list_function  = ["Article.#{state}"] + function_search_no_draft(search_hash)
 
       if search_hash[:category] and search_hash[:category].to_i > 0
         list_function << 'category(search_hash[:category])'
       end
 
-      paginate_hash[:order] = 'published_at DESC'
-      list_function << "paginate(paginate_hash)"
+      list_function << "page(paginate_hash[:page])"
+      list_function << "per(paginate_hash[:per_page])"
+
       eval(list_function.join('.'))
     end
 
@@ -293,6 +300,7 @@ class Article < Content
       art.allow_comments = art.blog.default_allow_comments
       art.allow_pings = art.blog.default_allow_pings
       art.text_filter = art.blog.text_filter
+      art.published = true
     end
   end
 
@@ -330,7 +338,7 @@ class Article < Content
     if !query_s.empty? && args.empty?
       Article.searchstring(query)
     elsif !query_s.empty? && !args.empty?
-      Article.searchstring(query).paginate(args)
+      Article.searchstring(query).page(args[:page]).per(args[:per])
     else
       []
     end

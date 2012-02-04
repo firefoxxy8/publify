@@ -27,6 +27,11 @@ class Admin::FeedbackController < Admin::BaseController
       conditions.last.merge!(:state => 'ham')
     end
 
+    if params[:spam] == 'f'
+      conditions.first << ' AND state = :state '
+      conditions.last.merge!(:state => 'spam')
+    end
+
     if params[:presumed_ham] == 'f'
       conditions.first << ' AND state = :state '
       conditions.last.merge!(:state => 'presumed_ham')
@@ -41,7 +46,7 @@ class Admin::FeedbackController < Admin::BaseController
     if params[:page].blank? || params[:page] == "0"
       params.delete(:page)
     end
-    @feedback = Feedback.paginate :page => params[:page], :order => 'feedback.created_at desc', :conditions => conditions, :per_page => this_blog.admin_display_elements
+    @feedback = Feedback.where(conditions).order('feedback.created_at desc').page(params[:page]).per(this_blog.admin_display_elements)
   end
 
   def article
@@ -56,24 +61,23 @@ class Admin::FeedbackController < Admin::BaseController
   end
 
   def destroy
-    @feedback = Feedback.find params[:id]
+    @record = Feedback.find params[:id]
+    return(render 'admin/shared/destroy') unless request.post?
 
-    if request.post?
-      begin
-        @feedback.destroy
-        flash[:notice] = _("Deleted")
-      rescue ActiveRecord::RecordNotFound
-        flash[:notice] = _("Not found")
+    begin
+      @record.destroy
+      flash[:notice] = _("Deleted")
+    rescue ActiveRecord::RecordNotFound
+      flash[:notice] = _("Not found")
+    end
+    respond_to do |format|
+      format.html do
+        redirect_to :action => 'article', :id => @feedback.article.id
       end
-      respond_to do |format|
-        format.html do
-          redirect_to :action => 'article', :id => @feedback.article.id
-        end
-        format.js do
-          render :update do |page|
-            page.visual_effect(:puff,
-                               "#{@feedback.class.to_s.underscore}-#{@feedback.id}")
-          end
+      format.js do
+        render :update do |page|
+          page.visual_effect(:puff,
+                             "#{@record.class.to_s.underscore}-#{@record.id}")
         end
       end
     end

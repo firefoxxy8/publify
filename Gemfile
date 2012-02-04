@@ -15,15 +15,13 @@ else
   when 'postgresql'
     gem 'pg'
   when 'mysql'
-    if RUBY_VERSION.include?('1.9')
-      gem 'sam-mysql-ruby'
-    else
-      gem 'mysql'
-    end
+    gem 'sam-mysql-ruby'
   else
     raise "Don't know what gem to use for adapter #{adapter}"
   end
 end
+
+source :rubygems
 
 gem 'rails', '3.0.10'
 gem 'require_relative'
@@ -31,7 +29,7 @@ gem 'htmlentities'
 gem 'json'
 gem 'bluecloth', '>= 2.0.5'
 gem 'coderay', '~> 0.9'
-gem 'will_paginate', '3.0.pre2'
+gem 'kaminari'
 gem 'RedCloth', '4.2.8'
 gem 'addressable', '~> 2.1.0', :require => 'addressable/uri'
 gem 'mini_magick', '1.3.3', :require => 'mini_magick'
@@ -52,5 +50,9 @@ group :development, :test do
   gem 'factory_girl', '2.2.0'
   gem 'webrat'
   gem 'rspec-rails', '>= 2.0.0.beta.20'
-  gem 'rcov'
+  if RUBY_VERSION.include?('1.9')
+    gem 'simplecov', :require => false
+  else
+    gem 'rcov'
+  end
 end

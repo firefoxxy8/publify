@@ -13,7 +13,8 @@ class Admin::ContentController < Admin::BaseController
 
   def index
     @search = params[:search] ? params[:search] : {}
-    @articles = Article.search_no_draft_paginate(@search, :page => params[:page], :per_page => this_blog.admin_display_elements)
+    
+    @articles = Article.search_with_pagination(@search, {:page => params[:page], :per_page => this_blog.admin_display_elements})
 
     if request.xhr?
       render :partial => 'article_list', :locals => { :articles => @articles }
@@ -37,20 +38,18 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def destroy
-    @article = Article.find(params[:id])
+    @record = Article.find(params[:id])
 
-    unless @article.access_by?(current_user)
-      redirect_to :action => 'index'
+    unless @record.access_by?(current_user)
       flash[:error] = _("Error, you are not allowed to perform this action")
-      return
+      return(redirect_to :action => 'index')
     end
+    
+    return(render 'admin/shared/destroy') unless request.post?
 
-    if request.post?
-      @article.destroy
-      flash[:notice] = _("This article was deleted successfully")
-      redirect_to :action => 'index'
-      return
-    end
+    @record.destroy
+    flash[:notice] = _("This article was deleted successfully")
+    redirect_to :action => 'index'
   end
 
   def insert_editor
@@ -114,8 +113,8 @@ class Admin::ContentController < Admin::BaseController
     if @article.save
       render(:update) do |page|
         page.replace_html('autosave', hidden_field_tag('article[id]', @article.id))
-        page.replace_html('permalink', text_field('article', 'permalink', {:class => 'small medium'}))
-        page.replace_html('preview_link', link_to(_("Preview"), {:controller => '/articles', :action => 'preview', :id => @article.id}, {:target => 'new'}))
+        page.replace_html('preview_link', link_to(_("Preview"), {:controller => '/articles', :action => 'preview', :id => @article.id}, {:target => 'new', :class => 'btn info'}))
+        page.replace_html('destroy_link', link_to_destroy_draft(@article))
       end
 
       return true
@@ -163,10 +162,10 @@ class Admin::ContentController < Admin::BaseController
       end
     end
 
-    @article.published = true
     @article.keywords = Tag.collection_to_string @article.tags
     @article.attributes = params[:article]
     # TODO: Consider refactoring, because double rescue looks... weird.
+        
     @article.published_at = DateTime.strptime(params[:article][:published_at], "%B %e, %Y %I:%M %p GMT%z").utc rescue Time.parse(params[:article][:published_at]).utc rescue nil
 
     if request.post?
@@ -184,7 +183,7 @@ class Admin::ContentController < Admin::BaseController
       end
     end
 
-    @images = Resource.images_by_created_at.paginate(:page => params[:page], :per_page => 10)
+    @images = Resource.images_by_created_at.page(params[:page]).per(10)
     @resources = Resource.without_images_by_filename
     @macros = TextFilter.macro_filters
     render 'new'
@@ -215,9 +214,6 @@ class Admin::ContentController < Admin::BaseController
     if @article.title.blank?
       lastid = Article.find(:first, :order => 'id DESC').id
       @article.title = "Draft article " + lastid.to_s
-    end
-    unless @article.parent_id and Article.find(@article.parent_id).published
-      @article.permalink = @article.stripped_title
     end
   end
 

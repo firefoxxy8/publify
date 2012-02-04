@@ -4,10 +4,11 @@ module Admin::BaseHelper
   def subtabs_for(current_module)
     output = []
     AccessControl.project_module(current_user.profile_label, current_module).submenus.each_with_index do |m,i|
+      next if m.name.empty?
       current =
       output << subtab(_(m.name), (m.url[:controller] == params[:controller] && m.url[:action] == params[:action]) ? '' : m.url)
     end
-    content_for(:tasks) { output.join("\n").html_safe }
+    output.join("\n").html_safe
   end
 
   def subtab(label, options = {})
@@ -16,21 +17,18 @@ module Admin::BaseHelper
   end
 
   def show_page_heading
-    heading = ""
-    heading << content_tag(:div, @link_to_new, :class => 'page_new') unless @link_to_new.blank?
-    heading << content_tag(:h2, @page_heading, :class => 'page_heading') unless @page_heading.blank?
+    return if @page_heading.nil? or @page_heading.blank? 
+    heading = "<div class='page-header'>"
+    heading << content_tag(:h2, @page_heading.html_safe)
+    heading << "</div>"
   end
 
   def cancel(url = {:action => 'index'})
-    link_to _("Cancel"), url
+    link_to _("Cancel"), url, :class => 'btn'
   end
 
   def save(val = _("Store"))
-    '<input type="submit" value="' + val + '" class="save" />'
-  end
-
-  def confirm_delete(val = _("Delete"))
-   '<input type="submit" value="' + val + '" />'
+    '<input type="submit" value="' + val + '" class="btn primary" />'
   end
 
   def link_to_edit(label, record, controller = controller.controller_name)
@@ -51,7 +49,7 @@ module Admin::BaseHelper
   def link_to_destroy_with_profiles(record, controller = controller.controller_name)
     if current_user.admin? || current_user.id == record.user_id
       link_to(_("delete"),
-        { :controller => controller, :action => 'destroy', :id => record.id }, :confirm => _("Are you sure?"), :method => :post, :title => _("Delete content"))
+        { :controller => controller, :action => 'destroy', :id => record.id }, :confirm => _("Are you sure?"), :method => :post, :class => 'btn danger', :title => _("Delete content"))
       end
   end
 
@@ -160,13 +158,11 @@ module Admin::BaseHelper
   end
 
   def cancel_or_save
-    result = '<p>'
-    result << cancel
+    result = cancel
     result << " "
     result << _("or")
     result << " "
     result << save( _("Save") + " &raquo")
-    result << '</p>'
     return result
   end
 
@@ -200,8 +196,10 @@ module Admin::BaseHelper
   end
 
   def published_or_not(item)
-    return "<span class='published'>#{_("Published")}</span>" if item.published
-    "<span class='unpublished'>#{_("Unpublished")}</span>"
+    return "<span class='label success'>#{_("Published")}</span>" if item.state.to_s.downcase == 'published'
+    return "<span class='label notice'>#{_("Draft")}</span>" if item.state.to_s.downcase == 'draft'
+    return "<span class='label important'>#{_("Withdrawn")}</span>" if item.state.to_s.downcase == 'withdrawn'
+    return "<span class='label warning'>#{_("Publication pending")}</span>" if item.state.to_s.downcase == 'publicationpending'
   end
 
   def macro_help_popup(macro, text)
@@ -240,9 +238,7 @@ module Admin::BaseHelper
   end
 
   def display_pagination(collection, cols, first='', last='')
-    if collection.total_pages > 1
-      return "<tr><td class='#{first} #{last}' colspan=#{cols} class='paginate'>#{will_paginate(collection)}</td></tr>"
-    end
+    "<tr><td class='#{first} #{last}' colspan=#{cols} class='paginate'>#{paginate(collection)}</td></tr>"
   end
 
   def show_thumbnail_for_editor(image)
@@ -261,6 +257,6 @@ module Admin::BaseHelper
   end
 
   def save_settings
-    "<p class='settings'>#{save(_("Update settings"))}</p>".html_safe
+    "<div class='actions'>#{cancel} #{_("or")} #{save(_("Update settings"))}</div>".html_safe
   end
 end

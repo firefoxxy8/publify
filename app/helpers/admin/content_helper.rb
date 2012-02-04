@@ -1,10 +1,9 @@
 module Admin::ContentHelper
   def link_to_destroy_draft(record, controller = controller.controller_name)
-    if record.state.to_s == "Draft"
-      link_to(_("Destroy this draft"),
-        { :controller => controller, :action => 'destroy', :id => record.id },
-          :confirm => _("Are you sure?"), :method => :post )
-    end
+    return unless record.state.to_s.downcase == "draft"
+    link_to(_("Destroy this draft"),
+      { :controller => controller, :action => 'destroy', :id => record.id },
+        :confirm => _("Are you sure?"), :method => :post, :class => 'btn danger' )
   end
 
   def auto_complete_result(entries, field, phrase = nil)
@@ -44,7 +43,8 @@ module Admin::ContentHelper
       return hidden_field_tag "article[post_type]", "read"
     end
     
-    html = "<select name=article[post_type]>"
+    html = content_tag(:h4, _("Article type"))
+    html << "<select name=article[post_type]>"
         
     post_types.each do |pt|
       html << "<option value='read' #{'selected' if @article.post_type == 'read'} >#{_('Default')}</option>"
@@ -52,5 +52,5 @@ module Admin::ContentHelper
     end
     
     html << "</select>"
-  end
+  end  
 end

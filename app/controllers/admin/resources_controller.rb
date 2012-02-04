@@ -49,7 +49,7 @@ class Admin::ResourcesController < Admin::BaseController
 
   def index
     @r = Resource.new
-    @resources = Resource.paginate :page => params[:page], :order => 'created_at DESC', :per_page => this_blog.admin_display_elements
+    @resources = Resource.order('created_at DESC').page(params[:page]).per(this_blog.admin_display_elements)
   end
 
   def get_thumbnails
@@ -60,12 +60,12 @@ class Admin::ResourcesController < Admin::BaseController
 
   def destroy
     begin
-      @file = Resource.find(params[:id])
-      mime = @file.mime
-      if request.post?
-        @file.destroy
-        redirect_to :action => 'index'
-      end
+      @record = Resource.find(params[:id])
+      mime = @record.mime
+      return(render 'admin/shared/destroy') unless request.post?
+      
+      @record.destroy
+      redirect_to :action => 'index'
     rescue
       raise
     end
