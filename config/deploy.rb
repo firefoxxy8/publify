@@ -75,4 +75,4 @@ end
 
 
 after "deploy:setup", "deploy:post_setup"
-after "deploy:update_code", "deploy:link_db_config", "deploy:fix_public_dir", "bundler:bundle_new_release"
+after "deploy:update_code", "deploy:link_db_config", "deploy:fix_public_dir"
