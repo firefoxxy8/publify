@@ -18,6 +18,11 @@ mvz for 6.0.10
 - Evaluate http://typogarden.org/lindholmen.html
 - Clean up themes
 
+- Deployment issues:
+  - cap Bundler task:
+    - default doesn't work because Gemfile.lock missing (OKish)
+    - cap task doesn't set RAILS_ENV, so incorrect DB gem is installed.
+
 ook for 6.0.10
 - Allow merge of taggings. IIRC there's a ticket with a patch waiting for us as a good start
 - display permalink for comments
