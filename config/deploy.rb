@@ -25,7 +25,7 @@ set :bundle_flags, "--quiet"
 
 namespace :deploy do
   # FIXME: Make more descriptive name
-  task :post_setup do
+  task :create_shared_db_config do
     sudo "chown matijs:matijs #{deploy_to}"
     sudo "chown matijs:matijs #{releases_path}"
     # logdir
@@ -74,5 +74,5 @@ EOF
 end
 
 
-after "deploy:setup", "deploy:post_setup"
+after "deploy:setup", "deploy:create_shared_db_config"
 after "deploy:update_code", "deploy:link_db_config", "deploy:fix_public_dir"
