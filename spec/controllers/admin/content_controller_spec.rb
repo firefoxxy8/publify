@@ -1,4 +1,4 @@
-require 'spec_helper'
+ require 'spec_helper'
 
 describe Admin::ContentController do
   render_views
@@ -336,11 +336,11 @@ describe Admin::ContentController do
     end
 
     it 'should create a filtered article' do
+      Article.delete_all
       body = "body via *markdown*"
       extended="*foo*"
       post :new, 'article' => { :title => "another test", :body => body, :extended => extended}
-      assert_response :redirect, :action => 'show'
-
+      assert_response :redirect, :action => 'index'
       new_article = Article.find(:first, :order => "created_at DESC")
       assert_equal body, new_article.body
       assert_equal extended, new_article.extended
@@ -591,19 +591,19 @@ describe Admin::ContentController do
       it 'should return foo for keywords fo' do
         get :auto_complete_for_article_keywords, :article => {:keywords => 'fo'}
         response.should be_success
-        response.body.should == '<ul><li>foo</li></ul>'
+        response.body.should == '<ul class="unstyled" id="autocomplete"><li>foo</li></ul>'
       end
 
       it 'should return nothing for hello' do
         get :auto_complete_for_article_keywords, :article => {:keywords => 'hello'}
         response.should be_success
-        response.body.should == '<ul></ul>'
+        response.body.should == '<ul class="unstyled" id="autocomplete"></ul>'
       end
 
       it 'should return bar and bazz for ba keyword' do
         get :auto_complete_for_article_keywords, :article => {:keywords => 'ba'}
         response.should be_success
-        response.body.should == '<ul><li>bar</li><li>bazz</li></ul>'
+        response.body.should == '<ul class="unstyled" id="autocomplete"><li>bar</li><li>bazz</li></ul>'
       end
     end
 
