@@ -409,7 +409,7 @@ Localization.define("ja_JP") do |l|
   l.store "You robots.txt file is not writeable. Typo won't be able to write it", ""
   l.store "Search Engine Optimization", "検索エンジン最適化"
   l.store "This will display", ""
-  l.store "at the bottom of each of your post in the RSS feed", ""
+  l.store "at the bottom of each post in the RSS feed", ""
 
   # app/views/admin/settings/update_database.html.erb
   l.store "Information", "インフォメーション"
@@ -487,7 +487,7 @@ Localization.define("ja_JP") do |l|
   l.store "User's status", ""
   l.store "Active", "有効"
   l.store "Inactive", "無効"
-  l.store "Profile Settings", ""
+  l.store "Profile settings", ""
   l.store "Firstname", "姓"
   l.store "Lastname", "名"
   l.store "Nickname", "ニックネーム"
@@ -497,9 +497,9 @@ Localization.define("ja_JP") do |l|
   l.store "Send notification messages via email", "メールで通知を送信"
   l.store "Send notification messages when new articles are posted", "新しい記事が投稿された際に通知メッセージを送る"
   l.store "Send notification messages when comments are posted", "コメントが投稿された際に通知メッセージを送る"
-  l.store "Contact Options", ""
+  l.store "Contact options", ""
   l.store "Your site", "あなたのホームページ"
-  l.store "display url on public profile", "公開プロフィールにURLを表示"
+  l.store "display URL on public profile", "公開プロフィールにURLを表示"
   l.store "Your MSN", "あなたのMSN ID"
   l.store "display MSN ID on public profile", "公開プロフィールにMSN IDを表示"
   l.store "Your Yahoo ID", "あなたのYahoo ID"
@@ -509,7 +509,7 @@ Localization.define("ja_JP") do |l|
   l.store "Your AIM id", "あなたのAIM ID"
   l.store "display AIM ID on public profile", "公開プロフィールにAIM IDを表示"
   l.store "Your Twitter username", "あなたのTwitter ID"
-  l.store "display twitter on public profile", "公開プロフィールにTwitter IDを表示"
+  l.store "display Twitter on public profile", "公開プロフィールにTwitter IDを表示"
   l.store "Tell us more about you", "補足事項"
 
   # app/views/admin/users/destroy.html.erb
@@ -592,7 +592,7 @@ Localization.define("ja_JP") do |l|
   l.store "Welcome to your %s blog setup. Just fill in your blog title and your email, and Typo will take care of everything else", ""
 
   # app/views/shared/_confirm.html.erb
-  l.store "Congratulation!", ""
+  l.store "Congratulations!", ""
   l.store "You have successfully signed up", ""
   l.store "<strong>Login:</strong> %s", ""
   l.store "<strong>Password:</strong> %s", ""

@@ -1,5 +1,6 @@
 require 'tempfile'
 require 'mini_magick'
+require 'yaml'
 
 class Resource < ActiveRecord::Base
   validates_uniqueness_of :filename
@@ -20,32 +21,26 @@ class Resource < ActiveRecord::Base
     "#{::Rails.root.to_s}/public/files/#{file.nil? ? filename : file}"
   end
 
-  def write_to_disk(up)
-    begin
-      # create the public/files dir if it doesn't exist
-      FileUtils.mkdir(fullpath('')) unless File.directory?(fullpath(''))
-      if up.kind_of?(Tempfile) and !up.local_path.nil? and File.exist?(up.local_path)
-        File.chmod(0600, up.local_path)
-        FileUtils.copy(up.local_path, fullpath)
-      elsif up.kind_of?(ActionDispatch::Http::UploadedFile)
-        File.chmod(0600, up.path)
-        FileUtils.copy(up.path, fullpath)
-      else
-        bytes = up
-        if up.kind_of?(StringIO)
-          up.rewind
-          bytes = up.read
-        end
-        File.open(fullpath, "wb") { |f| f.write(bytes) }
-      end
-      File.chmod(0644, fullpath)
-      self.size = File.stat(fullpath).size rescue 0
-      create_thumbnail
-      update
-      self
-    rescue
-      raise
-    end
+  def self.create_and_upload(file)
+    resource = create(filename: file.original_filename, mime: file.content_type.chomp, created_at: Time.now)
+    resource.upload(file)
+  end
+
+  def upload(file)
+    storage = setup_storage
+    directory = storage.directories.get('files')
+    directory = storage.directories.create(:key => 'files') unless directory
+
+    file = directory.files.create(
+      :body => file,
+      :key  => self.filename,
+      :public => true
+    )
+
+    self.size = File.stat(fullpath).size rescue 0
+    create_thumbnail
+    update
+    self
   end
 
   def create_thumbnail
@@ -61,12 +56,13 @@ class Resource < ActiveRecord::Base
         img_orig = img_orig.resize("#{resize}x#{resize}")
         img_orig.write(fullpath("#{size}_#{self.filename}"))
       end
-   rescue
+    rescue
       nil
-  end
+    end
   end
 
   protected
+
   def uniq_filename_on_disk
     i = 0
     raise if filename.empty?
@@ -78,7 +74,45 @@ class Resource < ActiveRecord::Base
     end
     self.filename = tmpfile
   end
+
   def delete_filename_on_disk
     File.unlink(fullpath(filename)) if File.exist?(fullpath(filename))
+  end
+
+  private
+
+  def setup_storage
+    config = File.join(Rails.root, "config", "storage.yml")
+    if File.exists? config
+      @conf = YAML.load_file(config)
+      provider = @conf['provider']
+    else
+      provider = "Local"
+    end
+
+    case provider
+    when "AWS"
+      return setup_aws_storage
+    else
+      return setup_local_storage
+    end
+  end
+
+  def setup_local_storage
+    # create the public/files dir if it doesn't exist
+    FileUtils.mkdir(fullpath('')) unless File.directory?(fullpath(''))
+
+    Fog::Storage.new({
+      :local_root => File.join(Rails.root, "public"),
+      :provider   => 'Local'
+    })
+  end
+
+  def setup_aws_storage
+    Fog::Storage.new({
+      :provider   => 'AWS',
+      :aws_access_key_id => @conf['aws_access_key_id'],
+      :aws_secret_access_key => @conf['aws_secret_access_key']
+    })
   end
 end

@@ -408,7 +408,7 @@ Localization.define("nl_NL") do |l|
   l.store "You robots.txt file is not writeable. Typo won't be able to write it", "Je robots.txt bestand is niet schrijfbaar. Typo kan het niet wijzigen"
   l.store "Search Engine Optimization", "Zoekmachine optimalisatie"
   l.store "This will display", "Dit zorgt er voor dat "
-  l.store "at the bottom of each of your post in the RSS feed", " onderaan elke post in je RSS-feed verschijnt"
+  l.store "at the bottom of each post in the RSS feed", " onderaan elke post in je RSS-feed verschijnt"
 
   # app/views/admin/settings/update_database.html.erb
   l.store "Information", "Informatie"
@@ -484,7 +484,7 @@ Localization.define("nl_NL") do |l|
   l.store "User's status", "Status van de gebruiker"
   l.store "Active", "Actief"
   l.store "Inactive", "Inactief"
-  l.store "Profile Settings", "Profiel instellingen"
+  l.store "Profile settings", "Profiel instellingen"
   l.store "Firstname", "Voornaam"
   l.store "Lastname", "Achternaam"
   l.store "Nickname", "Bijnaam"
@@ -494,9 +494,9 @@ Localization.define("nl_NL") do |l|
   l.store "Send notification messages via email", "Zend notificaties via e-mail"
   l.store "Send notification messages when new articles are posted", "Zend notificaties wanneer nieuwe artikelen worden gepubliceerd"
   l.store "Send notification messages when comments are posted", "Zend notificaties wanneer commentaren geplaatst worden"
-  l.store "Contact Options", "Contact opties"
+  l.store "Contact options", "Contact opties"
   l.store "Your site", "Je site"
-  l.store "display url on public profile", "toon URL op publiek profiel"
+  l.store "display URL on public profile", "toon URL op publiek profiel"
   l.store "Your MSN", "Je msn"
   l.store "display MSN ID on public profile", "toon MSN op publiek profiel"
   l.store "Your Yahoo ID", "Je Yahoo ID"
@@ -506,7 +506,7 @@ Localization.define("nl_NL") do |l|
   l.store "Your AIM id", "Je AIM id"
   l.store "display AIM ID on public profile", "toon AIM ID op publiek profiel"
   l.store "Your Twitter username", "Je Twitter gebruikersnaam"
-  l.store "display twitter on public profile", "toon twitter op publiek profiel"
+  l.store "display Twitter on public profile", "toon twitter op publiek profiel"
   l.store "Tell us more about you", "Vertel ons meer over jezelf"
 
   # app/views/admin/users/destroy.html.erb
@@ -589,7 +589,7 @@ Localization.define("nl_NL") do |l|
   l.store "Welcome to your %s blog setup. Just fill in your blog title and your email, and Typo will take care of everything else", "Welkom bij je %s blog setup. Vul een titel voor je blog in, en een e-mailadres, en Typo zorgt voor de rest"
 
   # app/views/shared/_confirm.html.erb
-  l.store "Congratulation!", "Gefeliciteerd!"
+  l.store "Congratulations!", "Gefeliciteerd!"
   l.store "You have successfully signed up", "Je bent succesvol aangemeld"
   l.store "<strong>Login:</strong> %s", "<strong>Inlognaam:</strong> %s"
   l.store "<strong>Password:</strong> %s", "<strong>Wachtwoord:</strong> %s"

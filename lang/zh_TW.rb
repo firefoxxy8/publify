@@ -409,7 +409,7 @@ Localization.define("zh_TW") do |l|
   l.store "You robots.txt file is not writeable. Typo won't be able to write it", ""
   l.store "Search Engine Optimization", ""
   l.store "This will display", ""
-  l.store "at the bottom of each of your post in the RSS feed", ""
+  l.store "at the bottom of each post in the RSS feed", ""
 
   # app/views/admin/settings/update_database.html.erb
   l.store "Information", "資訊"
@@ -487,7 +487,7 @@ Localization.define("zh_TW") do |l|
   l.store "User's status", ""
   l.store "Active", ""
   l.store "Inactive", ""
-  l.store "Profile Settings", ""
+  l.store "Profile settings", ""
   l.store "Firstname", ""
   l.store "Lastname", ""
   l.store "Nickname", ""
@@ -497,9 +497,9 @@ Localization.define("zh_TW") do |l|
   l.store "Send notification messages via email", "經由email發出通知訊息"
   l.store "Send notification messages when new articles are posted", "新的文章貼上時發出通知訊息"
   l.store "Send notification messages when comments are posted", "新的評錀貼上時發出通知訊息"
-  l.store "Contact Options", ""
+  l.store "Contact options", ""
   l.store "Your site", ""
-  l.store "display url on public profile", ""
+  l.store "display URL on public profile", ""
   l.store "Your MSN", ""
   l.store "display MSN ID on public profile", ""
   l.store "Your Yahoo ID", ""
@@ -509,7 +509,7 @@ Localization.define("zh_TW") do |l|
   l.store "Your AIM id", ""
   l.store "display AIM ID on public profile", ""
   l.store "Your Twitter username", ""
-  l.store "display twitter on public profile", ""
+  l.store "display Twitter on public profile", ""
   l.store "Tell us more about you", ""
 
   # app/views/admin/users/destroy.html.erb
@@ -592,7 +592,7 @@ Localization.define("zh_TW") do |l|
   l.store "Welcome to your %s blog setup. Just fill in your blog title and your email, and Typo will take care of everything else", ""
 
   # app/views/shared/_confirm.html.erb
-  l.store "Congratulation!", ""
+  l.store "Congratulations!", ""
   l.store "You have successfully signed up", ""
   l.store "<strong>Login:</strong> %s", ""
   l.store "<strong>Password:</strong> %s", ""

@@ -10,14 +10,14 @@ module Admin::BaseHelper
     end
     output.join("\n").html_safe
   end
-
+  
   def subtab(label, options = {})
-    return content_tag :li, "<span class='subtabs'>#{label}</span>".html_safe if options.empty?
-    content_tag :li, link_to(label, options)
+    return content_tag :li, link_to(label, '#'), :class => 'active' if options.empty?
+    content_tag :li, link_to(label, options) 
   end
 
   def show_page_heading
-    return if @page_heading.nil? or @page_heading.blank? 
+    return if @page_heading.nil? or @page_heading.blank?
     heading = "<div class='page-header'>"
     heading << content_tag(:h2, @page_heading.html_safe)
     heading << "</div>"
@@ -28,7 +28,7 @@ module Admin::BaseHelper
   end
 
   def save(val = _("Store"))
-    '<input type="submit" value="' + val + '" class="btn primary" />'
+    submit_tag(val, :class => 'btn btn-primary')
   end
 
   def link_to_edit(label, record, controller = controller.controller_name)
@@ -49,7 +49,9 @@ module Admin::BaseHelper
   def link_to_destroy_with_profiles(record, controller = controller.controller_name)
     if current_user.admin? || current_user.id == record.user_id
       link_to(_("delete"),
-        { :controller => controller, :action => 'destroy', :id => record.id }, :confirm => _("Are you sure?"), :method => :post, :class => 'btn danger', :title => _("Delete content"))
+        { controller: controller, action: 'destroy', id: record.id },
+        data: {confirm: _("Are you sure?")},
+        method: :post, class: 'btn danger', title: _("Delete content"))
       end
   end
 
@@ -78,77 +80,6 @@ module Admin::BaseHelper
 
   def task_overview
     content_tag :li, link_to(_('Back to list'), :action => 'index')
-  end
-
-  def class_tab
-    ''
-  end
-
-  def class_selected_tab
-    'active'
-  end
-
-  def class_articles
-    if controller.controller_name  =~ /content|tags|categories|feedback|post_type/
-      return class_selected_tab if controller.action_name =~ /list|index|show|article|destroy|new|edit/
-    end
-    class_tab
-  end
-
-  def class_media
-    if controller.controller_name  =~ /resources/
-      return class_selected_tab
-    end
-    class_tab
-  end
-
-  def class_pages
-    if controller.controller_name  =~ /pages/
-      return class_selected_tab if controller.action_name =~ /index|destroy|new|edit/
-    end
-    class_tab
-  end
-
-  def class_themes
-    return class_selected_tab if controller.controller_name  =~ /themes|sidebar/
-    class_tab
-  end
-
-  def class_dashboard
-    return class_selected_tab if controller.controller_name  =~ /dashboard/
-    class_tab
-  end
-
-  def class_settings
-    return class_selected_tab if controller.controller_name  =~ /settings|users|cache|redirects/
-    class_tab
-  end
-
-  def class_profile
-    return class_selected_tab if controller.controller_name  =~ /profiles/
-    class_tab
-  end
-
-  def class_seo
-    return class_selected_tab if controller.controller_name  =~ /seo/
-    class_tab
-  end
-
-  def collection_select_with_current(object, method, collection, value_method, text_method, current_value, prompt=false)
-    result = "<select name='#{object}[#{method}]'>\n"
-
-    if prompt == true
-      result << "<option value=''>" << _("Please select") << "</option>"
-    end
-    for element in collection
-      if current_value and current_value == element.send(value_method)
-        result << "<option value='#{element.send(value_method)}' selected='selected'>#{element.send(text_method)}</option>\n"
-      else
-        result << "<option value='#{element.send(value_method)}'>#{element.send(text_method)}</option>\n"
-      end
-    end
-    result << "</select>\n"
-    return result
   end
 
   def render_void_table(size, cols)
@@ -192,14 +123,17 @@ module Admin::BaseHelper
 
   def link_to_published(item)
     return link_to_permalink(item,  _("Show"), nil, 'published') if item.published
-    link_to(_("Preview"), {:controller => '/articles', :action => 'preview', :id => item.id}, {:class => 'unpublished', :target => '_new'})
+    
+    type = controller.controller_name == 'content' ? "" : "_page"
+    
+    link_to(_("Preview"), {:controller => '/articles', :action => "preview#{type}", :id => item.id}, {:class => 'unpublished', :target => '_new'}) 
   end
 
   def published_or_not(item)
-    return "<span class='label success'>#{_("Published")}</span>" if item.state.to_s.downcase == 'published'
-    return "<span class='label notice'>#{_("Draft")}</span>" if item.state.to_s.downcase == 'draft'
-    return "<span class='label important'>#{_("Withdrawn")}</span>" if item.state.to_s.downcase == 'withdrawn'
-    return "<span class='label warning'>#{_("Publication pending")}</span>" if item.state.to_s.downcase == 'publicationpending'
+    return "<span class='label label-success'>#{_("Published")}</span>" if item.state.to_s.downcase == 'published'
+    return "<span class='label label-info'>#{_("Draft")}</span>" if item.state.to_s.downcase == 'draft'
+    return "<span class='label label-important'>#{_("Withdrawn")}</span>" if item.state.to_s.downcase == 'withdrawn'
+    return "<span class='label label-warning'>#{_("Publication pending")}</span>" if item.state.to_s.downcase == 'publicationpending'
   end
 
   def macro_help_popup(macro, text)
@@ -258,6 +192,6 @@ module Admin::BaseHelper
   end
 
   def save_settings
-    "<div class='actions'>#{cancel} #{_("or")} #{save(_("Update settings"))}</div>".html_safe
+    "<div class='form-actions'>#{cancel} #{_("or")} #{save(_("Update settings"))}</div>".html_safe
   end
 end

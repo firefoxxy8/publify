@@ -409,7 +409,7 @@ Localization.define("da_DK") do |l|
   l.store "You robots.txt file is not writeable. Typo won't be able to write it", ""
   l.store "Search Engine Optimization", ""
   l.store "This will display", ""
-  l.store "at the bottom of each of your post in the RSS feed", ""
+  l.store "at the bottom of each post in the RSS feed", ""
 
   # app/views/admin/settings/update_database.html.erb
   l.store "Information", "Information"
@@ -487,7 +487,7 @@ Localization.define("da_DK") do |l|
   l.store "User's status", ""
   l.store "Active", ""
   l.store "Inactive", ""
-  l.store "Profile Settings", ""
+  l.store "Profile settings", ""
   l.store "Firstname", "Fornavn"
   l.store "Lastname", "Efternavn"
   l.store "Nickname", "Kælenavn"
@@ -497,9 +497,9 @@ Localization.define("da_DK") do |l|
   l.store "Send notification messages via email", "Send meddelelser via e-mail"
   l.store "Send notification messages when new articles are posted", "Send meddelelser når ny artikler bliver udgivet"
   l.store "Send notification messages when comments are posted", "Send meddelelser når der er nye kommentarer"
-  l.store "Contact Options", "Kontakt information"
+  l.store "Contact options", "Kontakt information"
   l.store "Your site", "Din hjemmeside"
-  l.store "display url on public profile", "Vis hjemmeside på din profil"
+  l.store "display URL on public profile", "Vis hjemmeside på din profil"
   l.store "Your MSN", "Dit MSN ID"
   l.store "display MSN ID on public profile", "Vis dit MSN ID på din profil"
   l.store "Your Yahoo ID", "Dit Yahoo ID"
@@ -509,7 +509,7 @@ Localization.define("da_DK") do |l|
   l.store "Your AIM id", "Dit AIM ID"
   l.store "display AIM ID on public profile", "Vis dit AIM ID på din profil"
   l.store "Your Twitter username", "Dit Twitter brugernavn"
-  l.store "display twitter on public profile", "Vis twitter på din profil"
+  l.store "display Twitter on public profile", "Vis twitter på din profil"
   l.store "Tell us more about you", "Fortæl lidt mere om dig"
 
   # app/views/admin/users/destroy.html.erb
@@ -592,7 +592,7 @@ Localization.define("da_DK") do |l|
   l.store "Welcome to your %s blog setup. Just fill in your blog title and your email, and Typo will take care of everything else", ""
 
   # app/views/shared/_confirm.html.erb
-  l.store "Congratulation!", ""
+  l.store "Congratulations!", ""
   l.store "You have successfully signed up", ""
   l.store "<strong>Login:</strong> %s", ""
   l.store "<strong>Password:</strong> %s", ""

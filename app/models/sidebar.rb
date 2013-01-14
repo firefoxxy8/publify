@@ -21,9 +21,9 @@ class Sidebar < ActiveRecord::Base
     def label_html(sidebar)
       content_tag('label', label)
     end
-
+    
     def input_html(sidebar)
-      text_field_tag(input_name(sidebar), sidebar.config[key], { :class => 'span4'})
+      text_field_tag(input_name(sidebar), sidebar.config[key], { :class => 'span12'})
     end
 
     def line_html(sidebar)
@@ -49,7 +49,7 @@ class Sidebar < ActiveRecord::Base
 
     class TextAreaField < self
       def input_html(sidebar)
-        html_options = { "rows" => "10", "class" => "span4" }.update(options.stringify_keys)
+        html_options = { "rows" => "10", "class" => "span12" }.update(options.stringify_keys)
         text_area_tag(input_name(sidebar), sidebar.config[key], html_options)
       end
     end
@@ -74,13 +74,8 @@ class Sidebar < ActiveRecord::Base
     end
 
     class CheckBoxField < self
-      def input_html(sidebar)
-        hidden_field_tag(input_name(sidebar),0)+
-        check_box_tag(input_name(sidebar), 1, sidebar.config[key], options)
-      end
-
       def line_html(sidebar)
-        input_html(sidebar) + ' ' + label_html(sidebar) + '<br >'
+hidden_field_tag(input_name(sidebar),0) + content_tag('label', "#{check_box_tag(input_name(sidebar), 1, sidebar.config[key], options)} #{label}".html_safe)
       end
 
       def canonicalize(value)
@@ -127,13 +122,13 @@ class Sidebar < ActiveRecord::Base
         super
       rescue ActiveRecord::SubclassNotFound => e
         available = available_sidebars.map {|klass| klass.to_s}
-        set_inheritance_column :bogus
+        self.inheritance_column = :bogus
         super.each do |record|
           unless available.include? record.type
             record.delete
           end
         end
-        set_inheritance_column :type
+        self.inheritance_column = :type
         super
       end
     end
@@ -151,14 +146,23 @@ class Sidebar < ActiveRecord::Base
     end
 
     def setting(key, default=nil, options = { })
-      return if instance_methods.include?(key.to_s)
-      fields << Field.build(key.to_s, default, options)
-      fieldmap.update(key.to_s => fields.last)
+      key = key.to_s
+
+      return if instance_methods.include?(key)
+
+      fields << Field.build(key, default, options)
+      fieldmap.update(key => fields.last)
+
       self.send(:define_method, key) do
-        self.config[key.to_s]
+        if config.has_key? key
+          config[key]
+        else
+          default
+        end
       end
+
       self.send(:define_method, "#{key}=") do |newval|
-        self.config[key.to_s] = newval
+        config[key] = newval
       end
     end
 
@@ -227,7 +231,7 @@ class Sidebar < ActiveRecord::Base
 
 
   def publish
-    self.active_position=self.staged_position
+    self.active_position = self.staged_position
   end
 
   def config

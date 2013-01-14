@@ -1,22 +1,21 @@
 module Admin::FeedbackHelper
   def comment_class state
-    return 'notice' if state.to_s.downcase == 'ham?'
-    return 'warning' if state.to_s.downcase == 'spam?'
-    return 'success' if state.to_s.downcase == 'ham'
-    return 'important'
+    return 'badge-info' if state.to_s.downcase == 'ham?'
+    return 'badge-warning' if state.to_s.downcase == 'spam?'
+    return 'badge-success' if state.to_s.downcase == 'ham'
+    return 'badge-important'
   end
 
   def show_feedback_actions(item, context='listing')
-    html = <<-HTML
-      <small>
-        
-        #{published_or_not item} |
-        #{change_status(item, context)} |
-        #{link_to _("Edit"), :controller => 'admin/feedback', :action => 'edit', :id => item.id} |
-        #{link_to _("Delete"), :controller => 'admin/feedback', :action => 'destroy', :id => item.id }|
-        #{link_to _("Show conversation"), :controller => 'admin/feedback', :action => 'article', :id => item.article_id}
-    </small>
-    HTML
+    return if current_user.profile.label == "contributor"
+    content_tag(:small) do
+      [published_or_not(item), 
+        change_status(item, context),
+        link_to(_("Edit"), :controller => "admin/feedback", action: :edit, id: item.id),
+        link_to(_("Delete"), :controller => "admin/feedback", action: 'destroy', id: item.id),
+        link_to(_("Show conversation"), :controller => 'admin/feedback', :action => 'article', :id => item.article_id)].join(" | ").html_safe
+    end
+      
   end
 
   def filter_link(text, filter='', style='')
