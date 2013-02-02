@@ -5,10 +5,7 @@ class LocalController < ContentController
 
   def frontpage
     @frontpage = true;
-    @articles = Article.find_already_published(
-      :all, :order => 'created_at DESC',
-      :limit => this_blog.limit_article_display
-    )
+    @articles = Article.already_published.limit(this_blog.limit_article_display)
     @page_title = 'matijs.net'
   end
 end
