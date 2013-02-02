@@ -1,43 +1,20 @@
 require 'fog'
 
 class Admin::ResourcesController < Admin::BaseController
-  upload_status_for :file_upload, :status => :upload_status
-
   cache_sweeper :blog_sweeper
 
   def upload
-    if request.post?
-      file = params[:upload][:filename]
-      unless file.content_type
-        mime = 'text/plain'
-      else
-        mime = file.content_type.chomp
-      end
-      @up = Resource.create(:filename => file.original_filename, :mime => mime, :created_at => Time.now)
-      @up.upload file
+    file = params[:upload][:filename]
 
-      @message = _('File uploaded: ')+ file.size.to_s
-      finish_upload_status "'#{@message}'"
-    end
-  end
-
-  def update
-    @resource = Resource.find(params[:resource][:id])
-    @resource.attributes = params[:resource]
-
-    if request.post? and @resource.save
-      flash[:notice] = _('Metadata was successfully updated.')
+    unless file.content_type
+      mime = 'text/plain'
     else
-      flash[:error] = _('Not all metadata was defined correctly.')
-      @resource.errors.each do |meta_key,val|
-        flash[:error] << "<br />" + val
-      end
+      mime = file.content_type.chomp
     end
-    redirect_to :action => 'index'
-  end
+    @up = Resource.create(:upload => file, :mime => mime, :created_at => Time.now)
 
-  def upload_status
-    render :inline => "<%= upload_progress.completed_percent rescue 0 %> % " + _("complete"), :layout => false
+    flash[:notice] = _("File successfully uploaded")
+    redirect_to :action => "index"
   end
 
   def index
@@ -47,7 +24,8 @@ class Admin::ResourcesController < Admin::BaseController
 
   def get_thumbnails
     position = params[:position].to_i
-    @resources = Resource.without_images.by_created_at.limit("#{position}, 10")
+    @resources = Resource.without_images.by_created_at.limit(10).offset(position)
+
     render 'get_thumbnails', :layout => false
   end
 
@@ -56,7 +34,7 @@ class Admin::ResourcesController < Admin::BaseController
       @record = Resource.find(params[:id])
       mime = @record.mime
       return(render 'admin/shared/destroy') unless request.post?
-      
+
       @record.destroy
       redirect_to :action => 'index'
     rescue

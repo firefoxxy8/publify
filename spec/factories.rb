@@ -166,6 +166,7 @@ http://alsoping.example.com/rpc/ping"
     comment_text_filter "markdown" #FactoryGirl.create(:markdown).name
     permalink_format "/%year%/%month%/%day%/%title%"
     use_canonical_url true
+    lang "en_US"
 
     after :stub do |blog|
       Blog.stub(:default) { blog }
@@ -208,7 +209,7 @@ http://alsoping.example.com/rpc/ping"
   end
 
   factory :resource do |r|
-    r.filename {FactoryGirl.generate(:file_name)}
+    r.upload {FactoryGirl.generate(:file_name)}
     r.mime 'image/jpeg'
     r.size 110
   end
