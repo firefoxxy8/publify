@@ -6,15 +6,12 @@ require "bundler/capistrano"
 default_run_options[:pty] = true
 
 set :application, "typo"
-set :repository,  "."
 
 set :deploy_to, "/var/www/#{application}"
 
 set :scm, :git
-
-set :deploy_via, :copy
-set :copy_strategy, :export
-set :copy_exclude, "**/*.psd"
+set :repository, 'matijs@mist.matijs.net:git/typo.git'
+set :branch, "toxic-elephant"
 
 role :app, "mist.matijs.net"
 role :web, "mist.matijs.net"
