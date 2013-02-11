@@ -2,7 +2,7 @@ gem 'pg'
 
 source :rubygems
 
-gem 'rails', '~> 3.2.11'
+gem 'rails', '~> 3.2.12'
 gem 'require_relative'
 gem 'htmlentities'
 gem 'bluecloth', '~> 2.1'
