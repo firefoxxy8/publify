@@ -201,7 +201,7 @@ class User < ActiveRecord::Base
   # But before the encryption, we send an email to user for he can remind his
   # password
   def crypt_password
-    send_create_notification
+    EmailNotify.send_user_create_notification self
     write_attribute "password", password_hash(password(true))
     @password = nil
   end
@@ -223,11 +223,7 @@ class User < ActiveRecord::Base
   before_validation :set_default_profile
 
   def set_default_profile
-    if User.count.zero?
-      self.profile ||= Profile.find_by_label('admin')
-    else
-      self.profile ||= Profile.find_by_label('contributor')
-    end
+    self.profile ||= Profile.find_by_label(User.count.zero? ? 'admin' : 'contributor')
   end
 
   validates_uniqueness_of :login, :on => :create
@@ -241,17 +237,4 @@ class User < ActiveRecord::Base
 
   validates_confirmation_of :password
   validates_length_of :login, :within => 3..40
-
-
-  private
-
-  # Send a mail of creation user to the user create
-  def send_create_notification
-    begin
-      email_notification = NotificationMailer.notif_user(self)
-      EmailNotify.send_message(self, email_notification)
-    rescue => err
-      logger.error "Unable to send notification of create user email: #{err.inspect}"
-    end
-  end
 end
