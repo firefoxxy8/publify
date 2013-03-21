@@ -50,12 +50,21 @@ class Article < Content
   after_save :post_trigger, :keywords_to_tags, :shorten_url
 
   scope :category, lambda { |category_id| where('categorizations.category_id = ?', category_id).includes('categorizations') }
-  scope :drafts, lambda { where(:state => 'draft').order('created_at DESC') }
-  scope :child_of, lambda { |article_id| where(:parent_id => article_id) }
-  scope :published, lambda { where(:published => true, :published_at => Time.at(0)..Time.now).order('published_at DESC') }
-  scope :published_at, lambda { |time_params| where(:published => true, :published_at => Article.time_delta(*time_params)).order('published_at DESC') }
-  scope :withdrawn, lambda { where(:state => 'withdrawn').order('published_at DESC') }
+  scope :drafts, lambda { where(state: 'draft').order('created_at DESC') }
+  scope :child_of, lambda { |article_id| where(parent_id: article_id) }
+  scope :published, lambda { where(published: true, published_at: Time.at(0)..Time.now).order('published_at DESC') }
+  scope :published_at, lambda {|time_params| published.where(published_at: TypoTime.delta(*time_params)).order('published_at DESC')}
+  scope :published_since, lambda {|time| published.where('published_at > ?', time).order('published_at DESC') }
+  scope :withdrawn, lambda { where(state: 'withdrawn').order('published_at DESC') }
   scope :pending, lambda { where('state = ? and published_at > ?', 'publication_pending', Time.now).order('published_at DESC') }
+
+  scope :bestof, lambda {
+    select('contents.*, comment_counts.count AS comment_count') \
+    .from("contents, (SELECT feedback.article_id AS article_id, COUNT(feedback.id) as count FROM feedback WHERE feedback.state IN ('presumed_ham', 'ham') GROUP BY feedback.article_id ORDER BY count DESC LIMIT 9) AS comment_counts") \
+    .where('comment_counts.article_id = contents.id') \
+    .where(published: true) \
+    .limit(5)
+  }
 
   setting :password, :string, ''
 
@@ -77,7 +86,7 @@ class Article < Content
     # Yes, this is weird - PDC
     begin
       self.settings ||= {}
-    rescue Exception => e
+    rescue
       self.settings = {}
     end
   end
@@ -192,20 +201,10 @@ class Article < Content
     result.map{ |d| [d.published_at.strftime('%Y-%m')]}.uniq
   end
 
-  def self.get_or_build_article(id)
-    return Article.find(id) if id.present?
-    article = Article.new.tap do |art|
-      art.allow_comments = art.blog.default_allow_comments
-      art.allow_pings = art.blog.default_allow_pings
-      art.old_permalink = art.permalink_url unless art.permalink.nil? or art.permalink.empty?
-      art.published = true
-    end
-  end
-
   # Finds one article which was posted on a certain date and matches the supplied dashed-title
   # params is a Hash
   def self.find_by_permalink(params)
-    date_range = self.time_delta(params[:year], params[:month], params[:day])
+    date_range = TypoTime.delta(params[:year], params[:month], params[:day])
 
     req_params = {}
     req_params[:permalink] = params[:title] if params[:title]
@@ -367,17 +366,6 @@ class Article < Content
       # Any dump access forcing de-serialization
       password.blank?
     end
-  end
-
-  def self.time_delta(year = nil, month = nil, day = nil)
-    return nil if year.nil? && month.nil? && day.nil?
-    from = Time.utc(year, month || 1, day || 1)
-
-    to = from.next_year
-    to = from.next_month unless month.blank?
-    to = from + 1.day unless day.blank?
-    to = to - 1 # pull off 1 second so we don't overlap onto the next day
-    from..to
   end
 
   private
