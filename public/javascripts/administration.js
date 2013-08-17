@@ -194,11 +194,11 @@ edButtons.push(
 
 edButtons.push(
 	new edButton(
-		'ed_typocode'
-		,'typo:code'
+		'ed_publifycode'
+		,'publify:code'
 		,''
-		,'\n</typo:code>\n\n'
-		,'typo:code'
+		,'\n</publify:code>\n\n'
+		,'publify:code'
 	)
 );
 
@@ -232,8 +232,8 @@ function edShowButton(which, button, i) {
 		case 'ed_link':
 			document.write('<input type="button" id="' + button.id + '_' + which + '" ' + accesskey + ' class="btn ' + button.id + '" onclick="edInsertLink(\'' + which + '\', ' + i + ');" value="' + button.display + '" />');
 			break;
-		case 'ed_typocode':
-			document.write('<input type="button" id="' + button.id + '_' + which + '" ' + accesskey + ' class="btn ' + button.id + '" onclick="edInsertTypoCode(\'' + which + '\', ' + i + ');" value="' + button.display + '" />');
+		case 'ed_publifycode':
+			document.write('<input type="button" id="' + button.id + '_' + which + '" ' + accesskey + ' class="btn ' + button.id + '" onclick="edInsertPublifyCode(\'' + which + '\', ' + i + ');" value="' + button.display + '" />');
 			break;
 		default:
 			document.write('<input type="button" id="' + button.id + '_' + which + '" ' + accesskey + ' class="btn ' + button.id + '" onclick="edInsertTag(\'' + which + '\', ' + i + ');" value="' + button.display + '"  />');
@@ -331,7 +331,7 @@ function edSpell(which) {
 }
 
 function edToolbar(which) {
-	document.write('<div id="ed_toolbar_' + which + '" class="btn-toolbar">');
+	document.write('<div id="ed_toolbar_' + which + '" class="btn-toolbar"><div class="btn-group">');
 	for (i = 0; i < extendedStart; i++) {
 		edShowButton(which, edButtons[i], i);
 	}
@@ -351,7 +351,7 @@ function edToolbar(which) {
 		edShowButton(which, edButtons[i], i);
 	}
 //	edShowLinks();
-	document.write('</div>');
+	document.write('</div></div>');
     edOpenTags[which] = new Array();
 }
 
@@ -470,7 +470,7 @@ function edInsertLink(which, i, defaultValue) {
 	}
 }
 
-function edInsertTypoCode(which, i, defaultValue) {
+function edInsertPublifyCode(which, i, defaultValue) {
     myField = document.getElementById(which);
 	if (!defaultValue) {
 		defaultValue = '';

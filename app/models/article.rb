@@ -3,7 +3,7 @@ require 'uri'
 require 'net/http'
 
 class Article < Content
-  include TypoGuid
+  include PublifyGuid
   include ConfigManager
 
   serialize :settings, Hash
@@ -34,13 +34,12 @@ class Article < Content
     def spam
       where(:state => ["presumed_spam", "spam"])
     end
-
   end
 
-  with_options(:conditions => { :published => true }, :order => 'created_at DESC') do |this|
-    this.has_many :published_comments,   :class_name => "Comment", :order => "created_at ASC"
-    this.has_many :published_trackbacks, :class_name => "Trackback", :order => "created_at ASC"
-    this.has_many :published_feedback,   :class_name => "Feedback", :order => "created_at ASC"
+  with_options(:conditions => { :published => true }, :order => 'created_at ASC') do |this|
+    this.has_many :published_comments, class_name: "Comment"
+    this.has_many :published_trackbacks, class_name: "Trackback"
+    this.has_many :published_feedback, class_name: "Feedback"
   end
 
   has_and_belongs_to_many :tags
@@ -53,17 +52,19 @@ class Article < Content
   scope :drafts, lambda { where(state: 'draft').order('created_at DESC') }
   scope :child_of, lambda { |article_id| where(parent_id: article_id) }
   scope :published, lambda { where(published: true, published_at: Time.at(0)..Time.now).order('published_at DESC') }
-  scope :published_at, lambda {|time_params| published.where(published_at: TypoTime.delta(*time_params)).order('published_at DESC')}
+  scope :published_at, lambda {|time_params| published.where(published_at: PublifyTime.delta(*time_params)).order('published_at DESC')}
   scope :published_since, lambda {|time| published.where('published_at > ?', time).order('published_at DESC') }
   scope :withdrawn, lambda { where(state: 'withdrawn').order('published_at DESC') }
   scope :pending, lambda { where('state = ? and published_at > ?', 'publication_pending', Time.now).order('published_at DESC') }
 
-  scope :bestof, lambda {
-    select('contents.*, comment_counts.count AS comment_count') \
-    .from("contents, (SELECT feedback.article_id AS article_id, COUNT(feedback.id) as count FROM feedback WHERE feedback.state IN ('presumed_ham', 'ham') GROUP BY feedback.article_id ORDER BY count DESC LIMIT 9) AS comment_counts") \
-    .where('comment_counts.article_id = contents.id') \
-    .where(published: true) \
-    .limit(5)
+  scope :bestof, ->() {
+    joins(:feedback).
+      where('feedback.published' => true, 'feedback.type' => 'Comment',
+            'contents.published' => true).
+      group('contents.id').
+      order('count(feedback.id) DESC').
+      select('contents.*, count(feedback.id) as comment_count').
+      limit(5)
   }
 
   setting :password, :string, ''
@@ -153,11 +154,11 @@ class Article < Content
   end
 
   def comment_url
-    blog.url_for("comments?article_id=#{self.id}", :only_path => false)
+    blog.url_for("comments?article_id=#{self.id}", :only_path => true)
   end
 
   def preview_comment_url
-    blog.url_for("comments/preview?article_id=#{self.id}", :only_path => false)
+    blog.url_for("comments/preview?article_id=#{self.id}", :only_path => true)
   end
 
   def feed_url(format)
@@ -204,14 +205,13 @@ class Article < Content
   # Finds one article which was posted on a certain date and matches the supplied dashed-title
   # params is a Hash
   def self.find_by_permalink(params)
-    date_range = TypoTime.delta(params[:year], params[:month], params[:day])
+    date_range = PublifyTime.delta(params[:year], params[:month], params[:day])
 
     req_params = {}
     req_params[:permalink] = params[:title] if params[:title]
     req_params[:published_at] = date_range if date_range
 
     return nil if req_params.empty? # no search if no params send
-
     article = find_published(:first, :conditions => req_params)
     return article if article
 
@@ -222,11 +222,6 @@ class Article < Content
     end
 
     raise ActiveRecord::RecordNotFound
-  end
-
-  def self.find_by_params_hash(params = {})
-    params[:title] ||= params[:article_id]
-    find_by_permalink(params)
   end
 
   # Fulltext searches the body of published articles
@@ -242,6 +237,11 @@ class Article < Content
   end
 
   def keywords_to_tags
+    # if keywords is empty, we want to reset the tags altogether, but
+    # if they do not exists (for instance because we're triggered by a
+    # publication_pending) we don't want to destroy the tags
+    return if keywords.nil?
+
     Article.transaction do
       tags.clear
       tags <<

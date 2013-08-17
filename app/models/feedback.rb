@@ -3,8 +3,9 @@ class Feedback < ActiveRecord::Base
   self.table_name = "feedback"
 
   belongs_to :text_filter
+  belongs_to :article
 
-  include TypoGuid
+  include PublifyGuid
 
   include Stateful
   include ContentBase
@@ -41,6 +42,22 @@ class Feedback < ActiveRecord::Base
     'created_at ASC'
   end
 
+  def self.comments
+    Comment.where(published: true).order('created_at DESC')
+  end
+
+  def self.trackbacks
+    Trackback.where(published: true).order('created_at DESC')
+  end
+
+  def self.from(type, article_id = nil)
+    if article_id.present?
+      Article.find(article_id).send("published_#{type}")
+    else
+      send(type)
+    end
+  end
+
   def parent
     article
   end
@@ -68,12 +85,11 @@ class Feedback < ActiveRecord::Base
   end
 
   def akismet_options
-    {:user_ip => ip,
-      :comment_type => self.class.to_s.downcase,
-      :comment_author => originator,
-      :comment_author_email => email,
-      :comment_author_url => url,
-      :comment_content => body}
+    {:comment_type => self.class.to_s.downcase,
+     :comment_author => originator,
+     :comment_author_email => email,
+     :comment_author_url => url,
+     :comment_content => body}
   end
 
   def spam_fields
@@ -103,7 +119,7 @@ class Feedback < ActiveRecord::Base
         sp.is_spam?(self.send(field))
       end
     end
-  rescue Timeout::Error => e
+  rescue Timeout::Error
     nil
   end
 
@@ -112,9 +128,9 @@ class Feedback < ActiveRecord::Base
 
     begin
       Timeout.timeout(defined?($TESTING) ? 30 : 60) do
-        akismet.comment_check(ip, nil, akismet_options)
+        akismet.comment_check(ip, user_agent, akismet_options)
       end
-    rescue Timeout::Error => e
+    rescue Timeout::Error
       nil
     end
   end
@@ -132,6 +148,16 @@ class Feedback < ActiveRecord::Base
     result
   end
 
+  def mark_as_ham!
+    mark_as_ham
+    save!
+  end
+
+  def mark_as_spam!
+    mark_as_spam
+    save!
+  end
+
   def report_as_spam
     report_as('spam')
   end
@@ -145,9 +171,9 @@ class Feedback < ActiveRecord::Base
     begin
       Timeout.timeout(defined?($TESTING) ? 5 : 3600) {
         akismet.send("submit_#{spam_or_ham}",
-                     ip, nil, akismet_options)
+                     ip, user_agent, akismet_options)
       }
-    rescue Timeout::Error => e
+    rescue Timeout::Error
       nil
     end
   end
@@ -178,9 +204,12 @@ class Feedback < ActiveRecord::Base
 
   def akismet_client
     return false if blog.sp_akismet_key.blank?
+    begin
+      client = Akismet::Client.new(blog.sp_akismet_key, blog.base_url)
 
-    client = Akismet::Client.new(blog.sp_akismet_key, blog.base_url)
-
-    return client.verify_key ? client : false
+      return client.verify_key ? client : false
+    rescue
+      nil
+    end
   end
 end

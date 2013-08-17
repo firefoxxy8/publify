@@ -30,7 +30,6 @@ describe 'Given a new blog' do
     @blog.should_not be_sp_global
   end
 
-
   it "#sp_article_auto_close should be 0" do
     @blog.sp_article_auto_close.should == 0
   end
@@ -96,8 +95,8 @@ describe 'Given a new blog' do
     @blog.should be_send_outbound_pings
   end
 
-  it '#email_from should be typo@example.com' do
-    @blog.email_from.should == 'typo@example.com'
+  it '#email_from should be publify@example.com' do
+    @blog.email_from.should == 'publify@example.com'
   end
 
   it '#editor should be visual' do
@@ -232,16 +231,36 @@ describe 'Given a new blog' do
     @blog.search_desc_template.should == "Results for %search% | %blog_name% | %blog_subtitle% %page%"
   end
   
+  it 'status list title is Statuses | blog name page' do
+    @blog.statuses_title_template.should == "Statuses | %blog_name% %page%"
+  end
+  
+  it 'status list description  is Statuses | blog name | blog subtitle page' do
+    @blog.statuses_desc_template.should == "Statuses | %blog_name% | %blog_subtitle% %page%"
+  end
+
+  it 'a single status title is status content | blog name' do
+    @blog.status_title_template.should == "%body% | %blog_name%"
+  end
+  
+  it 'status list description  is status content' do
+    @blog.status_desc_template.should == "%excerpt%"
+  end
+
   it 'custom tracking fiels is empty' do
     @blog.custom_tracking_field.should == ''
   end
 
-  it '404 title should be page not found' do
-    @blog.title_error_404.should == "Page not found"
+  it 'twitter_consumer_key is empty' do
+    @blog.twitter_consumer_key.should == ''
   end
   
-  it '404 text should be "The page you are looking for has moved or does not exist"' do
-    @blog.msg_error_404.should == "<p>The page you are looking for has moved or does not exist.</p>"
+  it 'twitter consumer secret should be empty' do
+    @blog.twitter_consumer_secret.should == ''
+  end
+  
+  it 'should have an empty custom url shortener' do
+    @blog.custom_url_shortener.should == ''
   end
 end
 
@@ -325,6 +344,23 @@ describe 'Given a new user' do
   it 'Admin theme should be blue' do
     @user.admin_theme.should == 'blue'
   end  
+  
+  it 'Twitter account for statuses should be empty' do
+    @user.twitter_account.should == ''
+  end
+  
+  it 'Twitter oauth token should be empty' do
+    @user.twitter_oauth_token.should == ''
+  end
+
+  it 'Twitter oauth secret token should be empty' do
+    @user.twitter_oauth_token_secret.should == ''
+  end
+  
+  it 'Twitter profile image should be empty' do
+    @user.twitter_profile_image.should == ''
+  end
+  
 end
 
 describe 'Given a new article' do
@@ -344,5 +380,27 @@ describe 'Given a new page' do
 
   it 'A new page should get an empty password' do
     @page.password.should == ''
+  end
+end
+
+describe "Given a new status" do
+  before(:each) do
+    @status = Status.new
+  end
+  
+  it "should not have a twitter id set" do
+    @status.twitter_id.should == ""
+  end
+  
+  it "should not reply to another one" do
+    @status.in_reply_to_status_id.should == ""
+  end
+
+  it "should not have a reply context message" do
+    @status.in_reply_to_message.should == ""
+  end
+  
+  it "should not have a reply context protected" do
+    @status.in_reply_to_protected.should == false
   end
 end

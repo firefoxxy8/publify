@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   # Load plugin routes first. A little bit ugly, but I didn't find any better way to do it
-  # We consider that only typo_* plugins are concerned
-  Dir.glob(File.join("vendor", "plugins", "typo_*")).each do |dir|
+  # We consider that only publify_* plugins are concerned
+  Dir.glob(File.join("vendor", "plugins", "publify_*")).each do |dir|
     if File.exists?(File.join(dir, "config", "routes.rb"))
       require File.join(dir, "config", "routes.rb")
     end
@@ -11,7 +11,6 @@ Rails.application.routes.draw do
   match 'frontpage', :to => 'local#frontpage'
 
   # for CK Editor
-  match 'fm/filemanager(/:action(/:id))', :to => 'Fm::Filemanager', :format => false
   match 'ckeditor/command', :to => 'ckeditor#command', :format => false
   match 'ckeditor/upload', :to => 'ckeditor#upload', :format => false
 
@@ -102,6 +101,12 @@ Rails.application.routes.draw do
   # For the tests
   get 'theme/static_view_test', :format => false
 
+  # For the statuses
+  match '/sts', :to => 'statuses#index', :format => false
+  match '/sts/page/:page', :to => 'statuses#index', :format => false
+  get '/st/:permalink', :to => 'statuses#show', :format => false
+
+
   # Work around the Bad URI bug
   %w{ accounts backend files sidebar }.each do |i|
     match "#{i}", :to => "#{i}#index", :format => false
@@ -110,22 +115,21 @@ Rails.application.routes.draw do
   end
 
   # Admin/XController
-  %w{advanced cache categories comments profiles general pages feedback
-     resources sidebar textfilters themes trackbacks users settings tags redirects seo post_types }.each do |i|
+  %w{advanced cache categories content comments profiles general pages feedback
+     resources sidebar textfilters themes trackbacks users settings tags redirects seo post_types statuses }.each do |i|
     match "/admin/#{i}", :to => "admin/#{i}#index", :format => false
     match "/admin/#{i}(/:action(/:id))", :to => "admin/#{i}", :action => nil, :id => nil, :format => false
   end
 
-  namespace :admin do
-    resources :content do
-      post :autosave, on: :collection
-      get :insert_editor, on: :collection
-      get :auto_complete_for_article_keywords, on: :collection
-      get :attachment_box_add, on: :member
-      get :resource_add, on: :member
-      get :resource_remove, on: :member
-    end
-  end
+#  namespace :admin do
+#    resources :content do
+#      post :autosave, on: :collection
+#      get :insert_editor, on: :collection
+#      post :destroy, on: :member
+#      get :auto_complete_for_article_keywords, on: :collection
+##      get :attachment_box_add, on: :member
+#    end
+#  end
 
   # default
   root :to  => 'articles#index', :format => false

@@ -174,21 +174,21 @@ http://alsoping.example.com/rpc/ping"
 
   factory :profile, :class => :profile do |l|
     l.label {FactoryGirl.generate(:label)}
-    l.nicename 'Typo contributor'
+    l.nicename 'Publify contributor'
     l.modules [:dashboard, :profile]
   end
 
   factory :profile_admin, parent: :profile do
     label Profile::ADMIN
-    nicename 'Typo administrator'
+    nicename 'Publify administrator'
     modules [ :dashboard, :write, :articles, :pages, :feedback, :themes,
-              :sidebar, :users, :seo, :media, :settings, :profile ]
+              :sidebar, :users, :seo, :media, :settings, :profile, :statuses ]
   end
 
   factory :profile_publisher, :parent => :profile do |l|
     l.label 'publisher'
     l.nicename 'Blog publisher'
-    l.modules [:users, :dashboard, :write, :articles, :pages, :feedback, :media]
+    l.modules [:users, :dashboard, :write, :articles, :pages, :feedback, :media, :statuses]
   end
 
   factory :profile_contributor, :parent => :profile do |l|
@@ -250,6 +250,17 @@ http://alsoping.example.com/rpc/ping"
     user
     published true
     state 'published'
+  end
+
+  factory :status do
+    body 'this is a status'
+    created_at '2013-07-14 01:00:01'
+    published_at '2013-07-14 01:00:01'
+    updated_at '2013-07-14 01:00:01'
+    user
+    published true
+    state 'published'
+    text_filter {FactoryGirl.create(:markdown)}
   end
 
   factory :trackback do |t|

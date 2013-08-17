@@ -16,6 +16,36 @@ class Admin::BaseController < ApplicationController
   end
 
   private
+
+  def update_settings_with!(params)
+    Blog.transaction do
+      params[:setting].each { |k,v| this_blog.send("#{k.to_s}=", v) }
+      this_blog.save
+      flash[:notice] = _('config updated.')
+    end
+  end
+
+  def save_a(object, title)
+    if object.save
+      flash[:notice] = _("#{title.capitalize} was successfully saved.")
+    else
+      flash[:error] = _("#{title.capitalize} could not be saved.")
+    end
+    redirect_to action: 'index'
+  end
+
+  def destroy_a(klass_to_destroy)
+    @record = klass_to_destroy.find(params[:id])
+    if @record.respond_to?(:access_by?) && !@record.access_by?(current_user)
+      flash[:error] = _("Error, you are not allowed to perform this action")
+      return(redirect_to action: 'index')
+    end
+    return render('admin/shared/destroy') unless request.post?
+    @record.destroy
+    flash[:notice] = _("This #{controller_name.humanize} was deleted successfully")
+    redirect_to action: 'index'
+  end
+
   def look_for_needed_db_updates
     migrator = Migrator.new
     if migrator.migrations_pending?
@@ -31,7 +61,7 @@ class Admin::BaseController < ApplicationController
 
     begin
       checker.generate_token
-      flash[:error] = _("For security reasons, you should restart your Typo application. Enjoy your blogging experience.")
+      flash[:error] = _("For security reasons, you should restart your Publify application. Enjoy your blogging experience.")
     rescue
       flash[:error] = _("Error: can't generate secret token. Security is at risk. Please, change %s content", checker.file)
     end

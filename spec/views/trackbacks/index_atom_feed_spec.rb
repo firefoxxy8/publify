@@ -6,11 +6,11 @@ describe "trackbacks/index_atom_feed.atom.builder" do
   end
 
   describe "rendering trackbacks with one trackback" do
-    let(:article) { stub_full_article }
-    let(:trackback) { FactoryGirl.build(:trackback, :article => article) }
+    let(:article) { create(:article) }
+    let(:trackback) { create(:trackback, :article => article) }
 
     before do
-      assign(:trackbacks, [trackback])
+      assign(:items, [trackback])
       render
     end
 
@@ -18,11 +18,11 @@ describe "trackbacks/index_atom_feed.atom.builder" do
       assert_feedvalidator rendered
     end
 
-    it "shows typo with the current version as the generator" do
+    it "shows publify with the current version as the generator" do
       xml = Nokogiri::XML.parse(rendered)
       generator = xml.css("generator").first
-      generator.content.should == "Typo"
-      generator["version"].should == TYPO_VERSION
+      generator.content.should == "Publify"
+      generator["version"].should == PUBLIFY_VERSION
     end
 
     it "should render an Atom feed with one item" do

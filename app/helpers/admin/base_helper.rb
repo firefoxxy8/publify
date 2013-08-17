@@ -47,10 +47,10 @@ module Admin::BaseHelper
   def link_to_destroy_with_profiles(record, controller = controller.controller_name)
     if current_user.admin? || current_user.id == record.user_id
       link_to(_("delete"),
-        { controller: controller, action: 'destroy', id: record.id },
-        data: {confirm: _("Are you sure?")},
-        method: :post, class: 'btn danger', title: _("Delete content"))
-      end
+              { controller: controller, action: 'destroy', id: record.id },
+              data: {confirm: _("Are you sure?")},
+              method: :post, class: 'btn danger', title: _("Delete content"))
+    end
   end
 
   def text_filter_options
@@ -66,7 +66,7 @@ module Admin::BaseHelper
   end
 
   def plugin_options(kind, blank = true)
-    r = TypoPlugins::Keeper.available_plugins(kind).collect do |plugin|
+    r = PublifyPlugins::Keeper.available_plugins(kind).collect do |plugin|
       [ plugin.name, plugin.to_s ]
     end
     blank ? r << [_("none"),''] : r
@@ -97,7 +97,7 @@ module Admin::BaseHelper
     end
 
   def show_actions item
-    content_tag(:div, { :class => 'action' }) do
+    content_tag(:div, { :class => 'action', :style => '' }) do
       [ content_tag(:small, link_to_published(item)),
         small_to_edit(item),
         small_to_delete(item),
@@ -130,13 +130,13 @@ module Admin::BaseHelper
 
   def macro_help_popup(macro, text)
     unless current_user.editor == 'visual'
-      "<a href=\"#{url_for :controller => 'textfilters', :action => 'macro_help', :id => macro.short_name}\" onclick=\"return popup(this, 'Typo Macro Help')\">#{text}</a>"
+      "<a href=\"#{url_for :controller => 'textfilters', :action => 'macro_help', :id => macro.short_name}\" onclick=\"return popup(this, 'Publify Macro Help')\">#{text}</a>"
     end
   end
 
   def render_macros(macros)
     content_tag(:div) do
-      link_to_function(_("Show help on Typo macros") + " (+/-)", update_page { |page| page.visual_effect(:toggle_blind, "macros", :duration => 0.2) })
+      link_to_function(_("Show help on Publify macros") + " (+/-)", update_page { |page| page.visual_effect(:toggle_blind, "macros", :duration => 0.2) })
       content_tag(:table, {:id => 'macros', :style => 'display: none'}) do
         content_tag(:tr) do
           content_tag(:th, _('Name'))
@@ -157,6 +157,7 @@ module Admin::BaseHelper
   def build_editor_link(label, action, id, update, editor)
     link = link_to_remote(label,
             :url => { :action => action, 'editor' => editor},
+            :method => :get,
             :class => 'ui-button-text',
             :loading => "new Element.show('update_spinner_#{id}')",
             :success => "new Element.toggle('update_spinner_#{id}')",
@@ -189,6 +190,11 @@ module Admin::BaseHelper
   end
 
   def small_to_delete(item)
-    content_tag(:small, link_to(_("Delete"), :action => 'destroy', :id => item.id))
+    content_tag(:small, link_to(_("Delete"), {:action => 'destroy', :id => item.id}, :class => 'delete'))
+  end
+
+  def set_autosave_tag(article)
+    @article.inspect
+    hidden_field_tag("article[id]", @article.id) unless @article.id.nil?
   end
 end

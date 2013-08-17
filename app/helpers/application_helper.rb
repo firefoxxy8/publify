@@ -19,21 +19,21 @@ module ApplicationHelper
     else        sprintf(many, size)
     end
   end
-  
+
   # Produce a link to the permalink_url of 'item'.
-  def link_to_permalink(item, title, anchor=nil, style=nil, nofollow=nil)
+  def link_to_permalink(item, title, anchor=nil, style=nil, nofollow=nil, only_path=false)
     options = {}
     options[:class] = style if style
     options[:rel] = "nofollow" if nofollow
 
-    link_to title, item.permalink_url(anchor), options
+    link_to title, item.permalink_url(anchor,only_path), options
   end
 
   # The '5 comments' link from the bottom of articles
   def comments_link(article)
     comment_count = article.published_comments.size
     # FIXME Why using own pluralize metchod when the Localize._ provides the same funciotnality, but better? (by simply calling _('%d comments', comment_count) and using the en translation: l.store "%d comments", ["No nomments", "1 comment", "%d comments"])
-    link_to_permalink(article,pluralize(comment_count, _('no comments'), _('1 comment'), _('%d comments', comment_count)),'comments')
+    link_to_permalink(article,pluralize(comment_count, _('no comments'), _('1 comment'), _('%d comments', comment_count)),'comments', nil, nil, true)
   end
 
   def avatar_tag(options = {})
@@ -53,7 +53,7 @@ module ApplicationHelper
 
   def markup_help_popup(markup, text)
     if markup and markup.commenthelp.size > 1
-      "<a href=\"#{url_for :controller => 'articles', :action => 'markup_help', :id => markup.id}\" onclick=\"return popup(this, 'Typo Markup Help')\">#{text}</a>"
+      "<a href=\"#{url_for :controller => 'articles', :action => 'markup_help', :id => markup.id}\" onclick=\"return popup(this, 'Publify Markup Help')\">#{text}</a>"
     else
       ''
     end
@@ -61,7 +61,7 @@ module ApplicationHelper
 
   def onhover_show_admin_tools(type, id = nil)
     tag = []
-    tag << %{ onmouseover="if (getCookie('typo_user_profile') == 'admin') { Element.show('admin_#{[type, id].compact.join('_')}'); }" }
+    tag << %{ onmouseover="if (getCookie('publify_user_profile') == 'admin') { Element.show('admin_#{[type, id].compact.join('_')}'); }" }
     tag << %{ onmouseout="Element.hide('admin_#{[type, id].compact.join('_')}');" }
     tag
   end
@@ -90,6 +90,18 @@ module ApplicationHelper
     end
   end
 
+  def author_picture(status)
+    return if status.user.twitter_profile_image.nil? or status.user.twitter_profile_image.empty?
+    return if status.twitter_id.nil? or status.twitter_id.empty?
+
+    image_tag(status.user.twitter_profile_image , class: "alignleft", alt: status.user.nickname)
+  end
+
+  def view_on_twitter(status)
+    return if status.twitter_id.nil? or status.twitter_id.empty?
+    return " | " + link_to(_("View on Twitter"), File.join('https://twitter.com', status.user.twitter_account, 'status', status.twitter_id), {class: 'u-syndication', rel: 'syndication'})
+  end
+
   def google_analytics
     unless this_blog.google_analytics.empty?
       <<-HTML
@@ -106,7 +118,7 @@ module ApplicationHelper
   end
 
   def use_canonical
-    "<link rel='canonical' href='#{@canonical_url}' />".html_safe unless @canonical_url.nil?
+    "<link rel='canonical' href='#{this_blog.base_url + request.fullpath}' />".html_safe
   end
 
   def page_header
@@ -115,12 +127,12 @@ module ApplicationHelper
 
   def page_header_includes
     content_array.collect { |c| c.whiteboard }.collect do |w|
-      w.select {|k,v| k =~ /^page_header_/}.collect do |(k,v)|
+      w.select {|k,v| k =~ /^page_header_/}.collect do |_,v|
         v = v.chomp
-      # trim the same number of spaces from the beginning of each line
-      # this way plugins can indent nicely without making ugly source output
-      spaces = /\A[ \t]*/.match(v)[0].gsub(/\t/, "  ")
-      v.gsub!(/^#{spaces}/, '  ') # add 2 spaces to line up with the assumed position of the surrounding tags
+        # trim the same number of spaces from the beginning of each line
+        # this way plugins can indent nicely without making ugly source output
+        spaces = /\A[ \t]*/.match(v)[0].gsub(/\t/, "  ")
+        v.gsub!(/^#{spaces}/, '  ') # add 2 spaces to line up with the assumed position of the surrounding tags
       end
     end.flatten.uniq.join("\n")
   end
@@ -156,12 +168,12 @@ module ApplicationHelper
   end
 
   def new_js_distance_of_time_in_words_to_now(date)
-    # Ruby Date class doesn't have #utc method, but _typo_dev.html.erb
+    # Ruby Date class doesn't have #utc method, but _publify_dev.html.erb
     # passes Ruby Date.
     date = date.to_time
     time = _(date.utc.strftime(_("%%a, %%d %%b %%Y %%H:%%M:%%S GMT", date.utc)))
     timestamp = date.utc.to_i
-    content_tag(:span, time, {:class => "typo_date date gmttimestamp-#{timestamp}", :title => time})
+    content_tag(:span, time, {:class => "publify_date date gmttimestamp-#{timestamp}", :title => time})
   end
 
   def display_date(date)

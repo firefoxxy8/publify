@@ -46,7 +46,8 @@ module ContentBase
   # object.
   def generate_html(field, text = nil)
     text ||= self[field].to_s
-    html = (text_filter || default_text_filter).filter_text_for_content(blog, text, self) || text
+    prehtml = html_preprocess(field, text).to_s
+    html = (text_filter || default_text_filter).filter_text_for_content(blog, prehtml, self) || prehtml
     html_postprocess(field,html).to_s
   end
 
@@ -56,8 +57,25 @@ module ContentBase
     html
   end
 
+  def html_preprocess(field, html)
+    html
+  end
+
   def html_map field
     content_fields.include? field
+  end
+
+  def excerpt_text(length = 160)
+    if respond_to?(:excerpt) and (excerpt || "") != ""
+      text = generate_html(:excerpt, excerpt)
+    else
+      text = html(:all)
+    end
+
+    text = text.strip_html
+
+    return text.slice(0, length) +
+      (text.length > length ? '...' : '');
   end
 
   def invalidates_cache?(on_destruction = false)

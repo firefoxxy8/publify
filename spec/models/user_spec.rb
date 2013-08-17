@@ -20,7 +20,7 @@ describe User do
 
   context 'With the contents and users fixtures loaded' do
     before(:each) do
-      User.stub!(:salt).and_return('change-me')
+      User.stub(:salt).and_return('change-me')
     end
 
     it 'Calling User.authenticate with a valid user/password combo returns a user' do
@@ -64,7 +64,7 @@ describe User do
   describe 'With a new user' do
     before(:each) do
       @user = User.new :login => 'not_bob'
-      @user.email = 'typo@typo.com'
+      @user.email = 'publify@publify.com'
       set_password 'a secure password'
     end
 
@@ -289,4 +289,42 @@ describe User do
     end
   end
 
+  describe :first_and_last_name do
+    context "with first and last name" do
+      let(:user) { create(:user, firstname: 'Marlon', lastname: 'Brando') }
+      it { expect(user.first_and_last_name).to eq('Marlon Brando') }
+    end
+
+    context "with firstname without lastname" do
+      let(:user) { create(:user, firstname: 'Marlon', lastname: nil) }
+      it { expect(user.first_and_last_name).to eq('') }
+    end
+  end
+
+  describe :display_names do
+    context "with user without nickname, firstname, lastname" do
+      let(:user) { create(:user, nickname: nil, firstname: nil, lastname: nil) }
+      it { expect(user.display_names).to eq([user.login]) }
+    end
+
+    context "with user with nickname without firstname, lastname" do
+      let(:user) { create(:user, nickname: 'Bob', firstname: nil, lastname: nil) }
+      it { expect(user.display_names).to eq([user.login, user.nickname]) }
+    end
+
+    context "with user with firstname, without nickname, lastname" do
+      let(:user) { create(:user, nickname: nil, firstname: 'Robert', lastname: nil) }
+      it { expect(user.display_names).to eq([user.login, user.firstname]) }
+    end
+
+    context "with user with lastname, without nickname, firstname" do
+      let(:user) { create(:user, nickname: nil, firstname: nil, lastname: 'Redford') }
+      it { expect(user.display_names).to eq([user.login, user.lastname]) }
+    end
+
+    context "with user with firstname and lastname, witjout nickname" do
+      let(:user) { create(:user, nickname: nil, firstname: 'Robert', lastname: 'Redford') }
+      it { expect(user.display_names).to eq([user.login, user.firstname, user.lastname, "#{user.firstname} #{user.lastname}"]) }
+    end
+  end
 end

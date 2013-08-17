@@ -289,7 +289,7 @@ describe Article do
     t = Time.now
     # We stub the Time.now answer to emulate a sleep of 4. Avoid the sleep. So
     # speed up in test
-    Time.stub!(:now).and_return(t + 5.seconds)
+    Time.stub(:now).and_return(t + 5.seconds)
     Trigger.fire
     art.reload
     assert art.published
@@ -393,7 +393,7 @@ describe Article do
     before :each do
       @article = Article.new(
         :body => 'basic text',
-        :extended => 'extended text to explain more and more how Typo is wonderful')
+        :extended => 'extended text to explain more and more how Publify is wonderful')
     end
 
     it 'should combine body and extended content' do
@@ -469,14 +469,14 @@ describe Article do
   describe '#comment_url' do
     it 'should render complete url of comment' do
       article = stub_model(Article, :id => 123)
-      article.comment_url.should == "http://myblog.net/comments?article_id=#{article.id}"
+      article.comment_url.should == "/comments?article_id=#{article.id}"
     end
   end
 
   describe '#preview_comment_url' do
     it 'should render complete url of comment' do
       article = stub_model(Article, :id => 123)
-      article.preview_comment_url.should == "http://myblog.net/comments/preview?article_id=#{article.id}"
+      article.preview_comment_url.should == "/comments/preview?article_id=#{article.id}"
     end
   end
 
@@ -829,8 +829,15 @@ describe Article do
     it "returns article with comment count field" do
       comment = FactoryGirl.create(:comment)
       article = comment.article
-      expect(Article.bestof.first).to respond_to(:comment_count)
-      expect(Article.bestof.first.comment_count).to eq(1)
+      expect(Article.bestof.first.comment_count.to_i).to eq 1
+    end
+
+    it "counts comments but not trackbacks" do
+      article = create :article
+      create :trackback, article: article
+      create_list :comment, 2, article: article
+
+      expect(Article.bestof.first.comment_count.to_i).to eq 2
     end
 
     it "returns only 5 articles" do
@@ -847,7 +854,7 @@ describe Article do
       expect(Article.bestof).to eq([article])
     end
 
-    it "returns article sorted bu comment counts" do
+    it "returns article sorted by comment counts" do
       last_article = FactoryGirl.create(:article)
       FactoryGirl.create(:comment, article: last_article)
 

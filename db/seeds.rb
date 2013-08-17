@@ -28,10 +28,10 @@ TextFilter.create(name: 'markdown smartypants', description: 'Markdown with Smar
 TextFilter.create(name: 'textile', description: 'Textile',
                   markup: 'textile', filters: [], params: {})
 
-admin = Profile.create(label: 'admin', nicename: 'Typo administrator',
-                       modules: [:dashboard, :articles, :pages, :media, :feedback, :themes, :sidebar, :users, :settings, :profile, :seo])
+admin = Profile.create(label: 'admin', nicename: 'Publify administrator',
+                       modules: [:dashboard, :articles, :statuses, :pages, :feedback, :media, :themes, :sidebar, :profile, :users, :settings, :seo])
 publisher = Profile.create(label: 'publisher', nicename: 'Blog publisher',
-                           modules: [:dashboard, :articles, :media, :pages, :feedback, :profile])
+                           modules: [:dashboard, :articles, :statuses, :pages, :feedback, :media, :profile])
 contributor = Profile.create(label: 'contributor', nicename: 'Contributor',
                              modules: [:dashboard, :profile ])
 

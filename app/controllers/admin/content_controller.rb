@@ -26,12 +26,12 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def new
-    @article = new_article_with_defaults
+    @article = Article::Factory.new(this_blog, current_user).default
     load_resources
   end
 
   def create
-    article_factory = ArticleFactory.new(this_blog, current_user)
+    article_factory = Article::Factory.new(this_blog, current_user)
     @article = article_factory.get_or_build_from(params[:article][:id])
 
     update_article_attributes
@@ -85,52 +85,13 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def destroy
-    @record = Article.find(params[:id])
-
-    unless @record.access_by?(current_user)
-      flash[:error] = _("Error, you are not allowed to perform this action")
-      return(redirect_to :action => 'index')
-    end
-
-    return(render 'admin/shared/destroy') unless request.post?
-
-    @record.destroy
-    flash[:notice] = _("This article was deleted successfully")
-    redirect_to :action => 'index'
-  end
-
-  def resource_do(action)
-    @article = Article.find(params[:id])
-    @resources = Resource.by_created_at
-    @resource = Resource.find(params["resource_id"])
-    @article.resources.send(action, resource)
-    @article.save
-
-    render :partial => "show_resources"
-  end
-
-  def resource_add
-    resource_do(:<<)
-  end
-
-  def resource_remove
-    resource_do(:delete)
-  end
-
-  def attachment_box_add
-    render :update do |page|
-      page["attachment_add_#{params[:id]}"].remove
-      page.insert_html :bottom, 'attachments',
-          :partial => 'admin/content/attachment',
-          :locals => { :attachment_num => params[:id], :hidden => true }
-      page.visual_effect(:toggle_appear, "attachment_#{params[:id]}")
-    end
+    destroy_a(Article)
   end
 
   def autosave
     id = params[:article][:id] || params[:id]
 
-    article_factory = ArticleFactory.new(this_blog, current_user)
+    article_factory = Article::Factory.new(this_blog, current_user)
     @article = article_factory.get_or_build_from(id)
 
     get_fresh_or_existing_draft_for_article
@@ -237,14 +198,5 @@ class Admin::ContentController < Admin::BaseController
     @article.save_attachments!(params[:attachments])
     @article.state = "draft" if @article.draft
     @article.text_filter ||= current_user.default_text_filter
-  end
-
-  def new_article_with_defaults
-    Article.new.tap do |art|
-      art.allow_comments = this_blog.default_allow_comments
-      art.allow_pings = this_blog.default_allow_pings
-      art.text_filter = current_user.default_text_filter
-      art.published = true
-    end
   end
 end

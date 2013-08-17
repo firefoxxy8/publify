@@ -13,7 +13,7 @@ describe "comments/index_atom_feed.atom.builder" do
                                       guid: '12313123123123123') }
 
     before do
-      assign(:comments, [comment])
+      assign(:items, [comment])
       render
     end
 
@@ -21,11 +21,11 @@ describe "comments/index_atom_feed.atom.builder" do
       assert_feedvalidator rendered
     end
 
-    it "shows typo with the current version as the generator" do
+    it "shows publify with the current version as the generator" do
       xml = Nokogiri::XML.parse(rendered)
       generator = xml.css("generator").first
-      generator.content.should == "Typo"
-      generator["version"].should == TYPO_VERSION
+      generator.content.should == "Publify"
+      generator["version"].should == PUBLIFY_VERSION
     end
 
     it "should render an Atom feed with one item" do

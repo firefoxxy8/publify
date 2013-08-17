@@ -5,19 +5,20 @@ require 'rails/all'
 # Auto-require default libraries and those for the current Rails environment.
 Bundler.require :default, Rails.env
 
-module TypoBlog
+module Publify
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
 
+    #define default secret token to avoid information duplication
+    $default_token = "08aac1f2d29e54c90efa24a4aefef843ab62da7a2610d193bc0558a50254c7debac56b48ffd0b5990d6ed0cbecc7dc08dce1503b6b864d580758c3c46056729a"
+    
     # Setup the cache path
     config.action_controller.page_cache_directory = "#{::Rails.root.to_s}/public/cache/"
     config.cache_store=:file_store, "#{::Rails.root.to_s}/public/cache/"
-
-    # I need the localization plugin to load first
-    # Otherwise, I can't localize plugins <= localization
-    config.plugins = [ :localization, :all ]
+    
+    config.plugins = [ :all ]
 
     config.autoload_paths += %W(
       app/apis
@@ -37,14 +38,17 @@ module TypoBlog
   end
 
   # Load included libraries.
-
+  require 'localization'
+  require 'sidebar'
+  require 'publify_sidebar'
+  require 'publify_textfilters'
+  require 'publify_avatar_gravatar'
+  require 'calendar_date_select/lib/calendar_date_select.rb'
+  require 'easy-ckeditor'
   require 'action_web_service'
   ## Required by the plugins themselves.
   # require 'avatar_plugin'
   require 'email_notify'
-
-  $FM_OVERWRITE = true
-  require 'filemanager'
 
   require 'format'
   require 'i18n_interpolation_deprecation'
@@ -53,15 +57,15 @@ module TypoBlog
   # require 'spam_protection'
   require 'stateful'
   require 'transforms'
-  require 'typo_time'
-  require 'typo_guid'
+  require 'publify_time'
+  require 'publify_guid'
   ## Required by the plugins themselves.
-  # require 'typo_plugins'
+  # require 'publify_plugins'
   require 'bare_migration'
-  require 'typo_version'
+  require 'publify_version'
   require 'rails_patch/active_support'
 
-  require "#{Rails.root.to_s}/vendor/plugins/typo_login_system/lib/login_system"
+  require 'publify_login_system'
 
   Date::DATE_FORMATS.merge!(
     :long_weekday => '%a %B %e, %Y %H:%M'

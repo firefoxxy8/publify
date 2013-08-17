@@ -4,62 +4,76 @@ class Admin::DashboardController < Admin::BaseController
   require 'rexml/document'
 
   def index
+    t = Time.new
+    today = t.strftime("%Y-%m-%d 00:00")
+    
+    # Since last venue
     @newposts_count = Article.published_since(current_user.last_venue).count
     @newcomments_count = Feedback.published_since(current_user.last_venue).count
+    
+    # Today
+    @statposts = Article.published.where("published_at > ?", today).count
+    @statsdrafts = Article.drafts.where("created_at > ?", today).count
+    @statspages = Page.where("published_at > ?", today).count
+    @statuses = Status.where("published_at > ?", today).count
+    @statuserposts = Article.published.where("published_at > ?", today).count(conditions: {user_id: current_user.id})
+    @statcomments = Comment.where("created_at > ?", today).count
+    @presumedspam = Comment.presumed_spam.where("created_at > ?", today).count
+    @confirmed = Comment.ham.where("created_at > ?", today).count
+    @unconfirmed = Comment.unconfirmed.where("created_at > ?", today).count
+    
     @comments = Comment.last_published
-    @recent_posts = Article.published.limit(5)
-    @bestof = Article.bestof
-    @statposts = Article.published.count
-    @statuserposts = Article.published.count(conditions: {user_id: current_user.id})
-    @statcomments = Comment.not_spam.count
+    @drafts = Article.drafts.where("user_id = ?", current_user.id).limit(5)
+    
     @statspam = Comment.spam.count
-    @presumedspam = Comment.presumed_spam.count
-    @categories = Category.count
     @inbound_links = inbound_links
-    @typo_links = typo_dev
-    typo_version
+    @publify_links = publify_dev
+    publify_version
   end
 
-  def inbound_links
-    url = "http://www.google.com/search?q=link:#{this_blog.base_url}&tbm=blg&output=rss"
-    open(url) do |http|
-      return parse_rss(http.read).reverse
-    end
-  rescue
-    nil
-  end
-
-  def typo_version
-    typo_version = nil
-    version = TYPO_VERSION.to_s.split('.')
+  def publify_version
+    publify_version = nil
+    version = PUBLIFY_VERSION.to_s.split('.')
     begin
-      url = "http://blog.typosphere.org/version.txt"
+      url = "http://blog.publify.co/version.txt"
       open(url) do |http|
-        typo_version = http.read[0..5]
-        version = typo_version.split('.')
+        publify_version = http.read[0..5]
+        version = publify_version.split('.')
       end
     rescue
     end
 
     if version[0].to_i > TYPO_MAJOR.to_i
-      flash.now[:error] = _("You are late from at least one major version of Typo. You should upgrade immediately. Download and install %s", "<a href='http://typosphere.org/stable.tgz'>#{_("the latest Typo version")}</a>").html_safe
+      flash.now[:error] = _("You are late from at least one major version of Publify. You should upgrade immediately. Download and install %s", "<a href='http://publify.co/stable.tgz'>#{_("the latest Publify version")}</a>").html_safe
     elsif version[1].to_i > TYPO_SUB.to_i
-      flash.now[:warning] = _("There's a new version of Typo available which may contain important bug fixes. Why don't you upgrade to %s ?", "<a href='http://typosphere.org/stable.tgz'>#{_("the latest Typo version")}</a>").html_safe
+      flash.now[:warning] = _("There's a new version of Publify available which may contain important bug fixes. Why don't you upgrade to %s ?", "<a href='http://publify.co/stable.tgz'>#{_("the latest Publify version")}</a>").html_safe
     elsif version[2].to_i > TYPO_MINOR.to_i
-      flash.now[:notice] = _("There's a new version of Typo available. Why don't you upgrade to %s ?", "<a href='http://typosphere.org/stable.tgz'>#{_("the latest Typo version")}</a>").html_safe
+      flash.now[:notice] = _("There's a new version of Publify available. Why don't you upgrade to %s ?", "<a href='http://publify.co/stable.tgz'>#{_("the latest Publify version")}</a>").html_safe
     end
-  end
-
-  def typo_dev
-    url = "http://blog.typosphere.org/articles.rss"
-    open(url) do |http|
-      return parse_rss(http.read)[0..4]
-    end
-  rescue
-    nil
   end
 
   private
+
+  def inbound_links
+    host = URI.parse(this_blog.base_url).host 
+    return [] if (host.downcase == 'localhost' || host =~ /\.local$/) # don't try to fetch links for local blogs
+    url = "http://www.google.com/search?q=links:#{host}&tbm=blg&output=rss"
+    parse(url).reverse.compact
+  end
+
+  def publify_dev
+    url = "http://blog.publify.co/articles.rss"
+    parse(url)[0..2]
+  end
+
+
+  def parse(url)
+    open(url) do |http|
+      return parse_rss(http.read)
+    end
+  rescue
+    []
+  end
 
   class RssItem < Struct.new(:link, :title, :description, :description_link, :date, :author)
     def to_s; title end
