@@ -10,7 +10,8 @@ set :application, "typo"
 set :deploy_to, "/var/www/#{application}"
 
 set :scm, :git
-set :repository, 'matijs@mist.matijs.net:git/typo.git'
+set :repository, '/home/matijs/git/typo.git'
+set :local_repository, 'matijs@mist.matijs.net:git/typo.git'
 set :branch, "toxic-elephant"
 
 role :app, "mist.matijs.net"
