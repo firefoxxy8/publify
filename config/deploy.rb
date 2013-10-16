@@ -14,6 +14,8 @@ set :repository, '/home/matijs/git/typo.git'
 set :local_repository, 'matijs@mist.matijs.net:git/typo.git'
 set :branch, "toxic-elephant"
 
+set :use_sudo, false
+
 role :app, "mist.matijs.net"
 role :web, "mist.matijs.net"
 role :db,  "mist.matijs.net", :primary => true
