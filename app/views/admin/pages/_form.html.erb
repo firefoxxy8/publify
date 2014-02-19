@@ -1,83 +1,90 @@
-<input type="hidden" name="current_editor" id="current_editor" value="<%= current_user.editor %>" />
 <input type="hidden" name="user_textfilter" id="user_textfilter" value="<%= current_user.text_filter_name %>" />
 
-<h2 class='page-header'>
-  <%= _("#{controller.action_name.to_s.capitalize} Page") %>
-  <span class='pull-right'>
-    <%= save( _("Publish")) %>
-  </span>
-</h2>
-  
 <%= error_messages_for 'page' %>
-<div>
-  <div class='span9'>
-    <div>
-      <%= text_field 'page', 'title', :class => 'input-block-level', :placeholder => _('Title')  %>
-    </div>
-    
-    <%= render('images', { :images => @images}) unless @images.empty? %>
-    
-    <div id='editor-menu'>
-      <ul class="nav nav-tabs">
-        <li id='image-link' <%= 'style="display: none"' if current_user.editor == 'visual' %>><%= toggle_element 'carousel-wrapper', _("Images") %></li>
-        <li id="f" class='pull-right <%= "active" if current_user.editor == 'visual' %>'>
-          <%= build_editor_link(_("Visual"), 'insert_editor', 'fck', 'visual_editor', 'visual') %>
-        </li>
-        <li id="s" class='pull-right <%= "active" if current_user.editor == 'simple' %> '>
-          <%= build_editor_link("HTML", 'insert_editor', 'simple', 'simple_editor', 'simple') %>
-        </li>
-      </ul>
-    </div>
-    
-    <div id='editor'>
-      <div id='quicktags' style='<%= "display: none;" if current_user.editor == 'visual' %>'>
-        <script type="text/javascript">edToolbar('page_body');</script>
-      </div>
-      <div id ='visual_editor' <%= "style='display: none;'" if current_user.editor == 'simple'%> >
-        <%= ckeditor_textarea('page', 'body', {:class => 'large', :height => '300px', :rows => '20'}) if current_user.editor == 'visual' %>
-      </div>
-      <div id='simple_editor' <%= "style='display: none;'" if current_user.editor == 'visual'%> >
-        <%= text_area('page', 'body', {:class => 'input-block-level', :height => '300px', :rows => '20'}) if current_user.editor == 'simple' %>
-        <%= render_macros(@macros) if current_user.editor == 'simple' %>
-      </div>
-    </div>
-    <div class='separator'>
-      <div class='well'>
-        <fieldset>
-          <legend><%= _("Publish settings") %></legend>
-          <div class='control-group'>
-            <%= _("Status") %>: <strong><%= _(@page.state.to_s.downcase) %></strong> <%= toggle_element 'status' %>
-            <div id='status' style='display: none;'>
-              <label for="page_published" class='checkbox'>
-                <%= check_box 'page', 'published'  %>
-                <%= _("Online")%>
-              </label>
-            </div>
-          </div>
-          <div class='control-group'>
-            <%= _("Article filter") %>: <strong><%= _("#{@page.text_filter.description}") %></strong> <%= toggle_element 'text_filter' %>
-            <div id='text_filter' style='display: none;'>
-              <select name="page[text_filter]" id="text_filter">
-              <%= options_for_select text_filter_options, @page.text_filter %>
-            </select>
-            </div>
-          </div>
-        </fieldset>
-      </div>
-      <div class='form-actions'>
-        <div class='pull-right'>
-            <%= save( _("Publish")) %>
-        </div>
-      </div>
+<div class='row'>
+  <div class='col-md-12'>
+    <span class='pull-right'>
+      <%= link_to(t('.cancel'), {action: 'index'}, {class: 'btn btn-default'}) %>
+      <!-- Button trigger modal -->
+      <button class="btn btn-success" data-toggle="modal" data-target="#publish">
+        <%= controller.action_name == "new" ? t(".publish") : t(".save") %>
+      </button>    
+    </span>
+  </div>
+</div>
+
+<div class='row'>
+  <div class='col-md-8 col-md-offset-2' style='padding-top: 20px'>
+    <%= error_messages_for 'page' %>
+  </div>
+</div>
+
+<div class='row'>
+  <div class='col-md-2' id='quicktags-block'>
+    <div id='quicktags' class='pull-right'>
+      <script type="text/javascript">edToolbar('page_body', '<%= @page.text_filter %>');</script>
     </div>
   </div>
-  <div class='span3'>
-    <div class='well'>
-      <h4><%= _("Permanent link")%></h4>
-      <div>
-        <%= text_field 'page', 'name', :class => 'input-block-level' %>
-      </div>
-      
+  
+  <div class='col-md-8'>
+    <%= text_field 'page', 'title', :class => 'form-control', :placeholder => t('.title')  %>
+
+    <div id='editor'>
+      <%= text_area('page', 'body', {:class => 'form-control ', :height => '300px', :rows => '20', placeholder: t('.type_your_post'), :"data-widearea" => "enable"}) %>
+      <%#= render 'admin/shared/macros' %>
     </div>
   </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="publish" tabindex="-1" role="dialog" aria-labelledby="publish" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="publish">
+          <%= t('.publish') %>
+          <%= submit_tag( t(".publish"), class: 'btn btn-success pull-right') %>
+        </h2>
+      </div>
+      <div class="modal-body">
+        <div class='well'>
+          <h4><%= t(".permanent_link")%></h4>
+          <div>
+            <%= text_field 'page', 'name', :class => 'form-control' %>
+          </div>
+
+        </div>
+        
+        <div class='well'>
+          <fieldset>
+            <legend><%= t(".publish_settings") %></legend>
+            <div class='control-group'>
+              <%= t(".status") %>: <strong><%= @page.state.to_s.downcase %></strong> 
+              <%= toggle_element('status') %>
+              <div id='status' class='collapse'>
+                <label for="page_published" class='checkbox'>
+                  <%= check_box 'page', 'published'  %>
+                  <%= t(".online")%>
+                </label>
+                <p><span class='btn btn-default btn-mini'><%= toggle_element 'status', "OK" %></span></p>
+              </div>
+            </div>
+            <div class='control-group'>
+              <%= t(".article_filter") %>: <strong><%= @page.text_filter.description %></strong> <%= toggle_element 'text_filter' %>
+              <div id='text_filter' class='collapse'>
+                <select name="page[text_filter]" id="text_filter" class='form-control'>
+                <%= options_for_select text_filter_options, @page.text_filter %>
+              </select>
+              <p><span class='btn btn-mini btn-default'><%= toggle_element 'text_filter', "OK" %></span></p>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <%= submit_tag( t(".publish"), class: 'btn btn-success') %>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

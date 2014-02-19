@@ -99,16 +99,13 @@ describe 'Given a new blog' do
     @blog.email_from.should == 'publify@example.com'
   end
 
-  it '#editor should be visual' do
-    @blog.editor.should == 'visual'
-  end
-
   it '#date format should be day/month/year hour:minute' do
     @blog.date_format.should == '%d/%m/%Y'
     @blog.time_format.should == '%Hh%M'
   end
 
-  it 'Thumb and medium image size' do
+  it 'Thumb, medium and avatar image size' do
+    @blog.image_avatar_size.should == 48
     @blog.image_thumb_size.should == 125
     @blog.image_medium_size.should == 600
   end
@@ -129,7 +126,7 @@ describe 'Given a new blog' do
   
   it 'RSS description should be disable but not empty' do
     @blog.should_not be_rss_description
-    @blog.rss_description_text.should == "<hr /><p><small>Original article writen by %author% and published on <a href='%blog_url%'>%blog_name%</a> | <a href='%permalink_url%'>direct link to this article</a> | If you are reading this article elsewhere than <a href='%blog_url%'>%blog_name%</a>, it has been illegally reproduced and without proper authorization.</small></p>"
+    @blog.rss_description_text.should == "<hr /><p><small>Original article written by %author% and published on <a href='%blog_url%'>%blog_name%</a> | <a href='%permalink_url%'>direct link to this article</a> | If you are reading this article anywhere other than on <a href='%blog_url%'>%blog_name%</a>, it has been illegally reproduced and without proper authorization.</small></p>"
   end
   
   it 'Permalink format should be /year/month/day/title' do
@@ -141,9 +138,7 @@ describe 'Given a new blog' do
     @blog.robots.should == ''
   end
 
-  it 'Categories and tags should be indexed' do
-    @blog.should be_index_categories
-    @blog.should_not be_unindex_categories
+  it 'Tags should be indexed' do
     @blog.should be_index_tags
     @blog.should_not be_unindex_tags    
   end
@@ -191,14 +186,6 @@ describe 'Given a new blog' do
     @blog.paginated_desc_template.should == "%blog_name% | %blog_subtitle% | %meta_keywords% %page%"
   end
 
-  it 'category title template is Category: name | blog_name | page' do
-    @blog.category_title_template.should == "Category: %name% | %blog_name% %page%"
-  end
-  
-  it 'category description template is name | description | blog description page' do
-    @blog.category_desc_template.should == "%name% | %description% | %blog_subtitle% %page%"
-  end
-
   it 'tags title template is Tag: name | blog_name | page' do
     @blog.tag_title_template.should == "Tag: %name% | %blog_name% %page%"
   end
@@ -232,11 +219,11 @@ describe 'Given a new blog' do
   end
   
   it 'status list title is Statuses | blog name page' do
-    @blog.statuses_title_template.should == "Statuses | %blog_name% %page%"
+    @blog.statuses_title_template.should == "Notes | %blog_name% %page%"
   end
   
-  it 'status list description  is Statuses | blog name | blog subtitle page' do
-    @blog.statuses_desc_template.should == "Statuses | %blog_name% | %blog_subtitle% %page%"
+  it 'status list description  is Notes | blog name | blog subtitle page' do
+    @blog.statuses_desc_template.should == "Notes | %blog_name% | %blog_subtitle% %page%"
   end
 
   it 'a single status title is status content | blog name' do
@@ -262,6 +249,10 @@ describe 'Given a new blog' do
   it 'should have an empty custom url shortener' do
     @blog.custom_url_shortener.should == ''
   end
+  
+  it 'a new blog should display statuses in the main feed' do
+    @blog.statuses_in_timeline.should == true
+  end
 end
 
 describe 'Given a new user' do
@@ -273,10 +264,6 @@ describe 'Given a new user' do
     @user.should be_notify_watch_my_articles
   end
 
-  it 'Default editor is visual' do
-    @user.editor.should == 'visual'
-  end
-  
   it 'Firstname is empty' do
     @user.firstname.should == ''
   end
@@ -316,30 +303,6 @@ describe 'Given a new user' do
   it 'Jabber is empty' do
     @user.jabber.should == ''
   end
-
-  it 'URL display in user profile is not enabled' do
-    @user.should_not be_show_url
-  end
-
-  it 'MSN display in user profile is not enabled' do
-    @user.should_not be_show_msn
-  end
-
-  it 'AIM display in user profile is not enabled' do
-    @user.should_not be_show_aim
-  end
-
-  it 'Yahoo ID display in user profile is not enabled' do
-    @user.should_not be_show_yahoo
-  end
-  
-  it 'Twitter display in user profile is not enabled' do
-    @user.should_not be_show_twitter
-  end
-  
-  it 'Jabber display in user profile is not enabled' do
-    @user.should_not be_show_jabber
-  end
   
   it 'Admin theme should be blue' do
     @user.admin_theme.should == 'blue'
@@ -359,8 +322,7 @@ describe 'Given a new user' do
   
   it 'Twitter profile image should be empty' do
     @user.twitter_profile_image.should == ''
-  end
-  
+  end  
 end
 
 describe 'Given a new article' do
@@ -385,22 +347,22 @@ end
 
 describe "Given a new status" do
   before(:each) do
-    @status = Status.new
+    @note = Note.new
   end
   
   it "should not have a twitter id set" do
-    @status.twitter_id.should == ""
+    @note.twitter_id.should == ""
   end
   
   it "should not reply to another one" do
-    @status.in_reply_to_status_id.should == ""
+    @note.in_reply_to_status_id.should == ""
   end
 
   it "should not have a reply context message" do
-    @status.in_reply_to_message.should == ""
+    @note.in_reply_to_message.should == ""
   end
   
   it "should not have a reply context protected" do
-    @status.in_reply_to_protected.should == false
+    @note.in_reply_to_protected.should == false
   end
 end

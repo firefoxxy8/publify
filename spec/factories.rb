@@ -2,53 +2,56 @@
 
 # Factory definitions
 FactoryGirl.define do
-  sequence :name do |n|
-    "name_#{n}"
-  end
 
-  sequence :user do |n|
-    "user#{n}"
-  end
-
-  sequence :email do |n|
-    "user#{n}@example.com"
-  end
-
-  sequence :guid do |n|
-    "deadbeef#{n}"
-  end
-
-  sequence :label do |n|
-    "lab_#{n}"
-  end
-
-  sequence :file_name do |f|
-    "file_name_#{f}"
-  end
-
-  sequence :category do |n|
-    "c_#{n}"
-  end
-
-  basetime = Time.now
-
-  sequence :time do |n|
-    basetime - n
-  end
+  sequence :name do |n|; "name_#{n}"; end
+  sequence :body do |n|; "body #{n}" * (n+3 % 5) ; end
+  sequence :user do |n|; "user#{n}" ; end
+  sequence :email do |n|; "user#{n}@example.com" ; end
+  sequence :guid do |n|; "deadbeef#{n}" ; end
+  sequence :label do |n|; "lab_#{n}" ; end
+  sequence :file_name do |f|; "file_name_#{f}" ; end
+  sequence :time do |n|; DateTime.new(2012,3,26,19,56) - n ; end
 
   factory :user do
     login { FactoryGirl.generate(:user) }
     email { generate(:email) }
     name 'Bond'
+    nickname "James Bond"
     notify_via_email false
     notify_on_new_articles false
     notify_on_comments false
     password 'top-secret'
-    settings({})
     state 'active'
-    profile
-    editor 'simple'
+    twitter '@getpublify'
+    association :profile, factory: :profile
+    association :resource, factory: :avatar
     association :text_filter, factory: :textile
+
+    factory :user_with_an_empty_profile do
+      name "Doe"
+      nickname "John Doe"
+      twitter nil
+      association :resource, nil
+    end
+
+    factory :user_with_a_full_profile do
+      description "I am a poor lonesone factory generated user"
+      url "http://myblog.net"
+      msn "random@mail.com"
+      aim "randomaccount"
+      yahoo "anotherrandomaccount"
+      twitter "@random"
+      jabber "random@account.com"
+    end
+
+    factory :user_admin do
+      association :profile, factory: :profile_admin
+
+      trait :with_twitter do
+        twitter_oauth_token "oauth_token"
+        twitter_oauth_token_secret "oauth_token"
+      end
+    end
   end
 
   factory :article do
@@ -59,13 +62,13 @@ FactoryGirl.define do
     permalink 'a-big-article'
     published_at DateTime.new(2005,1,1,2,0,0)
     user
-    categories []
     tags []
     published_comments []
     published_trackbacks []
     allow_comments true
     published true
     allow_pings true
+    association :text_filter, factory: :textile
   end
 
   factory :unpublished_article, :parent => :article do |a|
@@ -170,34 +173,33 @@ http://alsoping.example.com/rpc/ping"
         build_stubbed filter
       end
     end
+
+    factory :blog_with_twitter do
+      twitter_consumer_key "consumer_key"
+      twitter_consumer_secret "consumer_secret"
+    end
   end
 
-  factory :profile, :class => :profile do |l|
-    l.label {FactoryGirl.generate(:label)}
-    l.nicename 'Publify contributor'
-    l.modules [:dashboard, :profile]
-  end
+  factory :profile, :class => :profile do
+    label {FactoryGirl.generate(:label)}
+    nicename 'Publify contributor'
+    modules [:dashboard, :profile]
 
-  factory :profile_admin, parent: :profile do
-    label Profile::ADMIN
-    nicename 'Publify administrator'
-    modules [ :dashboard, :write, :articles, :pages, :feedback, :themes,
-              :sidebar, :users, :seo, :media, :settings, :profile, :statuses ]
-  end
+    factory :profile_admin do
+      label Profile::ADMIN
+      nicename 'Publify administrator'
+      modules [ :dashboard, :write, :articles, :pages, :feedback, :themes,
+                :customizesidebar, :users, :seo, :media, :settings, :profile, :notes ]
+    end
 
-  factory :profile_publisher, :parent => :profile do |l|
-    l.label 'publisher'
-    l.nicename 'Blog publisher'
-    l.modules [:users, :dashboard, :write, :articles, :pages, :feedback, :media, :statuses]
-  end
+    factory :profile_publisher do
+      label 'publisher'
+      nicename 'Blog publisher'
+      modules [:users, :dashboard, :write, :articles, :pages, :feedback, :media, :notes]
+    end
 
-  factory :profile_contributor, :parent => :profile do |l|
-  end
-
-  factory :category do |c|
-    c.name {FactoryGirl.generate(:category)}
-    c.permalink {FactoryGirl.generate(:category)}
-    c.position 1
+    factory :profile_contributor do
+    end
   end
 
   factory :tag do |tag|
@@ -211,6 +213,12 @@ http://alsoping.example.com/rpc/ping"
     r.size 110
   end
 
+  factory :avatar, parent: :resource do |a|
+    a.upload "avatar.jpg"
+    a.mime 'image.jpeg'
+    a.size 600
+  end
+
   factory :redirect do |r|
     r.from_path 'foo/bar'
     r.to_path '/someplace/else'
@@ -219,7 +227,7 @@ http://alsoping.example.com/rpc/ping"
   factory :comment do
     published true
     article
-    text_filter {FactoryGirl.create(:textile)}
+    association :text_filter, factory: :textile
     author 'Bob Foo'
     url 'http://fakeurl.com'
     body 'Test <a href="http://fakeurl.co.uk">body</a>'
@@ -228,22 +236,50 @@ http://alsoping.example.com/rpc/ping"
     published_at '2005-01-01 02:00:00'
     guid
     state 'ham'
-  end
 
-  factory :spam_comment, :parent => :comment do |c|
-    c.state 'spam'
-    c.published false
-  end
+    factory :unconfirmed_comment do |c|
+      c.state 'presumed_ham'
+      c.status_confirmed false
+      c.published false
+    end
 
-  factory :ham_comment, :parent => :comment do |c|
-    c.state 'ham'
-    c.published false
+    factory :published_comment do |c|
+      c.state 'ham'
+      c.status_confirmed true
+      c.published true
+    end
+
+    factory :not_published_comment do |c|
+      c.state 'spam'
+      c.status_confirmed true
+      c.published false
+    end
+
+    factory :ham_comment do |c|
+      c.state 'ham'
+      c.published false
+    end
+
+    factory :presumed_ham_comment do |c|
+      c.state 'presumed_ham'
+      c.published false
+    end
+
+    factory :presumed_spam_comment do |c|
+      c.state 'presumed_spam'
+      c.published false
+    end
+
+    factory :spam_comment do |c|
+      c.state 'spam'
+      c.published false
+    end
   end
 
   factory :page do
-    name 'page_one'
+    name {FactoryGirl.generate(:name)}
     title 'Page One Title'
-    body 'ho ho ho'
+    body {FactoryGirl.generate(:body)}
     created_at '2005-05-05 01:00:01'
     published_at '2005-05-05 01:00:01'
     updated_at '2005-05-05 01:00:01'
@@ -252,15 +288,20 @@ http://alsoping.example.com/rpc/ping"
     state 'published'
   end
 
-  factory :status do
-    body 'this is a status'
+  factory :note do
+    body 'this is a note'
     created_at '2013-07-14 01:00:01'
     published_at '2013-07-14 01:00:01'
     updated_at '2013-07-14 01:00:01'
     user
     published true
     state 'published'
-    text_filter {FactoryGirl.create(:markdown)}
+    association :text_filter, factory: :markdown
+    guid
+  end
+
+  factory :unpublished_note, :parent => :note do |n|
+    n.published false
   end
 
   factory :trackback do |t|

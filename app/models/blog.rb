@@ -53,10 +53,10 @@ class Blog < ActiveRecord::Base
   setting :ping_urls,                  :string, "http://blogsearch.google.com/ping/RPC2\nhttp://rpc.technorati.com/rpc/ping\nhttp://ping.blo.gs/\nhttp://rpc.weblogs.com/RPC2"
   setting :send_outbound_pings,        :boolean, true
   setting :email_from,                 :string, 'publify@example.com'
-  setting :editor,                     :integer, 'visual'
   setting :allow_signup,               :integer, 0
   setting :date_format,                :string, '%d/%m/%Y'
   setting :time_format,                :string, '%Hh%M'
+  setting :image_avatar_size,          :integer, 48
   setting :image_thumb_size,           :integer, 125
   setting :image_medium_size,          :integer, 600
 
@@ -66,7 +66,7 @@ class Blog < ActiveRecord::Base
   setting :google_analytics,           :string, ''
   setting :feedburner_url,             :string, ''
   setting :rss_description,            :boolean, false
-  setting :rss_description_text,       :string, "<hr /><p><small>Original article writen by %author% and published on <a href='%blog_url%'>%blog_name%</a> | <a href='%permalink_url%'>direct link to this article</a> | If you are reading this article elsewhere than <a href='%blog_url%'>%blog_name%</a>, it has been illegally reproduced and without proper authorization.</small></p>"
+  setting :rss_description_text,       :string, "<hr /><p><small>Original article written by %author% and published on <a href='%blog_url%'>%blog_name%</a> | <a href='%permalink_url%'>direct link to this article</a> | If you are reading this article anywhere other than on <a href='%blog_url%'>%blog_name%</a>, it has been illegally reproduced and without proper authorization.</small></p>"
   setting :permalink_format,           :string, '/%year%/%month%/%day%/%title%'
   setting :robots,                     :string, ''
   setting :index_categories,           :boolean, true # deprecated but still needed for backward compatibility
@@ -87,28 +87,27 @@ class Blog < ActiveRecord::Base
   setting :page_desc_template,         :string, "%excerpt%"
   setting :paginated_title_template,   :string, "%blog_name% | %blog_subtitle% %page%"
   setting :paginated_desc_template,    :string, "%blog_name% | %blog_subtitle% | %meta_keywords% %page%"
-  setting :category_title_template,    :string, "Category: %name% | %blog_name% %page%"
-  setting :category_desc_template,     :string, "%name% | %description% | %blog_subtitle% %page%"
   setting :tag_title_template,         :string, "Tag: %name% | %blog_name% %page%"
   setting :tag_desc_template,          :string, "%name% | %blog_name% | %blog_subtitle% %page%"
   setting :author_title_template,      :string, "%author% | %blog_name%"
   setting :author_desc_template,       :string, "%author% | %blog_name% | %blog_subtitle%"
   setting :archives_title_template,    :string, "Archives for %blog_name% %date% %page%"
   setting :archives_desc_template,     :string, "Archives for %blog_name% %date% %page% %blog_subtitle%"
-  setting :search_title_template,      :string, "Results for %search% | %blog_name% %page%" 
+  setting :search_title_template,      :string, "Results for %search% | %blog_name% %page%"
   setting :search_desc_template,       :string, "Results for %search% | %blog_name% | %blog_subtitle% %page%"
-  setting :statuses_title_template,    :string, "Statuses | %blog_name% %page%"
-  setting :statuses_desc_template,     :string, "Statuses | %blog_name% | %blog_subtitle% %page%"
+  setting :statuses_title_template,    :string, "Notes | %blog_name% %page%"
+  setting :statuses_desc_template,     :string, "Notes | %blog_name% | %blog_subtitle% %page%"
   setting :status_title_template,      :string, "%body% | %blog_name%"
   setting :status_desc_template,       :string, "%excerpt%"
-  
+
   setting :custom_tracking_field,      :string, ''
   # setting :meta_author_template,       :string, "%blog_name% | %nickname%"
 
   setting :twitter_consumer_key,      :string, ''
   setting :twitter_consumer_secret,   :string, ''
   setting :custom_url_shortener,      :string, ''
-  
+  setting :statuses_in_timeline,      :boolean, true
+
   validate :permalink_has_identifier
 
   def initialize(*args)
@@ -204,8 +203,13 @@ class Blog < ActiveRecord::Base
     end
   end
 
- def articles_matching(query, args={})
+  def articles_matching(query, args={})
     Article.search(query, args)
+  end
+
+  def per_page(format)
+    return limit_article_display if format.nil? || format == 'html'
+    limit_rss_display
   end
 
   def rss_limit_params
@@ -217,12 +221,11 @@ class Blog < ActiveRecord::Base
 
   def permalink_has_identifier
     unless permalink_format =~ /(%title%)/
-      errors.add(:permalink_format, _("You need a permalink format with an identifier : %%title%%"))
+      errors.add(:permalink_format, I18n.t("errors.permalink_nede_a_title"))
     end
 
-    # A permalink cannot end in .atom or .rss. it's reserved for the feeds
     if permalink_format =~ /\.(atom|rss)$/
-      errors.add(:permalink_format, _("Can't end in .rss or .atom. These are reserved to be used for feed URLs"))
+      errors.add(:permalink_format, I18n.t("errors.cant_end_with_rss_or_atom"))
     end
   end
 
@@ -242,11 +245,17 @@ class Blog < ActiveRecord::Base
     urls_to_ping
   end
 
-  private
-
-  def protocol
-    split_base_url[:protocol]
+  def has_twitter_configured?
+    return false if self.twitter_consumer_key.nil? or self.twitter_consumer_secret.nil?
+    return false if self.twitter_consumer_key.empty? or self.twitter_consumer_secret.empty?
+    true
   end
+
+  def allow_signup?
+    allow_signup == 1
+  end
+
+  private
 
   def host_with_port
     split_base_url[:host_with_port]
@@ -257,8 +266,7 @@ class Blog < ActiveRecord::Base
       unless base_url =~ /(https?):\/\/([^\/]*)(.*)/
         raise "Invalid base_url: #{self.base_url}"
       end
-      @split_base_url = { :protocol => $1, :host_with_port => $2,
-        :root_path => $3.gsub(%r{/$},'') }
+      @split_base_url = { :protocol => $1, :host_with_port => $2, :root_path => $3.gsub(%r{/$},'') }
     end
     @split_base_url
   end

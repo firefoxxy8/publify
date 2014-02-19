@@ -4,7 +4,7 @@ class SetupController < ApplicationController
 
   def index
     return if not request.post?
-
+    
     this_blog.blog_name = params[:setting][:blog_name]
     this_blog.base_url = blog_base_url
 
@@ -32,7 +32,7 @@ class SetupController < ApplicationController
       create_first_page @user
     end
     
-    redirect_to :action => 'confirm'
+    redirect_to controller: "accounts", action: "confirm"
   end
 
   private
@@ -51,17 +51,13 @@ class SetupController < ApplicationController
                      allow_pings: 1,
                      published: 1,
                      permalink: 'hello-world',
-                     categories: [Category.find(:first)],
+                     tags: [Tag.find(:first)],
                      user: user)
     end
   end
     
   def create_first_page user
-    Page.create(name: "about",
-      title: "about",
-      user: user,
-      body: "This is an example of a Publify page. You can edit this to write information about yourself or your site so readers know who you are. You can create as many pages as this one as you like and manage all of your content inside Publify.")
-    
+    Page.create(name: "about", title: I18n.t("setup.page.about"), user: user, body: I18n.t("setup.page.body"))
   end
 
   def check_config

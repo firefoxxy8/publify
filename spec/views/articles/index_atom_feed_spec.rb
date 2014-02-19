@@ -1,12 +1,10 @@
 require 'spec_helper'
 
 describe "articles/index_atom_feed.atom.builder" do
-  before do
-    stub_default_blog
-  end
+  let!(:blog) { build_stubbed :blog }
 
   describe "with no items" do
-    before do
+    before(:each) do
       assign(:articles, [])
       render
     end
@@ -157,6 +155,24 @@ describe "articles/index_atom_feed.atom.builder" do
   def rendered_entry
     parsed = Nokogiri::XML.parse(rendered)
     parsed.css("entry").first
+  end
+
+  describe :title do
+
+    before(:each) do
+      assign(:articles, [article])
+      render
+    end
+
+    context "with a note" do
+      let(:article) { create(:note) }
+      it { expect(rendered_entry.css("title").text).to eq(article.body) }
+    end
+
+    context "with an article" do
+      let(:article) { create(:article) }
+      it { expect(rendered_entry.css("title").text).to eq(article.title) }
+    end
   end
 end
 

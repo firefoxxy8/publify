@@ -9,13 +9,13 @@ class Admin::RedirectsController < Admin::BaseController
     return(render 'admin/shared/destroy') unless request.post?
 
     @record.destroy
-    flash[:notice] = _('Redirection was successfully deleted.')
+    flash[:success] = I18n.t('admin.redirects.destroy.success')
     redirect_to :action => 'index'
   end
 
   private
   def new_or_edit
-    @redirects = Redirect.where("origin is null").order('created_at desc').page(params[:page]).per(this_blog.admin_display_elements)
+    @redirects = Redirect.where("origin is null").order('id desc').page(params[:page]).per(this_blog.admin_display_elements)
 
     @redirect = case params[:id]
     when nil
@@ -25,17 +25,14 @@ class Admin::RedirectsController < Admin::BaseController
     end
 
     @redirect.attributes = params[:redirect]
-    if request.post?
-      if @redirect.from_path.empty? || @redirect.from_path.nil?
+      if  @redirect.from_path.nil? || @redirect.from_path.empty?
         @redirect.from_path = @redirect.shorten
       end
-      save_redirect
-      return
+    if request.post?
+      save_a(@redirect, 'redirection')
+    else
+      render 'new'
     end
-    render 'new'
   end
 
-  def save_redirect
-    save_a(@redirect, 'redirection')
-  end
 end

@@ -22,12 +22,12 @@ class Sidebar < ActiveRecord::Base
     end
 
     def input_html(sidebar)
-      text_field_tag(input_name(sidebar), sidebar.config[key], { :class => 'span12'})
+      text_field_tag(input_name(sidebar), sidebar.config[key], { :class => 'form-control'})
     end
 
     def line_html(sidebar)
       html = label_html(sidebar)
-      html << content_tag(:div,  input_html(sidebar), :class => 'input')
+      html << content_tag(:div,  input_html(sidebar), :class => 'form-group')
     end
 
     def input_name(sidebar)
@@ -48,7 +48,7 @@ class Sidebar < ActiveRecord::Base
 
     class TextAreaField < self
       def input_html(sidebar)
-        html_options = { "rows" => "10", "class" => "span12" }.update(options.stringify_keys)
+        html_options = { "rows" => "10", "class" => "form-control" }.update(options.stringify_keys)
         text_area_tag(input_name(sidebar), sidebar.config[key], html_options)
       end
     end
@@ -74,7 +74,9 @@ class Sidebar < ActiveRecord::Base
 
     class CheckBoxField < self
       def line_html(sidebar)
-hidden_field_tag(input_name(sidebar),0) + content_tag('label', "#{check_box_tag(input_name(sidebar), 1, sidebar.config[key], options)} #{label}".html_safe)
+        hidden_field_tag(input_name(sidebar),0) +
+          content_tag('label',
+                      "#{check_box_tag(input_name(sidebar), 1, sidebar.config[key], options)} #{label}".html_safe)
       end
 
       def canonicalize(value)
@@ -88,7 +90,7 @@ hidden_field_tag(input_name(sidebar),0) + content_tag('label', "#{check_box_tag(
     end
 
     def self.build(key, default, options)
-      field = class_for(options).new(key, default, options)
+      class_for(options).new(key, default, options)
     end
 
     def self.class_for(options)
@@ -116,7 +118,7 @@ hidden_field_tag(input_name(sidebar),0) + content_tag('label', "#{check_box_tag(
   def self.find *args
     begin
       super
-    rescue ActiveRecord::SubclassNotFound => e
+    rescue ActiveRecord::SubclassNotFound
       available = available_sidebars.map {|klass| klass.to_s}
       self.inheritance_column = :bogus
       super.each do |record|
@@ -135,6 +137,21 @@ hidden_field_tag(input_name(sidebar),0) + content_tag('label', "#{check_box_tag(
 
   def self.find_all_staged
     where('staged_position is not null').order('staged_position')
+  end
+
+  def self.ordered_sidebars
+    os = []
+    Sidebar.all.each do |s| 
+      if s.staged_position
+        os[s.staged_position] = ((os[s.staged_position] || []) << s).uniq
+      elsif s.active_position
+        os[s.active_position] = ((os[s.active_position] || []) << s).uniq
+      end
+      if s.active_position.nil? && s.staged_position.nil?
+        s.destroy # neither staged nor active: destroy. Full stop.
+      end
+    end
+    os.flatten.compact
   end
 
   def self.purge
@@ -195,9 +212,19 @@ hidden_field_tag(input_name(sidebar),0) + content_tag('label', "#{check_box_tag(
     Sidebar.descendants.sort_by { |klass| klass.to_s }
   end
 
-    def self.fields=(newval)
-      @fields = newval
+  def self.fields=(newval)
+    @fields = newval
+  end
+
+  def self.apply_staging_on_active!
+    Sidebar.transaction do
+      Sidebar.all.each do |s|
+        s.active_position = s.staged_position
+        s.staged_position = nil
+        s.save!
+      end
     end
+  end
 
   class << self
     attr_accessor :view_root
@@ -277,5 +304,10 @@ hidden_field_tag(input_name(sidebar),0) + content_tag('label', "#{check_box_tag(
   def view_root
     self.class.view_root
   end
-end
 
+  def admin_state
+    return :active if active_position && (staged_position == active_position || staged_position.nil?)
+    return :will_change_position if active_position != staged_position
+    raise "Oups, ask ook to set an admin_state for this: #{{active: active_position, staged: staged_position}}"
+  end
+end

@@ -8,43 +8,68 @@ module ApplicationHelper
     @page_title
   end
 
-  include SidebarHelper
+  def render_sidebars(*sidebars)
+    (sidebars.blank? ? Sidebar.find(:all, :order => 'active_position ASC') : sidebars).map do |sb|
+      @sidebar = sb
+      sb.parse_request(content_array, params)
+      render_sidebar(sb)
+    end.join
+  rescue => e
+    logger.error e
+    logger.error e.backtrace.join("\n")
+    I18n.t('errors.render_sidebar')
+  end
 
-  # Basic english pluralizer.
-  # Axe?
-  def pluralize(size, zero, one , many )
-    case size
-    when 0 then zero
-    when 1 then one
-    else        sprintf(many, size)
+  def render_sidebar(sidebar)
+    if sidebar.view_root
+      render_deprecated_sidebar_view_in_view_root sidebar
+    else
+      render_to_string(partial: sidebar.content_partial, locals: sidebar.to_locals_hash, layout: false)
     end
   end
 
-  # Produce a link to the permalink_url of 'item'.
+  def render_deprecated_sidebar_view_in_view_root(sidebar)
+    logger.warn "Sidebar#view_root is deprecated. Place your _content.html.erb in views/sidebar_name/ in your plugin's folder"
+    # Allow themes to override sidebar views
+    view_root = File.expand_path(sidebar.view_root)
+    rails_root = File.expand_path(::Rails.root.to_s)
+    if view_root =~ /^#{Regexp.escape(rails_root)}/
+      new_root = view_root[rails_root.size..-1]
+      new_root.sub! %r{^/?vendor/}, ""
+      new_root.sub! %r{/views}, ""
+      new_root = File.join(this_blog.current_theme.path, "views", new_root)
+      view_root = new_root if File.exists?(File.join(new_root, "content.rhtml"))
+    end
+    render_to_string(:file => "#{view_root}/content.rhtml", :locals => sidebar.to_locals_hash, :layout => false)
+  end
+
+  def articles?
+    not Article.first.nil?
+  end
+
+  def trackbacks?
+    not Trackback.first.nil?
+  end
+
+  def comments?
+    not Comment.first.nil?
+  end
+
+  def render_to_string(*args, &block)
+    controller.send(:render_to_string, *args, &block)
+  end
+
   def link_to_permalink(item, title, anchor=nil, style=nil, nofollow=nil, only_path=false)
     options = {}
     options[:class] = style if style
     options[:rel] = "nofollow" if nofollow
-
     link_to title, item.permalink_url(anchor,only_path), options
-  end
-
-  # The '5 comments' link from the bottom of articles
-  def comments_link(article)
-    comment_count = article.published_comments.size
-    # FIXME Why using own pluralize metchod when the Localize._ provides the same funciotnality, but better? (by simply calling _('%d comments', comment_count) and using the en translation: l.store "%d comments", ["No nomments", "1 comment", "%d comments"])
-    link_to_permalink(article,pluralize(comment_count, _('no comments'), _('1 comment'), _('%d comments', comment_count)),'comments', nil, nil, true)
   end
 
   def avatar_tag(options = {})
     avatar_class = this_blog.plugin_avatar.constantize
     return '' unless avatar_class.respond_to?(:get_avatar)
     avatar_class.get_avatar(options)
-  end
-
-  def trackbacks_link(article)
-    trackbacks_count = article.published_trackbacks.size
-    link_to_permalink(article,pluralize(trackbacks_count, _('no trackbacks'), _('1 trackback'), _('%d trackbacks',trackbacks_count)),'trackbacks')
   end
 
   def meta_tag(name, value)
@@ -80,14 +105,25 @@ module ApplicationHelper
     content.html(what)
   end
 
-  def author_link(article)
-    if this_blog.link_to_author and article.user and article.user.email.to_s.size>0
-      "<a href=\"mailto:#{h article.user.email}\">#{h article.user.name}</a>"
-    elsif article.user and article.user.name.to_s.size>0
-      h article.user.name
-    else
-      h article.author
+  def display_user_avatar(user, size='avatar', klass='alignleft')
+    if user.resource.present?
+      avatar_path = case size
+                    when 'thumb'
+                      user.resource.upload.thumb.url
+                    when 'medium'
+                      user.resource.upload.medium.url
+                    when 'large'
+                      user.resource.upload.large.url
+                    else
+                      user.resource.upload.avatar.url
+                    end
+      return if avatar_path.nil?
+      avatar_url = File.join(this_blog.base_url, avatar_path)
+    elsif user.twitter_profile_image.present?
+      avatar_url = user.twitter_profile_image
     end
+    return unless avatar_url
+    image_tag(avatar_url, alt: user.nickname, class: klass)
   end
 
   def author_picture(status)
@@ -95,11 +131,6 @@ module ApplicationHelper
     return if status.twitter_id.nil? or status.twitter_id.empty?
 
     image_tag(status.user.twitter_profile_image , class: "alignleft", alt: status.user.nickname)
-  end
-
-  def view_on_twitter(status)
-    return if status.twitter_id.nil? or status.twitter_id.empty?
-    return " | " + link_to(_("View on Twitter"), File.join('https://twitter.com', status.user.twitter_account, 'status', status.twitter_id), {class: 'u-syndication', rel: 'syndication'})
   end
 
   def google_analytics
@@ -119,10 +150,6 @@ module ApplicationHelper
 
   def use_canonical
     "<link rel='canonical' href='#{this_blog.base_url + request.fullpath}' />".html_safe
-  end
-
-  def page_header
-    render 'shared/page_header'
   end
 
   def page_header_includes
@@ -145,16 +172,6 @@ module ApplicationHelper
     feed_for('rss')
   end
 
-  def render_the_flash
-    return unless flash[:notice] or flash[:error] or flash[:warning]
-    the_class = flash[:error] ? 'error' : 'success'
-
-    html = "<div class='alert alert-#{the_class}'>"
-    html << "<a class='close' href='#'>×</a>"
-    html << render_flash rescue nil
-    html << "</div>"
-  end
-
   def content_array
     if @articles
       @articles
@@ -167,15 +184,6 @@ module ApplicationHelper
     end
   end
 
-  def new_js_distance_of_time_in_words_to_now(date)
-    # Ruby Date class doesn't have #utc method, but _publify_dev.html.erb
-    # passes Ruby Date.
-    date = date.to_time
-    time = _(date.utc.strftime(_("%%a, %%d %%b %%Y %%H:%%M:%%S GMT", date.utc)))
-    timestamp = date.utc.to_i
-    content_tag(:span, time, {:class => "publify_date date gmttimestamp-#{timestamp}", :title => time})
-  end
-
   def display_date(date)
     date.strftime(this_blog.date_format)
   end
@@ -185,8 +193,11 @@ module ApplicationHelper
   end
 
   def display_date_and_time(timestamp)
-    return new_js_distance_of_time_in_words_to_now(timestamp) if this_blog.date_format == 'distance_of_time_in_words'
-    "#{display_date(timestamp)} #{_('at')} #{display_time(timestamp)}"
+    if this_blog.date_format == 'setting_date_format_distance_of_time_in_words'
+      new_js_distance_of_time_in_words_to_now(timestamp) 
+    else
+      "#{display_date(timestamp)} #{t('helper.at')} #{display_time(timestamp)}"
+    end
   end
 
   def show_meta_keyword
@@ -198,10 +209,10 @@ module ApplicationHelper
     @blog ||= Blog.default
   end
 
-  def stop_index_robots?
+  def stop_index_robots?(blog)
     stop = (params[:year].present? || params[:page].present?)
-    stop = @blog.unindex_tags if controller_name == "tags"
-    stop = @blog.unindex_categories if controller_name == "categories"
+    stop = blog.unindex_tags if controller_name == "tags"
+    stop = blog.unindex_categories if controller_name == "categories"
     stop
   end
 
@@ -217,12 +228,14 @@ module ApplicationHelper
     end
   end
 
-  def render_flash
-    output = []
-    for key,value in flash
-      output << "<span class=\"#{key.to_s.downcase}\">#{h(_(value))}</span>"
-    end if flash
-    output.join("<br />\n")
+  def new_js_distance_of_time_in_words_to_now(date)
+    # Ruby Date class doesn't have #utc method, but _publify_dev.html.erb
+    # passes Ruby Date.
+    date = date.to_time
+    time = date.utc.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    timestamp = date.utc.to_i
+    content_tag(:span, time, {:class => "publify_date date gmttimestamp-#{timestamp}", :title => time})
   end
+
 
 end

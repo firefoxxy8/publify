@@ -35,6 +35,9 @@ module Publify
 
     # To avoid exception when deploying on Heroku
     config.assets.initialize_on_precompile = false
+
+    # Time to step into asset pipeline…
+    config.assets.enabled = true
   end
 
   # Load included libraries.
@@ -43,9 +46,8 @@ module Publify
   require 'publify_sidebar'
   require 'publify_textfilters'
   require 'publify_avatar_gravatar'
-  require 'calendar_date_select/lib/calendar_date_select.rb'
-  require 'easy-ckeditor'
   require 'action_web_service'
+  require 'publify_lang'
   ## Required by the plugins themselves.
   # require 'avatar_plugin'
   require 'email_notify'
@@ -70,6 +72,11 @@ module Publify
   Date::DATE_FORMATS.merge!(
     :long_weekday => '%a %B %e, %Y %H:%M'
   )
+
+  # TimeZone
+  if  File.file? "#{::Rails.root.to_s}/config/timezone.yml"
+    Time.zone = YAML.load(File.read("#{::Rails.root.to_s}/config/timezone.yml"))
+  end
 
   ActionMailer::Base.default :charset => 'utf-8'
 

@@ -3,17 +3,7 @@ require 'spec_helper'
 
 describe Article do
 
-  before do
-    @blog = build_stubbed :blog
-    @articles = []
-  end
-
-  def assert_results_are(*expected)
-    assert_equal expected.size, @articles.size
-    expected.each do |i|
-      assert @articles.include?(i.is_a?(Symbol) ? contents(i) : i)
-    end
-  end
+  let!(:blog) { create(:blog) }
 
   it "test_content_fields" do
     a = Article.new
@@ -80,19 +70,18 @@ describe Article do
     a.title = "Zzz"
     assert a.save
 
-    a.categories << Category.find(FactoryGirl.create(:category).id)
-    assert_equal 1, a.categories.size
+    a.tags << Tag.find(FactoryGirl.create(:tag).id)
+    assert_equal 1, a.tags.size
 
     b = Article.find(a.id)
-    assert_equal 1, b.categories.size
+    assert_equal 1, b.tags.size
   end
 
   it "test_permalink_with_title" do
-    article = FactoryGirl.create(:article, :permalink => 'article-3', :published_at => Time.utc(2004, 6, 1))
-    assert_equal(article,
-                 Article.find_by_permalink({:year => 2004, :month => 06, :day => 01, :title => "article-3"}) )
+    article = FactoryGirl.create(:article, permalink: 'article-3', published_at: Time.utc(2004, 6, 1))
+    assert_equal(article, Article.find_by_permalink({year: 2004, month: 06, day: 01, title: "article-3"}) )
     assert_raises(ActiveRecord::RecordNotFound) do
-      Article.find_by_permalink :year => 2005, :month => "06", :day => "01", :title => "article-5"
+      Article.find_by_permalink year: 2005, month: "06", day: "01", title: "article-5"
     end
   end
 
@@ -132,7 +121,7 @@ describe Article do
 
   describe "the html_urls method" do
     before do
-      @blog.stub(:text_filter_object) { TextFilter.new(:filters => []) }
+      blog.stub(:text_filter_object) { TextFilter.new(:filters => []) }
       @article = Article.new
     end
 
@@ -201,36 +190,6 @@ describe Article do
     end
   end
 
-  describe "with tags" do
-    it "recieves tags from the keywords property" do
-      a = FactoryGirl.create(:article, :keywords => 'foo bar')
-      assert_equal ['foo', 'bar'].sort, a.tags.collect {|t| t.name}.sort
-    end
-
-    it "changes tags when changing keywords" do
-      a = FactoryGirl.create(:article, :keywords => 'foo bar')
-      a.keywords = 'foo baz'
-      a.save
-      assert_equal ['foo', 'baz'].sort, a.tags.collect {|t| t.name}.sort
-    end
-
-    it "empties tags when keywords is set to ''" do
-      a = FactoryGirl.create(:article, :keywords => 'foo bar')
-      a.keywords = ''
-      a.save
-      assert_equal [], a.tags.collect {|t| t.name}.sort
-    end
-
-    it "properly deals with dots and spaces" do
-      c = FactoryGirl.create(:article, :keywords => 'test "tag test" web2.0')
-      assert_equal ['test', 'tag-test', 'web2-0'].sort, c.tags.collect(&:name).sort
-    end
-
-    # TODO: Get rid of using the keywords field.
-    # TODO: Add functions to Tag to convert collection from and to string.
-    it "lets the tag collection survive a load-save cycle"
-  end
-
   it "test_find_published_by_tag_name" do
     art1 = FactoryGirl.create(:article)
     art2 = FactoryGirl.create(:article)
@@ -240,12 +199,12 @@ describe Article do
   end
 
   it "test_find_published" do
-    article = FactoryGirl.create(:article, :title => 'Article 1!', :state => 'published')
-    FactoryGirl.create(:article, :published => false, :state => 'draft')
-    @articles = Article.find_published
-    assert_equal 1, @articles.size
-    @articles = Article.find_published(:all, :conditions => "title = 'Article 1!'")
-    assert_equal [article], @articles
+    article = create(:article, title: 'Article 1!', state: 'published')
+    create(:article, published: false, state: 'draft')
+    articles = Article.find_published
+    assert_equal 1, articles.size
+    articles = Article.find_published(:all, :conditions => "title = 'Article 1!'")
+    assert_equal [article], articles
   end
 
   it "test_just_published_flag" do
@@ -295,33 +254,6 @@ describe Article do
     assert art.published
   end
 
-  it "test_find_published_by_category" do
-    cat = FactoryGirl.create(:category, :permalink => 'personal')
-    cat.articles << FactoryGirl.create(:article)
-    cat.articles << FactoryGirl.create(:article)
-    cat.articles << FactoryGirl.create(:article)
-
-    cat = FactoryGirl.create(:category, :permalink => 'software')
-    cat.articles << FactoryGirl.create(:article)
-
-    Article.create!(:title      => "News from the future!",
-                    :body       => "The future is cool!",
-                    :keywords   => "future",
-                    :published_at => Time.now + 12.minutes)
-
-    articles = Category.find_by_permalink('personal').published_articles
-    assert_equal 3, articles.size
-
-    articles = Category.find_by_permalink('software').published_articles
-    assert_equal 1, articles.size
-  end
-
-  it "test_find_published_by_nonexistent_category_raises_exception" do
-    assert_raises ActiveRecord::RecordNotFound do
-      Category.find_by_permalink('does-not-exist').published_articles
-    end
-  end
-
   it "test_destroy_file_upload_associations" do
     a = FactoryGirl.create(:article)
     FactoryGirl.create(:resource, :article => a)
@@ -355,13 +287,6 @@ describe Article do
     art.reload
     assert ! art.published?
     assert   art.withdrawn?
-  end
-
-  describe "#default_text_filter" do
-    it "returns the blog's text filter" do
-      a = Article.new
-      assert_equal @blog.text_filter, a.default_text_filter.name
-    end
   end
 
   it 'should get only ham not spam comment' do
@@ -408,18 +333,6 @@ describe Article do
   end
 
   describe '#search' do
-
-    describe 'with several words and no result' do
-
-      # FIXME: This tests nothing, really.
-      before :each do
-        @articles = Article.search('hello world')
-      end
-
-      it 'should be empty' do
-        @articles.should be_empty
-      end
-    end
 
     describe 'with one word and result' do
       it 'should have two items' do
@@ -481,7 +394,7 @@ describe Article do
   end
 
   it "test_can_ping_fresh_article_iff_it_allows_pings" do
-    a = FactoryGirl.create(:article, :allow_pings => true)
+    a = create(:article, allow_pings: true)
     assert_equal(false, a.pings_closed?)
     a.allow_pings = false
     assert_equal(true, a.pings_closed?)
@@ -551,8 +464,14 @@ describe Article do
 
   describe "an article published just before midnight UTC" do
     before do
+      @timezone = Time.zone
+      Time.zone = 'UTC'
       @a = FactoryGirl.build(:article)
       @a.published_at = "21 Feb 2011 23:30 UTC"
+    end
+
+    after do
+      Time.zone = @timezone
     end
 
     describe "#permalink_url" do
@@ -572,8 +491,14 @@ describe Article do
 
   describe "an article published just after midnight UTC" do
     before do
+      @timezone = Time.zone
+      Time.zone = 'UTC'
       @a = FactoryGirl.build(:article)
       @a.published_at = "22 Feb 2011 00:30 UTC"
+    end
+
+    after do
+      Time.zone = @timezone
     end
 
     describe "#permalink_url" do
@@ -590,6 +515,61 @@ describe Article do
       end
     end
   end
+
+  describe "an article published just before midnight JST (+0900)" do
+    before do
+      @time_zone = Time.zone
+      Time.zone = "Tokyo"
+      @a = FactoryGirl.build(:article)
+      @a.published_at = "31 Dec 2012 23:30 +0900"
+    end
+
+    after do
+      Time.zone = @time_zone
+    end
+
+    describe "#permalink_url" do
+      it "uses JST to determine correct day" do
+        @a.permalink_url.should == "http://myblog.net/2012/12/31/a-big-article"
+      end
+    end
+
+    describe "#find_by_permalink" do
+      it "uses JST to determine correct day" do
+        @a.save
+        a = Article.find_by_permalink :year => 2012, :month => 12, :day => 31, :permalink => 'a-big-article'
+        a.should == @a
+      end
+    end
+  end
+
+  describe "an article published just after midnight  JST (+0900)" do
+    before do
+      @time_zone = Time.zone
+      Time.zone = "Tokyo"
+      @a = FactoryGirl.build(:article)
+      @a.published_at = "1 Jan 2013 00:30 +0900"
+    end
+
+    after do
+      Time.zone = @time_zone
+    end
+
+    describe "#permalink_url" do
+      it "uses JST to determine correct day" do
+        @a.permalink_url.should == "http://myblog.net/2013/01/01/a-big-article"
+      end
+    end
+
+    describe "#find_by_permalink" do
+      it "uses JST to determine correct day" do
+        @a.save
+        a = Article.find_by_permalink :year => 2013, :month => 1, :day => 1, :permalink => 'a-big-article'
+        a.should == @a
+      end
+    end
+  end
+
 
   describe "#published_comments" do
     it 'should not include withdrawn comments' do
@@ -691,46 +671,41 @@ describe Article do
     end
   end
 
-  describe ".search_with_pagination" do
-    #TODO move those kind of test to a "integration specs" that can be run only for integration
-    context "given some datas" do
-      it "returns an empty array when no article and no params" do
-        Article.search_with_pagination({}, {page: nil, per_page: 12}).should be_empty
-      end
+  describe :search_with do
+    subject { Article.search_with(params) }
 
-      it "returns article" do
-        article = FactoryGirl.create(:article)
-        Article.search_with_pagination({}, {page: nil, per_page: 12}).should eq([article])
-      end
+    context "without article" do
+      let(:params) { nil }
+      it { expect(subject).to be_empty }
+    end
 
-      it "returns only published article where search params ask about published state" do
-        published_article = FactoryGirl.create(:article, state: 'published')
-        article = FactoryGirl.create(:article, state: 'draft')
-        Article.search_with_pagination({state: 'published'}, {page: nil, per_page: 12}).should eq([published_article])
-      end
+    context "with an article" do
+      let(:params) { nil }
+      let!(:article) { create(:article) }
+      it { expect(subject).to eq([article]) }
+    end
 
-      it "returns only quantity of article ask in per_page" do
-        article = FactoryGirl.create(:article, state: 'published')
-        out_of_per_page_article = FactoryGirl.create(:article, state: 'draft')
+    context "with two article but only one matching searchstring" do
+      let(:params) { {searchstring: 'match the string'} }
+      let!(:not_found_article) { create(:article) }
+      let!(:article) { create(:article, body: 'this match the string of article') }
+      it { expect(subject).to eq([article]) }
+    end
 
-        Article.search_with_pagination({}, { page: nil, per_page: 1 }).should have(1).item
-      end
+    context "with two articles with differents states and published params" do
+      let(:params) { {state: 'published'} }
+      let!(:article) { create(:article, state: 'published') }
+      let!(:draft_article) { create(:article, state: 'draft') }
+      it { expect(subject).to eq([article]) }
+    end
 
-      it "returns both published and draft articles by default" do
-        article = FactoryGirl.create(:article, state: 'published')
-        draft_article = FactoryGirl.create(:article, state: 'draft')
-        result = Article.search_with_pagination({}, {page: nil, per_page: 12})
-        result.count.should eq 2
-      end
-
-      it "returns article of search categorie" do
-        show_category = FactoryGirl.create(:category, name: 'show')
-        hide_category = FactoryGirl.create(:category, name: 'not_show')
-        article = FactoryGirl.create(:article, categories: [show_category])
-        hide_article = FactoryGirl.create(:article, categories: [hide_category])
-        Article.search_with_pagination({category: show_category.id}, {page: nil, per_page: 12}).should eq([article])
-      end
-
+    context "with two articles with differents states and no params" do
+      let(:params) { nil }
+      let(:now) { DateTime.new(2011,3,12) }
+      let!(:article) { create(:article, state: 'published', created_at: now) }
+      let!(:last_draft_article) { create(:article, state: 'draft', created_at: now + 2.days) }
+      let!(:draft_article) { create(:article, state: 'draft', created_at: now + 20.days) }
+      it { expect(subject).to eq([draft_article, last_draft_article, article]) }
     end
   end
 
@@ -863,6 +838,68 @@ describe Article do
       FactoryGirl.create(:comment, article: first_article)
 
       expect(Article.bestof).to eq([first_article, last_article])
+    end
+  end
+
+  describe "update tags from article keywords" do
+    before(:each) { article.save }
+
+    context "without keywords" do
+      let(:article) { build(:article, keywords: nil) }
+      it { expect(article.tags).to be_empty }
+    end
+
+    context "with a simple keyword" do
+      let(:article) { build(:article, keywords: "foo") }
+      it { expect(article.tags.size).to eq(1) }
+      it { expect(article.tags.first).to be_kind_of(Tag) }
+      it { expect(article.tags.first.name).to eq('foo') }
+    end
+
+    context "with two keyword separate by a space" do
+      let(:article) { build(:article, keywords: "foo bar") }
+      it { expect(article.tags.size).to eq(2) }
+      it { expect(article.tags.map(&:name)).to eq(['foo', 'bar']) }
+    end
+
+    context "with two keyword separate by a coma" do
+      let(:article) { build(:article, keywords: "foo, bar") }
+      it { expect(article.tags.size).to eq(2) }
+      it { expect(article.tags.map(&:name)).to eq(['foo', 'bar']) }
+    end
+
+    context "with two keyword with apostrophe" do
+      let(:article) { build(:article, keywords: "foo, l'bar") }
+      it { expect(article.tags.size).to eq(3) }
+      it { expect(article.tags.map(&:name)).to eq(['foo', 'l', 'bar']) }
+    end
+
+    context "with two identical keywords" do
+      let(:article) { build(:article, keywords: "same, same") }
+      it { expect(article.tags.size).to eq(1) }
+      it { expect(article.tags.map(&:name)).to eq(['same']) }
+    end
+
+    context "with keywords with dot and quote" do
+      let(:article) { build(:article, keywords: 'foo "bar quiz" web2.0') }
+      it { expect(article.tags.map(&:name)).to eq(['foo', 'bar-quiz', 'web2-0'])}
+    end
+  end
+
+  describe :post_type do
+    context "without post_type" do
+      let(:article) { build(:article, post_type: '') }
+      it { expect(article.post_type).to eq("read") }
+    end
+
+    context "with a oldschool read post_type" do
+      let(:article) { build(:article, post_type: 'read') }
+      it { expect(article.post_type).to eq("read") }
+    end
+
+    context "with a specific myletter post_type" do
+      let(:article) { build(:article, post_type: 'myletter') }
+      it { expect(article.post_type).to eq("myletter") }
     end
   end
 end

@@ -6,7 +6,8 @@ class User < ActiveRecord::Base
 
   belongs_to :profile
   belongs_to :text_filter
-
+  belongs_to :resource
+  
   delegate :name, :to => :text_filter, :prefix => true
   delegate :label, :to => :profile, :prefix => true
 
@@ -15,13 +16,16 @@ class User < ActiveRecord::Base
     :source => 'notify_content',
     :uniq => true
 
-  has_many :articles, :order => 'created_at DESC'
+  has_many :articles
 
   serialize :settings, Hash
 
+  STATUS = ['active', 'inactive']
+
+  attr_accessor :filename
+
   # Settings
   setting :notify_watch_my_articles,   :boolean, true
-  setting :editor,                     :string, 'visual'
   setting :firstname,                  :string, ''
   setting :lastname,                   :string, ''
   setting :nickname,                   :string, ''
@@ -32,12 +36,6 @@ class User < ActiveRecord::Base
   setting :yahoo,                      :string, ''
   setting :twitter,                    :string, ''
   setting :jabber,                     :string, ''
-  setting :show_url,                   :boolean, false
-  setting :show_msn,                   :boolean, false
-  setting :show_aim,                   :boolean, false
-  setting :show_yahoo,                 :boolean, false
-  setting :show_twitter,               :boolean, false
-  setting :show_jabber,                :boolean, false
   setting :admin_theme,                :string,  'blue'
   setting :twitter_account,            :string, ''
   setting :twitter_oauth_token,        :string, ''
@@ -98,19 +96,7 @@ class User < ActiveRecord::Base
     save(:validate => false)
   end
 
-  def permalink_url(anchor=nil, only_path=false)
-    blog = Blog.default # remove me...
-
-    blog.url_for(
-      :controller => 'authors',
-      :action => 'show',
-      :id => login,
-      :only_path => only_path
-    )
-  end
-
   def default_text_filter
-    return "none" if visual_editor?
     text_filter
   end
 
@@ -132,6 +118,14 @@ class User < ActiveRecord::Base
     profile.project_modules
   end
 
+  AccessControl.available_modules.each do |m|
+    define_method("can_access_to_#{m}?") { can_access_to?(m) }
+  end
+
+  def can_access_to?(m)
+    profile.modules.include?(m)
+  end
+
   # Generate Methods takes from AccessControl rules
   # Example:
   #
@@ -146,14 +140,6 @@ class User < ActiveRecord::Base
 
   def self.to_prefix
     'author'
-  end
-
-  def simple_editor?
-    editor == 'simple'
-  end
-
-  def visual_editor?
-    editor == 'visual'
   end
 
   def password=(newpass)
@@ -203,10 +189,8 @@ class User < ActiveRecord::Base
     self.password = newpass
   end
 
-  def twitter_configured?
-    return false if self.twitter_oauth_token.nil? or self.twitter_oauth_token.empty?
-    return false if self.twitter_oauth_token_secret.nil? or self.twitter_oauth_token_secret.empty?
-    true
+  def has_twitter_configured?
+    self.twitter_oauth_token.present? && self.twitter_oauth_token_secret.present?
   end
 
   protected

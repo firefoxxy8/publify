@@ -52,6 +52,18 @@ module AccessControl
     plugin.split("#{plugin_root}/publify_plugin_").second
   end
 
+  def self.available_modules
+    modules = []
+    roles.each do |role|
+      pms = project_modules(role)
+      modules.concat(pms.map(&:uid).map(&:to_s))
+      pms.each do |project_module|
+        modules.concat(project_module.submenus.map(&:uid))
+      end
+    end
+    modules.uniq.sort.map(&:to_sym)
+  end
+
   private
 
   def self.mappers(role)
@@ -97,6 +109,14 @@ module AccessControl
       @name = name
       @controllers, @menus, @submenus = [], [], []
       @controllers << controller
+    end
+    
+    def menu_name
+      menus.first.name
+    end
+  
+    def menu_url
+      menus.first.url
     end
 
     def menu(name, url, options={})

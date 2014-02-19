@@ -15,24 +15,20 @@ class Article < Content
 
   belongs_to :user
 
-  has_many :pings, :dependent => :destroy, :order => "created_at ASC"
-  has_many :trackbacks, :dependent => :destroy, :order => "created_at ASC"
-  has_many :feedback, :order => "created_at DESC"
-  has_many :resources, :order => "created_at DESC", :dependent => :nullify
-  has_many :categorizations
-  has_many :categories, :through => :categorizations
-  has_many :triggers, :as => :pending_item
-
-  has_many :comments,   :dependent => :destroy, :order => "created_at ASC" do
-
+  has_many :pings, dependent: :destroy, order: "created_at ASC"
+  has_many :trackbacks, dependent: :destroy, order: "created_at ASC"
+  has_many :feedback, order: "created_at DESC"
+  has_many :resources, order: "created_at DESC", dependent: :nullify
+  has_many :triggers, as: :pending_item
+  has_many :comments, dependent: :destroy, order: "created_at ASC" do
     # Get only ham or presumed_ham comments
     def ham
-      where(:state => ["presumed_ham", "ham"])
+      where(state: ["presumed_ham", "ham"])
     end
 
     # Get only spam or presumed_spam comments
     def spam
-      where(:state => ["presumed_spam", "spam"])
+      where(state: ["presumed_spam", "spam"])
     end
   end
 
@@ -48,10 +44,8 @@ class Article < Content
   before_save :set_published_at, :ensure_settings_type, :set_permalink
   after_save :post_trigger, :keywords_to_tags, :shorten_url
 
-  scope :category, lambda { |category_id| where('categorizations.category_id = ?', category_id).includes('categorizations') }
   scope :drafts, lambda { where(state: 'draft').order('created_at DESC') }
   scope :child_of, lambda { |article_id| where(parent_id: article_id) }
-  scope :published, lambda { where(published: true, published_at: Time.at(0)..Time.now).order('published_at DESC') }
   scope :published_at, lambda {|time_params| published.where(published_at: PublifyTime.delta(*time_params)).order('published_at DESC')}
   scope :published_since, lambda {|time| published.where('published_at > ?', time).order('published_at DESC') }
   scope :withdrawn, lambda { where(state: 'withdrawn').order('published_at DESC') }
@@ -106,6 +100,12 @@ class Article < Content
     Article.exists?(parent_id: self.id)
   end
 
+  def post_type
+    _post_type = read_attribute(:post_type)
+    _post_type = 'read' if _post_type.blank?
+    _post_type
+  end
+
   def self.last_draft(article_id)
     article = Article.find(article_id)
     while article.has_child?
@@ -114,23 +114,14 @@ class Article < Content
     article
   end
 
-  def self.search_with_pagination(search_hash, paginate_hash)
-    state = (search_hash[:state] and ["no_draft", "drafts", "published", "withdrawn", "pending"].include? search_hash[:state]) ? search_hash[:state] : nil
-
-    if state.nil?
-      list_function  = function_search_all_posts(search_hash)
-    elsif
-      list_function  = ["Article.#{state}"] + function_search_all_posts(search_hash)
+  def self.search_with(params)
+    params ||= {}
+    scoped = super(params)
+    if ["no_draft", "drafts", "published", "withdrawn", "pending"].include?(params[:state])
+      scoped = scoped.send(params[:state])
     end
 
-    if search_hash[:category] && search_hash[:category].to_i > 0
-      list_function << 'category(search_hash[:category])'
-    end
-
-    list_function << "page(paginate_hash[:page])"
-    list_function << "per(paginate_hash[:per_page])"
-    list_function << "order('published_at desc, created_at desc')"
-    eval(list_function.join('.'))
+    scoped.order('created_at DESC')
   end
 
   def permalink_url(anchor=nil, only_path=false)
@@ -154,7 +145,7 @@ class Article < Content
   end
 
   def comment_url
-    blog.url_for("comments?article_id=#{self.id}", :only_path => true)
+    blog.url_for("comments?article_id=#{self.id}", only_path: true)
   end
 
   def preview_comment_url
@@ -237,20 +228,7 @@ class Article < Content
   end
 
   def keywords_to_tags
-    # if keywords is empty, we want to reset the tags altogether, but
-    # if they do not exists (for instance because we're triggered by a
-    # publication_pending) we don't want to destroy the tags
-    return if keywords.nil?
-
-    Article.transaction do
-      tags.clear
-      tags <<
-      keywords.to_s.scan(/((['"]).*?\2|[\.[[:alnum:]]]+)/).collect do |x|
-        x.first.tr("\"'", '')
-      end.uniq.map do |tagword|
-        Tag.get(tagword)
-      end
-    end
+    Tag.create_from_article!(self)
   end
 
   def interested_users
@@ -319,20 +297,12 @@ class Article < Content
     self.extended = parts[1] || ''
   end
 
-  def link_to_author?
-    !user.email.blank? && blog.link_to_author
-  end
-
   def password_protected?
     not password.blank?
   end
 
   def add_comment(params)
     comments.build(params)
-  end
-
-  def add_category(category, is_primary = false)
-    self.categorizations.build(:category => category, :is_primary => is_primary)
   end
 
   def access_by?(user)

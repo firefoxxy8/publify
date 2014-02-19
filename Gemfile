@@ -2,7 +2,7 @@ gem 'pg'
 
 source 'https://rubygems.org'
 
-gem 'rails', '~> 3.2.13'
+gem 'rails', '~> 3.2.14'
 gem 'require_relative'
 gem 'htmlentities'
 gem 'bluecloth', '~> 2.1'
@@ -15,22 +15,27 @@ gem 'uuidtools', '~> 2.1.1'
 gem 'flickraw-cached'
 gem 'rubypants', '~> 0.2.0'
 gem 'rake', '~> 10.1.0'
-gem 'acts_as_list'
-gem 'acts_as_tree_rails3'
+#gem 'acts_as_list'
+#gem 'acts_as_tree_rails3'
 gem 'fog'
 gem 'recaptcha', :require => 'recaptcha/rails', :branch => 'rails3'
 gem 'carrierwave'
 gem 'akismet', '~> 1.0'
-gem 'twitter'
+gem 'twitter', '~> 5.2.0'
 
-# TODO: Replace with jquery
-gem 'prototype-rails', '~> 3.2.1'
-gem 'prototype_legacy_helper', '0.0.0', :git => 'http://github.com/rails/prototype_legacy_helper.git'
+gem "jquery-rails", "~> 3.0.4"
+gem "jquery-ui-rails", "~> 4.0.4"
 
 gem 'rails_autolink', '~> 1.1.0'
 gem 'dynamic_form', '~> 1.1.4'
 
 gem 'iconv'
+
+group :assets do
+  gem 'sass-rails', " ~> 3.2.6"
+  gem 'coffee-rails', " ~> 3.2.2"
+  gem 'uglifier'
+end
 
 group :development, :test do
   gem 'thin'

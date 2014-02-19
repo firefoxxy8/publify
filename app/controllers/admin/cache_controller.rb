@@ -1,20 +1,11 @@
 require 'find'
 
 class Admin::CacheController < Admin::BaseController
-  def index
+  def show
     @cache_size = 0
     @cache_number = 0
 
     FileUtils.mkdir_p(Publify::Application.config.action_controller.page_cache_directory) unless File.exists?(Publify::Application.config.action_controller.page_cache_directory)
-
-    if request.post?
-      begin
-        PageCache.sweep_all
-        flash.now[:notice] = _("Cache was successfully sweeped")
-      rescue
-        flash.now[:error] = _("Oops, something wrong happened. Cache could not be cleaned")
-      end
-    end
 
     Find.find(Publify::Application.config.action_controller.page_cache_directory) do |path|
       if FileTest.directory?(path)
@@ -30,4 +21,13 @@ class Admin::CacheController < Admin::BaseController
     end
   end
 
+  def destroy
+    begin
+      PageCache.sweep_all
+      flash[:success] = t('admin.cache.destroy.success')
+    rescue
+      flash[:error] = t('admin.cache.destroy.error')
+    end
+    redirect_to action: :show
+  end
 end

@@ -1,8 +1,10 @@
 config/database.yml
 config/mail.yml
+config/timezone.yml
 config/secret.token
 *.log
 *~
+db/db*
 db/*.sqlite*
 .*.swp
 .*.swo
@@ -26,4 +28,9 @@ Gemfile.lock
 .ruby-version
 bin/
 .bundle/
+.sass-cache/
 /vendor/bundle
+/themes/*
+!/themes/bootstrap
+!/themes/typographic
+gems/

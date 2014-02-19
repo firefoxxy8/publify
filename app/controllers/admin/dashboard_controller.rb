@@ -6,25 +6,25 @@ class Admin::DashboardController < Admin::BaseController
   def index
     t = Time.new
     today = t.strftime("%Y-%m-%d 00:00")
-    
+
     # Since last venue
     @newposts_count = Article.published_since(current_user.last_venue).count
     @newcomments_count = Feedback.published_since(current_user.last_venue).count
-    
+
     # Today
     @statposts = Article.published.where("published_at > ?", today).count
     @statsdrafts = Article.drafts.where("created_at > ?", today).count
     @statspages = Page.where("published_at > ?", today).count
-    @statuses = Status.where("published_at > ?", today).count
+    @statuses = Note.where("published_at > ?", today).count
     @statuserposts = Article.published.where("published_at > ?", today).count(conditions: {user_id: current_user.id})
     @statcomments = Comment.where("created_at > ?", today).count
     @presumedspam = Comment.presumed_spam.where("created_at > ?", today).count
     @confirmed = Comment.ham.where("created_at > ?", today).count
     @unconfirmed = Comment.unconfirmed.where("created_at > ?", today).count
-    
+
     @comments = Comment.last_published
     @drafts = Article.drafts.where("user_id = ?", current_user.id).limit(5)
-    
+
     @statspam = Comment.spam.count
     @inbound_links = inbound_links
     @publify_links = publify_dev
@@ -44,19 +44,19 @@ class Admin::DashboardController < Admin::BaseController
     end
 
     if version[0].to_i > TYPO_MAJOR.to_i
-      flash.now[:error] = _("You are late from at least one major version of Publify. You should upgrade immediately. Download and install %s", "<a href='http://publify.co/stable.tgz'>#{_("the latest Publify version")}</a>").html_safe
+      flash[:error] = I18n.t('admin.dashboard.publify_version.error')
     elsif version[1].to_i > TYPO_SUB.to_i
-      flash.now[:warning] = _("There's a new version of Publify available which may contain important bug fixes. Why don't you upgrade to %s ?", "<a href='http://publify.co/stable.tgz'>#{_("the latest Publify version")}</a>").html_safe
+      flash[:warning] = I18n.t('admin.dashboard.publify_version.warning')
     elsif version[2].to_i > TYPO_MINOR.to_i
-      flash.now[:notice] = _("There's a new version of Publify available. Why don't you upgrade to %s ?", "<a href='http://publify.co/stable.tgz'>#{_("the latest Publify version")}</a>").html_safe
+      flash[:notice] = I18n.t('admin.dashboard.publify_version.notice')
     end
   end
 
   private
 
   def inbound_links
-    host = URI.parse(this_blog.base_url).host 
-    return [] if (host.downcase == 'localhost' || host =~ /\.local$/) # don't try to fetch links for local blogs
+    host = URI.parse(this_blog.base_url).host
+    return [] if Rails.env.development?
     url = "http://www.google.com/search?q=links:#{host}&tbm=blg&output=rss"
     parse(url).reverse.compact
   end
@@ -65,7 +65,6 @@ class Admin::DashboardController < Admin::BaseController
     url = "http://blog.publify.co/articles.rss"
     parse(url)[0..2]
   end
-
 
   def parse(url)
     open(url) do |http|

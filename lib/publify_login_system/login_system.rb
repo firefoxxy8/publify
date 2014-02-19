@@ -16,7 +16,7 @@ module LoginSystem
 
     # If the current actions are in our access rule will be verifyed
     def allowed?
-      return AccessControl.allowed_controllers(current_user.profile.label, current_user.profile.modules).include?(params[:controller])
+      AccessControl.allowed_controllers(current_user.profile.label, current_user.profile.modules).include?(params[:controller])
     end
 
     def authorized?
@@ -52,11 +52,6 @@ module LoginSystem
 
     def store_location
       session[:return_to] = request.fullpath
-    end
-
-    def redirect_back_or_default(default)
-      redirect_to(session[:return_to] || default)
-      session[:return_to] = nil
     end
 
     def self.included(base)

@@ -10,10 +10,6 @@ Rails.application.routes.draw do
   # Front page
   match 'frontpage', :to => 'local#frontpage'
 
-  # for CK Editor
-  match 'ckeditor/command', :to => 'ckeditor#command', :format => false
-  match 'ckeditor/upload', :to => 'ckeditor#upload', :format => false
-
   # TODO: use only in archive sidebar. See how made other system
   match ':year/:month', :to => 'articles#index', :year => /\d{4}/, :month => /\d{1,2}/, :as => 'articles_by_month', :format => false
   match ':year/:month/page/:page', :to => 'articles#index', :year => /\d{4}/, :month => /\d{1,2}/, :as => 'articles_by_month_page', :format => false
@@ -52,8 +48,8 @@ Rails.application.routes.draw do
     end
   end
 
-  # TrackbacksController
   resources :trackbacks
+
   # I thinks it's useless. More investigating
   post "trackbacks/:id/:day/:month/:year", :to => 'trackbacks#create', :format => false
 
@@ -70,16 +66,9 @@ Rails.application.routes.draw do
   match 'check_password', :to => 'articles#check_password', :format => false
   match 'articles/markup_help/:id', :to => 'articles#markup_help', :format => false
   match 'articles/tag', :to => 'articles#tag', :format => false
-  match 'articles/category', :to => 'articles#category', :format => false
 
   # SetupController
   match '/setup', :to => 'setup#index', :format => false
-  match '/setup/confirm', :to => 'setup#confirm', :format => false
-
-  # CategoriesController (imitate inflected_resource)
-  resources :categories, :except => [:show, :update, :destroy, :edit]
-  resources :categories, :path => 'category', :only => [:show, :edit, :update, :destroy]
-  match '/category/:id/page/:page', :to => 'categories#show', :format => false
 
   # TagsController (imitate inflected_resource)
   resources :tags, :except => [:show, :update, :destroy, :edit]
@@ -87,9 +76,7 @@ Rails.application.routes.draw do
   match '/tag/:id/page/:page', :to => 'tags#show', :format => false
   match '/tags/page/:page', :to => 'tags#index', :format => false
 
-  # AuthorsController
-  match '/author/:id(.:format)', :to => 'authors#show', :format => /rss|atom/, :as => 'xml'
-  match '/author(/:id)', :to => 'authors#show', :format => false
+  resources :author, only: :show
 
   # ThemesController
   scope :controller => 'theme', :filename => /.*/ do
@@ -102,9 +89,17 @@ Rails.application.routes.draw do
   get 'theme/static_view_test', :format => false
 
   # For the statuses
-  match '/sts', :to => 'statuses#index', :format => false
-  match '/sts/page/:page', :to => 'statuses#index', :format => false
-  get '/st/:permalink', :to => 'statuses#show', :format => false
+  match '/notes', :to => 'notes#index', :format => false
+  match '/notes/page/:page', :to => 'notes#index', :format => false
+  get '/note/:permalink', :to => 'notes#show', :format => false
+
+  namespace :admin do
+    resources :sidebar, only: [:index, :update, :destroy] do
+      collection do
+        put :sortable
+      end
+    end
+  end
 
 
   # Work around the Bad URI bug
@@ -115,23 +110,16 @@ Rails.application.routes.draw do
   end
 
   # Admin/XController
-  %w{advanced cache categories content comments profiles general pages feedback
-     resources sidebar textfilters themes trackbacks users settings tags redirects seo post_types statuses }.each do |i|
+  %w{content comments profiles general pages feedback resources sidebar textfilters themes trackbacks users settings tags redirects seo post_types notes }.each do |i|
     match "/admin/#{i}", :to => "admin/#{i}#index", :format => false
     match "/admin/#{i}(/:action(/:id))", :to => "admin/#{i}", :action => nil, :id => nil, :format => false
   end
 
-#  namespace :admin do
-#    resources :content do
-#      post :autosave, on: :collection
-#      get :insert_editor, on: :collection
-#      post :destroy, on: :member
-#      get :auto_complete_for_article_keywords, on: :collection
-##      get :attachment_box_add, on: :member
-#    end
-#  end
+  namespace :admin do
+    get 'cache', to: 'cache#show'
+    delete 'cache', to: 'cache#destroy'
+  end
 
-  # default
   root :to  => 'articles#index', :format => false
 
   match '*from', :to => 'articles#redirect', :format => false

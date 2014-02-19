@@ -3,25 +3,24 @@ require 'base64'
 module Admin; end
 
 class Admin::ContentController < Admin::BaseController
-  layout "administration", except: [:show, :autosave]
+  layout :get_layout
 
   cache_sweeper :blog_sweeper
 
   def auto_complete_for_article_keywords
-    @items = Tag.find_with_char params[:article][:keywords].strip
-    render inline: "<%= raw auto_complete_result @items, 'name' %>"
+    @items = Tag.find(:all, select: :display_name, order: :display_name).map {|t| t.display_name}
+    
+    render inline: "<%= @items %>"
   end
 
   def index
     @search = params[:search] ? params[:search] : {}
-
-    @articles = Article.search_with_pagination(@search, {page: params[:page], per_page: this_blog.admin_display_elements})
+    @articles = Article.search_with(@search).page(params[:page]).per(this_blog.admin_display_elements)
 
     if request.xhr?
       render partial: 'article_list', locals: { articles: @articles }
     else
       @article = Article.new(params[:article])
-
     end
   end
 
@@ -37,8 +36,7 @@ class Admin::ContentController < Admin::BaseController
     update_article_attributes
 
     if @article.save
-      update_categories_for_article
-      set_the_flash
+      flash[:success] = I18n.t('admin.content.create.success')
       redirect_to action: 'index'
     else
       @article.keywords = Tag.collection_to_string @article.tags
@@ -74,8 +72,7 @@ class Admin::ContentController < Admin::BaseController
       unless @article.draft
         Article.where(parent_id: @article.id).map(&:destroy)
       end
-      update_categories_for_article
-      set_the_flash
+      flash[:success] = I18n.t('admin.content.update.success')
       redirect_to :action => 'index'
     else
       @article.keywords = Tag.collection_to_string @article.tags
@@ -89,6 +86,8 @@ class Admin::ContentController < Admin::BaseController
   end
 
   def autosave
+    return false unless request.xhr?
+    
     id = params[:article][:id] || params[:id]
 
     article_factory = Article::Factory.new(this_blog, current_user)
@@ -97,11 +96,6 @@ class Admin::ContentController < Admin::BaseController
     get_fresh_or_existing_draft_for_article
 
     @article.attributes = params[:article]
-
-    # Crappy workaround to have the visual editor work.
-    if current_user.visual_editor?
-      @article.body = params[:article][:body_and_extended]
-    end
 
     @article.published = false
     @article.set_author(current_user)
@@ -115,18 +109,12 @@ class Admin::ContentController < Admin::BaseController
     end
 
     if @article.save
-      render(:update) do |page|
-        page.replace_html('autosave', hidden_field_tag('article[id]', @article.id))
-        page.replace_html('preview_link', link_to(_("Preview"), {:controller => '/articles', :action => 'preview', :id => @article.id}, {:target => 'new', :class => 'btn info'}))
-        page.replace_html('destroy_link', link_to_destroy_draft(@article))
-        if params[:article][:published_at] and params[:article][:published_at].to_time.to_i < Time.now.to_time.to_i and @article.parent_id.nil?
-          page.replace_html('publish', calendar_date_select('article', 'published_at', {:class => 'span7'})) if @article.state.to_s.downcase == "draft"
-        end
+      flash[:success] = I18n.t('admin.content.autosave.success')
+      @must_update_calendar = (params[:article][:published_at] and params[:article][:published_at].to_time.to_i < Time.now.to_time.to_i and @article.parent_id.nil?)
+      respond_to do |format|
+        format.js
       end
-
-      return true
     end
-    render :text => nil
   end
 
   protected
@@ -141,28 +129,9 @@ class Admin::ContentController < Admin::BaseController
     end
   end
 
-  attr_accessor :resources, :categories, :resource, :category
-
-  def set_the_flash
-    case params[:action]
-    when 'create'
-      flash[:notice] = _('Article was successfully created')
-    when 'update'
-      flash[:notice] = _('Article was successfully updated.')
-    else
-      raise "I don't know how to tidy up action: #{params[:action]}"
-    end
-  end
+  attr_accessor :resources, :resource
 
   private
-
-  def parse_date_time(str)
-    begin
-      DateTime.strptime(str, "%B %e, %Y %I:%M %p GMT%z").utc
-    rescue
-      Time.parse(str).utc rescue nil
-    end
-  end
 
   def load_resources
     @post_types = PostType.find(:all)
@@ -171,21 +140,12 @@ class Admin::ContentController < Admin::BaseController
     @macros = TextFilter.macro_filters
   end
 
-  def update_categories_for_article
-    @article.categorizations.clear
-    if params[:categories]
-      Category.find(params[:categories]).each do |cat|
-        @article.categories << cat
-      end
-    end
-  end
-
   def access_granted?(article_id)
     article = Article.find(article_id)
     if article.access_by? current_user
       return true
     else
-      flash[:error] = _("Error, you are not allowed to perform this action")
+      flash[:error] = I18n.t('admin.content.access_granted.error')
       redirect_to action: 'index'
       return false
     end
@@ -198,5 +158,16 @@ class Admin::ContentController < Admin::BaseController
     @article.save_attachments!(params[:attachments])
     @article.state = "draft" if @article.draft
     @article.text_filter ||= current_user.default_text_filter
+  end
+  
+  def get_layout
+    case action_name
+    when "new", "edit", "create"
+      "editor"
+    when "show", "autosave"
+      nil
+    else
+      "administration"
+    end
   end
 end
