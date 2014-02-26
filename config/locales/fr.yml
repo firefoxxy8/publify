@@ -1,4 +1,16 @@
 fr:
+  meta_sidebar:
+    content:
+      rss_feed: "RSS Feed"
+      admin: "Admin"
+      powered_by_publify: "Powered by Publify"
+      search: "Search"
+  search_sidebar:
+    content:
+      search: "Search"
+  page_sidebar:
+    content:
+      pages: "Pages"
   activerecord:
     errors:
       template:
@@ -147,6 +159,8 @@ fr:
   layouts:
     default:
       html:
+        home: "Home"
+        statuses: "Statuses"
         powered_by: "Propulsé par %{powered_by}"
         designed_by: "Design par %{designed_by}"
     administration:
@@ -173,6 +187,23 @@ fr:
       not_allowed: "Error, you are not allowed to perform this action"
       successfully_deleted: "This %{name} was deleted successfully"
     notes:
+      index:
+        no_notes: "Il n'y a pas encore de notes, pourquoi ne pas en créer une ? "
+        how_to_setup_twitter: "If you want to push short statuses on Twitter, you need to %{twitter_settings_link} Twitter gave you after you %{twitter_registration_link}."
+        fill_the_twitter_credentials: "fill in the oauth credentials"
+        registered_your_application: "registered your application"
+        notes: "Notes"
+        compose_new_note: "Compose new note"
+        publish_settings: "Paramètres de publication"
+        posse_to_twitter: "POSSE to twitter"
+        in_reply_to: "In reply to"
+        tweet_id_like: "Tweet id (ex: 123456)"
+        permanent_link: "Lien permanent"
+        published: "Publié"
+        publish_at: "Publié le"
+        cancel: "Annuler"
+        or: "ou"
+        publish: "Publier"
       new:
         no_notes: "Il n'y a pas encore de notes, pourquoi ne pas en créer une ? "
         how_to_setup_twitter: "If you want to push short statuses on Twitter, you need to %{twitter_settings_link} Twitter gave you after you %{twitter_registration_link}."
@@ -862,6 +893,7 @@ fr:
     formats:
       default: "%d/%m/%Y %H:%M"
       short: "%d/%m/%y"
+      with_spaces: "%d %B %y"
       letters_month_with_year: "%B %Y"
   date:
     month_names: [~, Janvier, Février, Mars, Avril, Mai, Juin, Juillet, Août, Septembre, Octobre, "Novembre", Décembre]
