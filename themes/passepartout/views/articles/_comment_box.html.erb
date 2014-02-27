@@ -1,35 +1,27 @@
-<%= form_remote_tag :url => @article.comment_url,
-                    :position=> :bottom,
-                    :update => {:success => 'commentList'},
-                    :loading => "loading()",
-                    :complete => "complete(request)",
-                    :failure => "failure(request)",
-                    :html => {:id=>"commentform",:class=>"commentform"} \
-   do %>
+<%= form_tag url: @article.comment_url, :position => :bottom, :remote => true, :update => {:success => 'commentList'}, :loading => "loading()", :complete => "complete(request)", :failure => "failure(request)", :html => { :id => "commentform", :class => "commentform" } do %>
 
-
-<div class="comment-box">
+  <div class="comment-box">
   <div id="errors"></div>
   <div id="preview" style="display: none"></div>
 
   <a name="respond"></a>
 
 
-      <p><label for="comment_author"><%= _("Your name")%></label>
-      <%= text_field "comment", "author", :size => 20 %> <small><%= link_to_function("(#{_('leave url/email')} &#187;)".html_safe, "Element.toggle('guest_url'); Element.toggle('guest_email')") %></small>
+      <p><label for="comment_author"><%= t(".your_name")%></label>
+      <%= text_field "comment", "author", :size => 20 %> <small><%= link_to_function("(#{t('.leave_url_email')} &#187;)".html_safe, "Element.toggle('guest_url'); Element.toggle('guest_email')") %></small>
     </p>
     <p id="guest_url" style="display:none;">
-      <label for="comment_url"><%= _("Your blog")%></label>
+      <label for="comment_url"><%= t(".your_blog")%></label>
       <%= text_field "comment", "url" %>
     </p>
     <p id="guest_email" style="display:none;">
-      <label for="comment_email"><%= _("Your email")%></label>
+      <label for="comment_email"><%= t(".your_email")%></label>
       <%= text_field "comment", "email" %>
     </p>
     <p>
-      <label for="comment_body"><%= _("Your message")%></label>
-      <%= content_tag('small', link_to(_("Textile enabled"), "http://hobix.com/textile/")) if this_blog.comment_text_filter.include? 'textile' %>
-      <%= content_tag('small', link_to(_("Markdown enabled"), "http://daringfireball.net/projects/markdown/")) if this_blog.comment_text_filter.include? 'markdown' %>
+      <label for="comment_body"><%= t(".your_message")%></label>
+      <%= content_tag('small', link_to(t(".textile_enabled"), "http://hobix.com/textile/")) if this_blog.comment_text_filter.include? 'textile' %>
+      <%= content_tag('small', link_to(t(".markdown_enabled"), "http://daringfireball.net/projects/markdown/")) if this_blog.comment_text_filter.include? 'markdown' %>
     </p>
       <p>
         <%= text_area "comment", "body" %>
@@ -38,10 +30,10 @@
 
 
       <span id="comment_loading" style="display:none;"><%= image_tag "spinner.gif" %></span>
-      <a href="#" onclick="new Ajax.Updater('preview', '<%= @article.preview_comment_url %>',  {asynchronous:true, evalScripts:true, parameters:Form.serialize('commentform'), onComplete:function(request){Element.show('preview')}}); return false;"><%= _("Preview comment")%></a>
+      <a href="#" onclick="new Ajax.Updater('preview', '<%= @article.preview_comment_url %>',  {asynchronous:true, evalScripts:true, parameters:Form.serialize('commentform'), onComplete:function(request){Element.show('preview')}}); return false;"><%= t(".preview_comment")%></a>
       <input type="submit" name="submit" id="form-submit-button" value="submit" class="button" />&nbsp;&nbsp;
     </p>
 
 
 </div>
-<% end %>
+<%- end %>

@@ -16,13 +16,12 @@
 -->
 
 <div class="post"<%= onhover_show_admin_tools(:article) %>>
-  <%= link_to("edit", { :controller => "admin/content", :action => "edit", :id => @article.id },
-        :class => "admintools", :style => "display: none", :id => "admin_article") %>
+  <%= link_to(t(".edit"), { controller: "admin/content", action: "edit", id: @article.id }, class: "admintools", style: "display: none", id: "admin_article") %>
   <%= render @article %>
 </div>
-<p class="meta">
-  <%= article_links @article %>
-</p>
+
+<%= render 'article_links', article: @article %>
+
 <% if @article.allow_comments? or @article.published_comments.size > 0 -%>
   <a name="comments"></a>
   <% if @article.published_comments.blank? %>
@@ -32,7 +31,7 @@
   <% end %>
   <% unless @article.comments_closed? -%>
     <p class="postmetadata alt">
-      <small><a href="#respond"><%= _("Leave a response")%></a></small>
+      <small><a href="#respond"><%= t(".leave_a_response")%></a></small>
     </p>
   <% end -%>
   <%= render "articles/comment_list" %>
@@ -41,9 +40,9 @@
 <% if @article.allow_pings? or @article.published_trackbacks.size > 0 -%>
   <a name="trackbacks"></a>
   <% if @article.published_trackbacks.blank? -%>
-    <h4 class="blueblk"><%= _("No trackbacks")%></h4>
+    <h4 class="blueblk"><%= "No trackbacks" %></h4>
   <% else -%>
-    <h4 class="blueblk"><%= _("Trackbacks")%></h4>
+    <h4 class="blueblk"><%= t(".trackbacks") %></h4>
   <% end -%>
   <%= content_tag(:ol,
         render("trackback", :collection => @article.published_trackbacks),
@@ -53,5 +52,5 @@
 <% unless @article.comments_closed? -%>
   <%= render 'comment_box' %>
 <% else -%>
-  <p><%= _("Comments are disabled")%></p>
+  <p><%= t(".comments_are_disabled")%></p>
 <% end -%>
