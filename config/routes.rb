@@ -1,12 +1,4 @@
 Rails.application.routes.draw do
-  # Load plugin routes first. A little bit ugly, but I didn't find any better way to do it
-  # We consider that only publify_* plugins are concerned
-  Dir.glob(File.join("vendor", "plugins", "publify_*")).each do |dir|
-    if File.exists?(File.join(dir, "config", "routes.rb"))
-      require File.join(dir, "config", "routes.rb")
-    end
-  end
-
   # Front page
   match 'frontpage', :to => 'local#frontpage'
 
@@ -100,6 +92,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :notes
+
     get 'cache', to: 'cache#show'
     delete 'cache', to: 'cache#destroy'
   end
@@ -112,7 +106,7 @@ Rails.application.routes.draw do
   end
 
   # Admin/XController
-  %w{content comments profiles general pages feedback resources sidebar textfilters themes trackbacks users settings tags redirects seo post_types notes}.each do |i|
+  %w{content comments profiles general pages feedback resources sidebar textfilters themes trackbacks users settings tags redirects seo post_types}.each do |i|
     match "/admin/#{i}", to: "admin/#{i}#index", format: false
     match "/admin/#{i}(/:action(/:id))", to: "admin/#{i}", action: nil, id: nil, format: false
   end

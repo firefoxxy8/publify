@@ -39,7 +39,7 @@ describe ArticlesController do
         response.should have_selector("head>link[href='#{blog.base_url}/']")
       end
 
-      it 'should have googd title' do
+      it 'should have good title' do
         response.should have_selector('title', :content => "test blog | test subtitles")
       end
     end
@@ -495,6 +495,18 @@ describe ArticlesController, "redirecting" do
 
     end
 
+    describe "theme rendering" do
+      render_views
+
+      with_each_theme do |theme, view_path|
+        it "renders template #{view_path}/articles/read" do
+          blog.theme = theme if theme
+          get :redirect, from: "#{@article.permalink}.html"
+          response.should render_template('articles/read')
+        end
+      end
+    end
+
     describe 'rendering as atom feed' do
       before(:each) do
         @trackback1 = FactoryGirl.create(:trackback, :article => @article, :published_at => Time.now - 1.day,
@@ -629,7 +641,7 @@ describe ArticlesController, "preview page" do
   describe 'with non logged user' do
     before :each do
       @request.session = {}
-      get :preview, :id => FactoryGirl.create(:article).id
+      get :preview_page, :id => FactoryGirl.create(:article).id
     end
 
     it 'should redirect to login' do
