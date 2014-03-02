@@ -87,7 +87,7 @@ describe ArticlesController do
 
         it 'should have content markdown interpret and without html tag' do
           response.should have_selector('div') do |div|
-            div.should contain(/in markdown format\n\n\nwe\nuse\nok to define a link\n\n...\n/)
+            div.should contain(%Q{in markdown format * we * use [ok](http://blog.ok.com) to define a link})
           end
         end
       end
@@ -274,7 +274,6 @@ describe ArticlesController, "the index" do
 end
 
 describe ArticlesController, "previewing" do
-  render_views
   let!(:blog) { create(:blog) }
 
   describe 'with non logged user' do
@@ -294,11 +293,14 @@ describe ArticlesController, "previewing" do
 
     before(:each) { @request.session = { user: henri.id } }
 
-    with_each_theme do |theme, view_path|
-      it "should render template #{view_path}/articles/read" do
-        blog.theme = theme if theme
-        get :preview, id: article.id
-        response.should render_template('articles/read')
+    describe 'theme rendering' do
+      render_views
+      with_each_theme do |theme, view_path|
+        it "should render template #{view_path}/articles/read" do
+          blog.theme = theme
+          get :preview, id: article.id
+          response.should render_template('articles/read')
+        end
       end
     end
 
@@ -500,7 +502,7 @@ describe ArticlesController, "redirecting" do
 
       with_each_theme do |theme, view_path|
         it "renders template #{view_path}/articles/read" do
-          blog.theme = theme if theme
+          blog.theme = theme
           get :redirect, from: "#{@article.permalink}.html"
           response.should render_template('articles/read')
         end
@@ -581,7 +583,7 @@ describe ArticlesController, "password protected" do
 
   before do
     b = build_stubbed(:blog, :permalink_format => '/%title%.html')
-    @article = FactoryGirl.create(:article, :password => 'password')
+    @article = create(:article, :password => 'password')
   end
 
   it 'article alone should be password protected' do
@@ -658,7 +660,7 @@ describe ArticlesController, "preview page" do
 
     with_each_theme do |theme, view_path|
       it "should render template #{view_path}/articles/view_page" do
-        blog.theme = theme if theme
+        blog.theme = theme
         get :preview_page, :id => @page.id
         response.should render_template('articles/view_page')
       end

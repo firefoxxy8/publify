@@ -182,10 +182,6 @@ describe Note do
         it { expect(note.twitter_message.length).to eq(140) }
       end
     end
-
-    describe :set_author do
-      it { expect(Note.new).to respond_to(:set_author) }
-    end
   end
 
   context "with a dofollowify blog" do

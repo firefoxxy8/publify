@@ -20,10 +20,6 @@ module Publify
     
     config.plugins = [ :all ]
 
-    config.autoload_paths += %W(
-      app/apis
-    ).map {|dir| "#{::Rails.root.to_s}/#{dir}"}.select { |dir| File.directory?(dir) }
-
     # Activate observers that should always be running
     config.active_record.observers = :email_notifier, :web_notifier
 
@@ -45,7 +41,6 @@ module Publify
   require 'publify_sidebar'
   require 'publify_textfilters'
   require 'publify_avatar_gravatar'
-  require 'action_web_service'
   require 'publify_lang'
   ## Required by the plugins themselves.
   # require 'avatar_plugin'
