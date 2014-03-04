@@ -57,6 +57,8 @@ nb-NO:
   helper:
     at: "at"
   articles:
+    password_form:
+      submit: "Submit"
     index:
       next_page: "Next page"
       previous_page: "Previous page"
@@ -522,6 +524,8 @@ nb-NO:
         permanent_link: "Permanent lenke"
         page_with_action_name: "%{action} page"
         type_your_post: "Type your post"
+        published: "published"
+        offline: "offline"
       pages:
         no_pages: "Det finnes ingen pages enda. Hva med å opprette en?"
     feedback:
