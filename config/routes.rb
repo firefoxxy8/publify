@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   # Front page
-  match 'frontpage', :to => 'local#frontpage'
+  get 'frontpage', :to => 'local#frontpage'
 
   # TODO: use only in archive sidebar. See how made other system
   get ':year/:month', :to => 'articles#index', :year => /\d{4}/, :month => /\d{1,2}/, :as => 'articles_by_month', :format => false
