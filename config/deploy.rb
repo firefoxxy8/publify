@@ -1,78 +1,60 @@
-# Make bundler play nice:
-require "bundler/capistrano"
+# config valid only for Capistrano 3.1
+lock '3.2.1'
 
-# Magic incantation to give sudo a tty/pty/whatever.
-# See: http://weblog.jamisbuck.org/2007/10/14/capistrano-2-1
-default_run_options[:pty] = true
+set :application, 'typo'
+set :repo_url, 'matijs@mist.matijs.net:git/typo.git'
 
-set :application, "typo"
+# Default branch is :master
+# ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }.call
+set :branch, 'toxic-elephant'
 
-set :deploy_to, "/var/www/#{application}"
+# Default deploy_to directory is /var/www/my_app
+# set :deploy_to, '/var/www/my_app'
 
-set :scm, :git
-set :repository, '/home/matijs/git/typo.git'
-set :local_repository, 'matijs@mist.matijs.net:git/typo.git'
-set :branch, "toxic-elephant"
+# Default value for :scm is :git
+# set :scm, :git
 
-set :use_sudo, false
+# Default value for :format is :pretty
+# set :format, :pretty
 
-role :app, "mist.matijs.net"
-role :web, "mist.matijs.net"
-role :db,  "mist.matijs.net", :primary => true
+# Default value for :log_level is :debug
+# set :log_level, :debug
 
-set :bundle_cmd, "/var/lib/gems/1.9.1/bin/bundle"
-set :bundle_flags, "--quiet"
+# Default value for :pty is false
+# set :pty, true
+
+# Default value for :linked_files is []
+set :linked_files, %w{config/database.yml}
+
+# Default value for linked_dirs is []
+# set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system}
+set :linked_dirs, fetch(:linked_dirs, []) + %w{log tmp/pids public/files}
+
+# Default value for default_env is {}
+# set :default_env, { path: "/opt/ruby/bin:$PATH" }
+
+# Default value for keep_releases is 5
+# set :keep_releases, 5
 
 namespace :deploy do
-  # FIXME: Make more descriptive name
-  task :create_shared_db_config do
-    sudo "chown matijs:matijs #{deploy_to}"
-    sudo "chown matijs:matijs #{releases_path}"
-    # logdir
-    sudo "chgrp -R www-data #{shared_path}/log"
 
-    database_configuration = <<-EOF
-development:
-  adapter: sqlite3
-  database: db/#{application}_dev.sqlite3
-
-test:
-  adapter: sqlite3
-  database: db/#{application}_test.sqlite3
-
-production:
-  adapter: postgresql
-  database: #{application}
-  host: 
-  username: #{application}
-  password: 
-EOF
-
-    sudo "mkdir -p #{deploy_to}/#{shared_dir}/config" 
-    sudo "chgrp -R www-data #{deploy_to}/#{shared_dir}/config"
-    sudo "chmod 770 #{deploy_to}/#{shared_dir}/config"
-    put database_configuration, "#{deploy_to}/#{shared_dir}/config/database.yml" 
-    sudo "chmod 750 #{deploy_to}/#{shared_dir}/config"
-  end
-
-  desc "Give apache access to public directory"
-  task :fix_public_dir do
-    # Make public dir accessible to www-data
-    sudo "chgrp -R www-data #{current_release}/public"
-    # Link in the resource folder
-    run "ln -nfs #{shared_path}/files #{current_release}/public/files" 
-  end
-
-  task :link_db_config do
-    # Link in the production database.yml 
-    run "ln -nfs #{shared_path}/config/database.yml #{current_release}/config/database.yml" 
-  end
-
+  desc 'Restart application'
   task :restart do
-    run "touch #{current_path}/tmp/restart.txt"
+    on roles(:app), in: :sequence, wait: 5 do
+      # Your restart mechanism here, for example:
+      # execute :touch, release_path.join('tmp/restart.txt')
+    end
   end
+
+  after :publishing, :restart
+
+  after :restart, :clear_cache do
+    on roles(:web), in: :groups, limit: 3, wait: 10 do
+      # Here we can do anything such as:
+      # within release_path do
+      #   execute :rake, 'cache:clear'
+      # end
+    end
+  end
+
 end
-
-
-after "deploy:setup", "deploy:create_shared_db_config"
-after "deploy:update_code", "deploy:link_db_config", "deploy:fix_public_dir"

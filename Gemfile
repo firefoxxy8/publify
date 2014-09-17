@@ -47,6 +47,13 @@ group :development, :test do
   gem 'pry-rails'
 end
 
+group :development do
+  gem 'capistrano', '~> 3.0', require: false
+  gem 'capistrano-rails',   '~> 1.1', require: false
+  gem 'capistrano-bundler', '~> 1.1', require: false
+  gem 'capistrano-passenger', require: false
+end
+
 # Install gems from each theme
 Dir.glob(File.join(File.dirname(__FILE__), 'themes', '**', "Gemfile")) do |gemfile|
   eval(IO.read(gemfile), binding)
