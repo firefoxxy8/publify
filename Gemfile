@@ -36,6 +36,7 @@ group :assets do
   gem 'sass-rails', " ~> 4.0.3"
   gem 'coffee-rails', " ~> 4.0.1"
   gem 'uglifier'
+  gem 'non-stupid-digest-assets'
   gem 'therubyracer'
 end
 
