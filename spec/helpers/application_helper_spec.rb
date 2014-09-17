@@ -22,7 +22,7 @@ describe ApplicationHelper do
 
       describe "for a multibyte permalink" do
         let(:article) { build(:article, permalink: 'ルビー') }
-        it { expect(link_to_permalink(article, "title")).to include('%E3%83%AB%E3%83%93%E3%83%BC') } 
+        it { expect(link_to_permalink(article, "title")).to include('%E3%83%AB%E3%83%93%E3%83%BC') }
       end
     end
 
@@ -30,17 +30,17 @@ describe ApplicationHelper do
       subject { helper.stop_index_robots?(blog) }
 
       context "default" do
-        it { expect(subject).to be_false }
+        it { expect(subject).to be_falsey }
       end
 
       context "with year:2010" do
         before(:each) { params[:year] = 2010 }
-        it { expect(subject).to be_true }
+        it { expect(subject).to be_truthy }
       end
 
       context "with page:2" do
         before(:each) { params[:page] = 2 }
-        it { expect(subject).to be_true }
+        it { expect(subject).to be_truthy }
       end
 
       context "for the tags controller" do
@@ -48,12 +48,12 @@ describe ApplicationHelper do
 
         context "with unindex_tags set in blog" do
           before(:each) { blog.should_receive(:unindex_tags).and_return(true) }
-          it { expect(subject).to be_true }
+          it { expect(subject).to be_truthy }
         end
 
         context "with unindex_tags set in blog" do
           before(:each) { blog.should_receive(:unindex_tags).and_return(false) }
-          it { expect(subject).to be_false }
+          it { expect(subject).to be_falsey }
         end
       end
 
@@ -62,12 +62,62 @@ describe ApplicationHelper do
 
         context "with unindex_tags set in blog" do
           before(:each) { blog.should_receive(:unindex_categories).and_return(true) }
-          it { expect(subject).to be_true }
+          it { expect(subject).to be_truthy }
         end
 
         context "with unindex_tags set in blog" do
           before(:each) { blog.should_receive(:unindex_categories).and_return(false) }
-          it { expect(subject).to be_false }
+          it { expect(subject).to be_falsey }
+        end
+      end
+    end
+
+    describe "#get_reply_context_url" do
+      it "returns a link to the reply's URL if given" do
+        reply = {
+          'user' => {
+            'name' => 'truc',
+            'entities' => {'url' => {'urls' => [{'expanded_url' => 'an url'}]}}
+          }
+        }
+        expect(get_reply_context_url(reply)).to eq "<a href=\"an url\">truc</a>"
+      end
+
+      it "returns a link to the reply's user if no URL is given" do
+        reply = {'user' => {'name' => 'truc', 'entities' => {}}}
+        expect(get_reply_context_url(reply)).
+          to eq "<a href=\"https://twitter.com/truc\">truc</a>"
+      end
+    end
+
+    describe "#get_reply_context_twitter_link" do
+      let(:reply) { { 'id_str' => '123456789',
+                      'created_at' => "Thu Jan 23 13:47:00 +0000 2014",
+                      'user' => {
+                        'screen_name' => 'a_screen_name',
+                        'entities' => {'url' => {'urls' => [{'expanded_url' => 'an url'}]}}
+                      } } }
+      it "returns a link with the creation date and time" do
+        begin
+          timezone = Time.zone
+          Time.zone = "UTC"
+
+          expect(get_reply_context_twitter_link(reply)).
+            to eq "<a href=\"https://twitter.com/a_screen_name/status/123456789\">23/01/2014 at 13h47</a>"
+        ensure
+          Time.zone = timezone
+        end
+      end
+
+      it "displays creation date and time in the current time zone" do
+        begin
+          timezone = Time.zone
+          Time.zone = "Tokyo"
+
+          expect(get_reply_context_twitter_link(reply)).
+            to eq "<a href=\"https://twitter.com/a_screen_name/status/123456789\">23/01/2014 at 22h47</a>"
+        ensure
+          Time.zone = timezone
         end
       end
     end
@@ -109,22 +159,12 @@ describe ApplicationHelper do
   end
 
   describe '#display_date' do
-    let(:article) { build(:article) }
-    let!(:blog) { build(:blog) }
 
-    def this_blog; blog; end
-
-    ['%d/%m/%y', '%m/%m/%y', '%d %b %Y', '%b %d %Y'].each do |spec|
+    ['%d/%m/%y', '%m/%m/%y', '%d %b %Y', '%b %d %Y', '%I:%M%p', '%H:%M', '%Hh%M'].each do |spec|
       it "use #{spec} format from blog to render date" do
-        blog.stub(:date_format).and_return(spec)
+        create(:blog, date_format: spec)
+        article = build(:article)
         expect(display_date(article.published_at)).to eq(article.published_at.strftime(spec))
-      end
-    end
-
-    ['%I:%M%p', '%H:%M', '%Hh%M'].each do |spec|
-      it "use #{spec} format from blog to render date" do
-        blog.stub(:time_format).and_return(spec)
-        expect(display_time(article.published_at)).to eq(article.published_at.strftime(spec))
       end
     end
   end

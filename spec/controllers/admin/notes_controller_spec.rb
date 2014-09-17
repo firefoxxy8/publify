@@ -6,10 +6,10 @@ describe Admin::NotesController do
   before(:each) { request.session = { user: admin.id } }
 
   context "with a blog" do
-    let(:admin) { create(:user_admin) }
+    let(:admin) { create(:user, :as_admin) }
     let!(:blog) { create(:blog) }
 
-    describe :index do
+    describe 'index' do
       let!(:notes) { [create(:note), create(:note)] }
       before(:each) { get :index }
       it { expect(response).to render_template('index') }
@@ -19,7 +19,7 @@ describe Admin::NotesController do
       it { expect(assigns(:note).user).to eq(admin)}
     end
 
-    describe :create do
+    describe 'create' do
       context "a simple note" do
         before(:each) { post :create, note: { body: "Emphasis _mine_" } }
         it {expect(response).to redirect_to(admin_notes_path)}
@@ -34,7 +34,7 @@ describe Admin::NotesController do
     context "with an existing note from current user" do
       let(:note) { create(:note, user_id: admin) }
 
-      describe :edit do
+      describe 'edit' do
         before(:each) { get :edit, id: note.id }
         it { expect(response).to be_success }
         it { expect(response).to render_template('edit') }
@@ -42,13 +42,13 @@ describe Admin::NotesController do
         it { expect(assigns(:notes)).to eq([note]) }
       end
 
-      describe :update do
+      describe 'update' do
         before(:each) { post :update, id: note.id, note: {body: 'new body'} }
         it { expect(response).to redirect_to(action: :index) }
         it { expect(note.reload.body).to eq('new body') }
       end
 
-      describe :show do
+      describe 'show' do
         before(:each) { get :show, id: note.id }
         it { expect(response).to render_template('show') }
       end
@@ -63,9 +63,9 @@ describe Admin::NotesController do
 
   context "with a blog with twitter configured" do
     let!(:blog) { create(:blog_with_twitter) }
-    let(:admin) { create(:user_admin, :with_twitter) }
+    let(:admin) { create(:user, :as_admin, :with_twitter) }
 
-    describe :edit do
+    describe 'edit' do
       context "when push to twitter" do
         it "call note to send to twitter" do
           expect(Note.count).to eq(0)

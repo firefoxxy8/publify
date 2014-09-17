@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Trackback, 'With the various trackback filters loaded and DNS mocked out appropriately' do
   before(:each) do
-    IPSocket.stub(:getaddress).and_return { raise SocketError.new("getaddrinfo: Name or service not known") }
+    IPSocket.stub(:getaddress) { raise SocketError.new("getaddrinfo: Name or service not known") }
     FactoryGirl.create(:blog)
     @blog = Blog.default
     @blog.sp_global = true
@@ -61,7 +61,6 @@ describe Trackback, 'With the various trackback filters loaded and DNS mocked ou
 
   def ham_params
     { :blog_name => 'Blog', :title => 'trackback', :excerpt => 'bland',
-      :url => 'http://notaspammer.com', :ip => '212.42.230.206',
-      :blog => @blog }
+      :url => 'http://notaspammer.com', :ip => '212.42.230.206' }
   end
 end

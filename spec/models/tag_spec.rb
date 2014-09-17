@@ -11,7 +11,7 @@ describe Tag do
   end
 
   it 'display names with spaces can be found by dash joined name' do
-    Tag.find(:first, :conditions => {:name => 'Monty Python'}).should be_nil
+    Tag.where(:name => 'Monty Python').first.should be_nil
     tag = Tag.create(:name => 'Monty Python')
     tag.should be_valid
     tag.name.should == 'monty-python'
@@ -36,7 +36,7 @@ describe Tag do
     foo = FactoryGirl.create(:tag, :name => 'foo', :articles => [a, b, c])
     bar = FactoryGirl.create(:tag, :name => 'bar', :articles => [a, b])
     tags = Tag.find_all_with_article_counters
-    tags.should have(2).entries
+    expect(tags.entries.size).to eq(2)
     tags.first.name.should == "foo"
     tags.first.article_counter.should == 3
     tags.last.name.should == 'bar'

@@ -1,32 +1,25 @@
 # coding: utf-8
 require 'spec_helper'
 
-describe ArticlesController do
+describe ArticlesController, "base" do
   let!(:blog) { create(:blog) }
+  let!(:user) { create :user }
 
-  before(:each) { create :user }
-
-  it "should redirect tag to /tags" do
-    get 'tag'
-    response.should redirect_to(tags_path)
+  describe 'tag' do
+    before(:each) { get :tag }
+    it { expect(response).to redirect_to(tags_path) }
   end
 
-  describe :index do
-    before :each do
-      create(:article)
-      get 'index'
-    end
+  describe 'index' do
+    let!(:article) { create(:article) }
+    before(:each) { get :index }
 
-    it 'should be render template index' do
-      response.should render_template(:index)
-    end
-
-    it 'should show some articles' do
-      assigns[:articles].should_not be_empty
-    end
+    it { expect(response).to render_template(:index) }
+    it { expect(assigns[:articles]).to_not be_empty }
 
     context "with the view rendered" do
       render_views
+
       it 'should have good link feed rss' do
         response.should have_selector('head>link[href="http://test.host/articles.rss"]')
       end
@@ -45,25 +38,17 @@ describe ArticlesController do
     end
   end
 
-
   describe '#search action' do
-    before :each do
+    before(:each) do
       create(:article, :body => "in markdown format\n\n * we\n * use\n [ok](http://blog.ok.com) to define a link", :text_filter => create(:markdown))
       create(:article, :body => "xyz")
     end
 
     describe 'a valid search' do
-      before :each do
-        get 'search', :q => 'a'
-      end
+      before(:each) { get :search, q: 'a' }
 
-      it 'should render template search' do
-        response.should render_template(:search)
-      end
-
-      it 'should assigns articles' do
-        assigns[:articles].should_not be_nil
-      end
+      it { expect(response).to render_template(:search) }
+      it { expect(assigns[:articles]).to_not be_nil }
 
       context "with the view rendered" do
         render_views
@@ -94,21 +79,18 @@ describe ArticlesController do
     it 'should render feed rss by search' do
       get 'search', :q => 'a', :format => 'rss'
       response.should be_success
-      response.should render_template('index_rss_feed')
-      @layouts.keys.compact.should be_empty
+      response.should render_template('index_rss_feed', layout: false)
     end
 
     it 'should render feed atom by search' do
       get 'search', :q => 'a', :format => 'atom'
       response.should be_success
-      response.should render_template('index_atom_feed')
-      @layouts.keys.compact.should be_empty
+      response.should render_template('index_atom_feed', layout: false)
     end
 
     it 'search with empty result' do
       get 'search', :q => 'abcdefghijklmnopqrstuvwxyz'
-      response.should render_template('articles/error')
-      assigns[:articles].should be_empty
+      response.should render_template('articles/error', layout: false)
     end
 
   end
@@ -117,7 +99,7 @@ describe ArticlesController do
 
     describe 'with a query with several words' do
 
-      before :each do
+      before(:each) do
         create(:article, :body => "hello world and im herer")
         create(:article, :title => "hello", :body => "worldwide")
         create(:article)
@@ -125,8 +107,7 @@ describe ArticlesController do
       end
 
       it 'should be valid' do
-        assigns[:articles].should_not be_empty
-        assigns[:articles].should have(2).records
+        expect(assigns(:articles).records.size).to eq(2)
       end
 
       it 'should render without layout' do
@@ -168,7 +149,7 @@ describe ArticlesController do
 
   describe 'index for a month' do
 
-    before :each do
+    before(:each) do
       create(:article, :published_at => Time.utc(2004, 4, 23))
       get 'index', :year => 2004, :month => 4
     end
@@ -198,6 +179,7 @@ end
 
 describe ArticlesController, "nosettings" do
   let!(:blog) { create(:blog, settings: {}) }
+
   it 'redirects to setup' do
     get 'index'
     response.should redirect_to(controller: 'setup', action: 'index')
@@ -205,7 +187,9 @@ describe ArticlesController, "nosettings" do
 end
 
 describe ArticlesController, "nousers" do
+
   let!(:blog) { create(:blog) }
+
   it 'redirects to signup' do
     get 'index'
     response.should redirect_to(controller: 'accounts', action: 'signup')
@@ -224,31 +208,27 @@ describe ArticlesController, "feeds" do
   specify "/articles.atom => an atom feed" do
     get 'index', :format => 'atom'
     response.should be_success
-    response.should render_template("index_atom_feed")
+    response.should render_template("index_atom_feed", layout: false)
     assigns(:articles).should == [article1, article2]
-    @layouts.keys.compact.should be_empty
   end
 
   specify "/articles.rss => an RSS 2.0 feed" do
     get 'index', :format => 'rss'
     response.should be_success
-    response.should render_template("index_rss_feed")
+    response.should render_template("index_rss_feed", layout: false)
     assigns(:articles).should == [article1, article2]
-    @layouts.keys.compact.should be_empty
   end
 
   specify "atom feed for archive should be valid" do
     get 'index', :year => 2004, :month => 4, :format => 'atom'
-    response.should render_template("index_atom_feed")
+    response.should render_template("index_atom_feed", layout: false)
     assigns(:articles).should == [article2]
-    @layouts.keys.compact.should be_empty
   end
 
   specify "RSS feed for archive should be valid" do
     get 'index', :year => 2004, :month => 4, :format => 'rss'
-    response.should render_template("index_rss_feed")
+    response.should render_template("index_rss_feed", layout: false)
     assigns(:articles).should == [article2]
-    @layouts.keys.compact.should be_empty
   end
 end
 
@@ -257,6 +237,7 @@ describe ArticlesController, "the index" do
 
   before(:each) do
     create(:user, :login => 'henri', :profile => create(:profile_admin, :label => Profile::ADMIN))
+    create(:article)
   end
 
   it "should ignore the HTTP Accept: header" do
@@ -281,7 +262,7 @@ describe ArticlesController, "previewing" do
   end
 
   describe 'with logged user' do
-    let(:admin) { create(:user_admin) }
+    let(:admin) { create(:user, :as_admin) }
     let(:article) { create(:article, user: admin) }
 
     before(:each) { @request.session = { user: admin.id } }
@@ -407,7 +388,7 @@ describe ArticlesController, "redirecting" do
 
   describe 'with permalink_format like %title%.html' do
     let!(:blog) { create(:blog, :permalink_format => '/%title%.html') }
-    let!(:admin) { create(:user_admin) }
+    let!(:admin) { create(:user, :as_admin) }
 
     before(:each) do
       @request.session = { :user => admin.id }
@@ -494,8 +475,7 @@ describe ArticlesController, "redirecting" do
 
       it 'should render feedback atom feed' do
         assigns(:feedback).should == [trackback1]
-        response.should render_template('feedback_atom_feed')
-        @layouts.keys.compact.should be_empty
+        response.should render_template('feedback_atom_feed', layout: false)
       end
     end
 
@@ -509,8 +489,7 @@ describe ArticlesController, "redirecting" do
 
       it 'should render rss20 partial' do
         assigns(:feedback).should == [trackback1]
-        response.should render_template('feedback_rss_feed')
-        @layouts.keys.compact.should be_empty
+        response.should render_template('feedback_rss_feed', layout: false)
       end
     end
   end
@@ -606,7 +585,6 @@ end
 
 describe ArticlesController, "preview page" do
   let!(:blog) { create(:blog) }
-  render_views
 
   describe 'with non logged user' do
     before :each do
@@ -622,7 +600,7 @@ describe ArticlesController, "preview page" do
   describe 'with logged user' do
     let!(:page) { create(:page) }
 
-    before :each do
+    before(:each) do
       henri = create(:user, :login => 'henri', :profile => create(:profile_admin, :label => Profile::ADMIN))
       @request.session = { :user => henri.id }
     end

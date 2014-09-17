@@ -59,8 +59,8 @@ describe Content do
   describe "#really_send_notifications" do
     it "sends notifications to interested users" do
       @content = Content.new
-      henri = mock_model(User)
-      alice = mock_model(User)
+      henri = create(:user)
+      alice = create(:user)
 
       @content.should_receive(:notify_user_via_email).with henri
       @content.should_receive(:notify_user_via_email).with alice
@@ -103,7 +103,7 @@ describe Content do
       context "with not published status article" do
         let(:params) { {published: '0' } }
         let!(:article) { create(:article) }
-        let!(:match_article) { create(:article, published: false) }
+        let!(:match_article) { create(:article, published: false, state: 'draft') }
         it { expect(subject).to eq([match_article]) }
       end
 
