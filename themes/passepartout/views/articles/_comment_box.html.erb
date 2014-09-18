@@ -8,13 +8,13 @@
 
 
       <p><label for="comment_author"><%= t(".your_name")%></label>
-      <%= text_field "comment", "author", :size => 20 %> <small><%= link_to_function("(#{t('.leave_url_email')} &#187;)".html_safe, "Element.toggle('guest_url'); Element.toggle('guest_email')") %></small>
+      <%= text_field "comment", "author", :size => 20 %>
     </p>
-    <p id="guest_url" style="display:none;">
+    <p id="guest_url">
       <label for="comment_url"><%= t(".your_blog")%></label>
       <%= text_field "comment", "url" %>
     </p>
-    <p id="guest_email" style="display:none;">
+    <p id="guest_email">
       <label for="comment_email"><%= t(".your_email")%></label>
       <%= text_field "comment", "email" %>
     </p>
