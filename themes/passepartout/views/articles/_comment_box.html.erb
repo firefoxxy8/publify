@@ -4,16 +4,19 @@
   <div id="preview" style="display: none"></div>
 
   <a name="respond"></a>
-
-
       <p><label for="comment_author"><%= t(".your_name")%></label>
       <%= text_field "comment", "author", size: 20 %>
+      <small>
+        <%= link_to '#', onclick: "$('.optional_field').toggle()" do %>
+          (<%= t(".leave_url_email") %> &#187;)
+        <%- end %>
+      </small>
     </p>
-    <p id="guest_url">
+    <p class="optional_field">
       <label for="comment_url"><%= t(".your_blog")%></label>
       <%= text_field "comment", "url" %>
     </p>
-    <p id="guest_email">
+    <p class="optional_field">
       <label for="comment_email"><%= t(".your_email")%></label>
       <%= text_field "comment", "email" %>
     </p>
