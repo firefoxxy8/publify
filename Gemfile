@@ -2,18 +2,18 @@ source 'https://rubygems.org'
 
 gem 'pg'
 
-gem 'rails', '~> 4.1.1'
+gem 'rails', '~> 4.1.7'
 gem 'htmlentities'
 gem 'bluecloth', '~> 2.1'
 gem 'coderay', '~> 1.1.0'
 gem 'kaminari'
 gem 'RedCloth', '~> 4.2.8'
 gem 'addressable', '~> 2.1', :require => 'addressable/uri'
-gem 'mini_magick', '~> 3.7.0', :require => 'mini_magick'
+gem 'mini_magick', '~> 3.8.1', :require => 'mini_magick'
 gem 'uuidtools', '~> 2.1.1'
 gem 'flickraw-cached'
 gem 'rubypants', '~> 0.2.0'
-gem 'rake', '~> 10.1.0'
+gem 'rake', '~> 10.3.2'
 #gem 'acts_as_list'
 #gem 'acts_as_tree_rails3'
 gem 'fog'
@@ -23,7 +23,7 @@ gem 'akismet', '~> 1.0'
 gem 'twitter', '~> 5.6.0'
 
 gem "jquery-rails", "~> 3.1.0"
-gem "jquery-ui-rails", "~> 4.2.0"
+gem "jquery-ui-rails", "~> 5.0.2"
 
 gem 'rails-timeago', '~> 2.0'
 
@@ -45,11 +45,12 @@ end
 
 group :development, :test do
   gem 'thin'
-  gem 'factory_girl', '~> 4.2.0'
+  gem 'factory_girl', '~> 4.5.0'
   gem 'capybara'
-  gem 'rspec-rails', '~> 2.99.0'
+  gem 'rspec-rails', '~> 3.1.0'
   gem 'simplecov', :require => false
   gem 'pry-rails'
+  gem 'guard-rspec'
 end
 
 group :development do
