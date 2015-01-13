@@ -29,7 +29,7 @@
   <% else %>
     <h4 class="blueblk">Comments</h4>
   <% end %>
-  <% unless @article.comments_closed? -%>
+  <%- unless @article.comments_closed? %>
     <p class="postmetadata alt">
       <small><a href="#respond"><%= t(".leave_a_response")%></a></small>
     </p>
