@@ -44,9 +44,11 @@
   <% else -%>
     <h4 class="blueblk"><%= t(".trackbacks") %></h4>
   <% end -%>
-  <%= content_tag(:ol,
-        render("trackback", :collection => @article.published_trackbacks),
-        :id => 'trackbackList', :class => 'trackback-list') unless @article.published_trackbacks.blank? %>
+  <%- unless @article.published_trackbacks.blank? %>
+    <ol id="trackbackList" class="trackback-list">
+      <%= render(partial: "trackback", collection: @article.published_trackbacks) %>
+    </ol>
+  <% end -%>
 <% end -%>
 
 <% unless @article.comments_closed? -%>
