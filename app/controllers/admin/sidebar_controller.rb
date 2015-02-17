@@ -10,11 +10,11 @@ class Admin::SidebarController < Admin::BaseController
     sidebar_config = params[:configure]
     sidebar = Sidebar.where(id: params[:id]).first
     old_s_index = sidebar.staged_position || sidebar.active_position
-    sidebar.update_attributes sidebar_config[sidebar.id.to_s]
+    sidebar.update_attributes sidebar_config[sidebar.id.to_s].permit!
     respond_to do |format|
       format.js do
         # render partial _target for it
-        return render partial: 'target_sidebar', locals: { sortable_index: old_s_index, sidebar: sidebar}
+        return render partial: 'target_sidebar', locals: { sortable_index: old_s_index, sidebar: sidebar }
       end
       format.html do
         return redirect_to(admin_sidebar_index_path)
@@ -26,7 +26,7 @@ class Admin::SidebarController < Admin::BaseController
     @sidebar = Sidebar.where(id: params[:id]).first
     @sidebar && @sidebar.destroy
     respond_to do |format|
-      format.html { return redirect_to(admin_sidebar_index_path)}
+      format.html { return redirect_to(admin_sidebar_index_path) }
       format.js
     end
   end
@@ -49,9 +49,9 @@ class Admin::SidebarController < Admin::BaseController
         # IT'S OVER NINE THOUSAND! considering we'll never reach 9K Sidebar
         # instances or Sidebar specializations
         sidebar = if sidebar_id >= 9000
-          Sidebar.available_sidebars[sidebar_id - 9000].new
-        else
-          Sidebar.valid.find(sidebar_id)
+                    Sidebar.available_sidebars[sidebar_id - 9000].new
+                  else
+                    Sidebar.valid.find(sidebar_id)
         end
         sidebar.update_attributes(staged_position: staged_index)
       end
