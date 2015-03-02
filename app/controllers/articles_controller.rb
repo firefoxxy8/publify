@@ -14,10 +14,10 @@ class ArticlesController < ContentController
     conditions = (Blog.default.statuses_in_timeline) ? ['type in (?, ?)', 'Article', 'Note'] : ['type = ?', 'Article']
 
     limit = this_blog.per_page(params[:format])
-    unless params[:year].blank?
-      @articles = Content.published_at(params.values_at(:year, :month, :day)).where(conditions).page(params[:page]).per(limit)
-    else
+    if params[:year].blank?
       @articles = Content.published.where(conditions).page(params[:page]).per(limit)
+    else
+      @articles = Content.published_at(params.values_at(:year, :month, :day)).where(conditions).page(params[:page]).per(limit)
     end
 
     @page_title = this_blog.home_title_template
@@ -33,8 +33,6 @@ class ArticlesController < ContentController
     @description = @description.to_title(@articles, this_blog, params)
 
     @keywords = this_blog.meta_keywords
-
-    suffix = (params[:page].nil? && params[:year].nil?) ? '' : '/'
 
     respond_to do |format|
       format.html { render_paginated_index }
@@ -110,14 +108,16 @@ class ArticlesController < ContentController
     @description = this_blog.archives_desc_template.to_title(@articles, this_blog, params)
   end
 
+  # FIXME: Belongs in CommentsController
   def comment_preview
-    if (params[:comment][:body].blank? rescue true)
+    comment_params = params[:comment] || {}
+    if comment_params[:body].blank?
       render nothing: true
       return
     end
 
     headers['Content-Type'] = 'text/html; charset=utf-8'
-    @comment = Comment.new(params[:comment])
+    @comment = Comment.new(comment_params)
   end
 
   def tag

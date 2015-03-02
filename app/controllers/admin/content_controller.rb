@@ -7,11 +7,6 @@ class Admin::ContentController < Admin::BaseController
 
   cache_sweeper :blog_sweeper
 
-  def auto_complete_for_article_keywords
-    @items = Tag.select(:display_name).order(:display_name).map(&:display_name)
-    render inline: '<%= @items %>'
-  end
-
   def index
     @search = params[:search] ? params[:search] : {}
     @articles = Article.search_with(@search).page(params[:page]).per(this_blog.admin_display_elements)
@@ -27,6 +22,14 @@ class Admin::ContentController < Admin::BaseController
 
   def new
     @article = Article::Factory.new(this_blog, current_user).default
+    load_resources
+  end
+
+  def edit
+    return unless access_granted?(params[:id])
+    @article = Article.find(params[:id])
+    @article.text_filter ||= current_user.default_text_filter
+    @article.keywords = Tag.collection_to_string @article.tags
     load_resources
   end
 
@@ -46,14 +49,6 @@ class Admin::ContentController < Admin::BaseController
     end
   end
 
-  def edit
-    return unless access_granted?(params[:id])
-    @article = Article.find(params[:id])
-    @article.text_filter ||= current_user.default_text_filter
-    @article.keywords = Tag.collection_to_string @article.tags
-    load_resources
-  end
-
   def update
     return unless access_granted?(params[:id])
     id = params[:article][:id] || params[:id]
@@ -62,17 +57,13 @@ class Admin::ContentController < Admin::BaseController
     if params[:article][:draft]
       get_fresh_or_existing_draft_for_article
     else
-      unless @article.parent_id.nil?
-        @article = Article.find(@article.parent_id)
-      end
+      @article = Article.find(@article.parent_id) unless @article.parent_id.nil?
     end
 
     update_article_attributes
 
     if @article.save
-      unless @article.draft
-        Article.where(parent_id: @article.id).map(&:destroy)
-      end
+      Article.where(parent_id: @article.id).map(&:destroy) unless @article.draft
       flash[:success] = I18n.t('admin.content.update.success')
       redirect_to action: 'index'
     else
@@ -84,6 +75,11 @@ class Admin::ContentController < Admin::BaseController
 
   def destroy
     destroy_a(Article)
+  end
+
+  def auto_complete_for_article_keywords
+    @items = Tag.select(:display_name).order(:display_name).map(&:display_name)
+    render inline: '<%= @items %>'
   end
 
   def autosave

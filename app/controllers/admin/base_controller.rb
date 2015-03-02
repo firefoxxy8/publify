@@ -10,9 +10,10 @@ class Admin::BaseController < ApplicationController
   private
 
   def parse_date_time(str)
+    return unless str
     DateTime.strptime(str, '%B %e, %Y %I:%M %p GMT%z').utc
-  rescue
-    Time.parse(str).utc rescue nil
+  rescue ArgumentError
+    Time.parse(str).utc
   end
 
   def update_settings_with!(settings_param)
@@ -24,15 +25,6 @@ class Admin::BaseController < ApplicationController
         flash[:error] = I18n.t('admin.settings.update.error', messages: this_blog.errors.full_messages.join(', '))
       end
     end
-  end
-
-  def save_a(object, title)
-    if object.save
-      flash[:notice] = I18n.t('admin.base.successfully_saved', element: title)
-    else
-      flash[:error] = I18n.t('admin.base.unsuccessfully_saved', element: title)
-    end
-    redirect_to action: 'index'
   end
 
   def destroy_a(klass_to_destroy)
