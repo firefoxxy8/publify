@@ -1,36 +1,36 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <%= render 'shared/page_header' %>
-  <title><%=h page_title %></title>
-  <%= stylesheet_link_tag "user-styles", :media => 'all' %>
-  <%= stylesheet_link_tag "/stylesheets/theme/passepartout", :media => 'all' %>
-  <%= stylesheet_link_tag "/stylesheets/theme/print", :media => 'print' %>
-</head>
+  <head>
+    <%= render 'shared/page_header' %>
+    <title><%=h page_title %></title>
+    <%= stylesheet_link_tag "user-styles", :media => 'all' %>
+    <%= stylesheet_link_tag "/stylesheets/theme/passepartout", :media => 'all' %>
+    <%= stylesheet_link_tag "/stylesheets/theme/print", :media => 'print' %>
+  </head>
 
-<body>
-  <div class="contents">
+  <body>
+    <div class="contents">
       <div class="main">
-          <% if @frontpage -%>
+        <% if @frontpage -%>
           <h1 id="sitename">matijs.net</h1>
-          <% else -%>
+        <% else -%>
           <h1 id="sitename"><%= link_to this_blog.blog_name, this_blog.base_url %></h1>
-          <% end -%>
-      <%= yield %>
-    </div>
+        <% end -%>
+        <%= yield %>
+      </div>
 
-    <div class="places">
-    <% if @frontpage -%>
-      <%= render :partial => "articles/frontbar" %>
-    <% else -%>
-      <p>Toxic Elephant is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
-      <%= link_to image_tag("powered.gif"),  "http://www.typosphere.org/", {:class => "powered" } %>
+      <div class="places">
+        <% if @frontpage -%>
+          <%= render :partial => "articles/frontbar" %>
+        <% else -%>
+          <p>Toxic Elephant is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
+          <%= link_to image_tag("powered.gif"),  "http://www.typosphere.org/", {:class => "powered" } %>
 
-      <!-- sidebar components -->
-      <%= render_sidebars %>
-    <% end -%>
-    </div>
+          <!-- sidebar components -->
+          <%= render_sidebars %>
+        <% end -%>
+      </div>
       <p class="copyright">Copyright 2002&ndash;2014, Matijs van Zuijlen</p>
-  </div>
-</body>
+    </div>
+  </body>
 </html>
