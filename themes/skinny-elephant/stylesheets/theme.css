@@ -1,0 +1,106 @@
+body {
+  margin: 0px;
+  font-family: sans-serif;
+  font-size: 16px;
+  line-height: 2rem;
+}
+
+h1, h2, h3 {
+  font-weight: inherit;
+}
+h1, h2, h3, p, ul {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+h1, h2, h3, p, ul, pre {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+h1 {
+  font-size: 2rem;
+  line-height: 4rem;
+}
+h2 {
+  font-size: 1.5rem;
+}
+h3 {
+  font-size: 1.25rem;
+}
+p.desc, p.auth, p.meta {
+  font-size: 0.75rem;
+}
+p.desc, p.auth {
+  margin-top: -2rem;
+}
+p.meta {
+  padding-bottom: 3rem;
+}
+
+h2, h3 {
+  color: rgb(204, 34, 0);
+}
+h1 a, h2 a {
+  text-decoration: none;
+}
+a {
+  color: inherit;
+}
+a:hover {
+  color: #85ab02;
+}
+
+pre {
+  overflow-x: auto;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  border-color: #a5945a;
+  margin-top: -1px;
+  margin-bottom: -1px;
+}
+
+.header, .sidebar, .footer {
+  padding-top: 2rem;
+}
+
+.content, .sidebar, .footer {
+  padding-bottom: 2rem;
+}
+
+.header, .content, .sidebar, .footer {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.header, .content, .sidebar, .footer, .container {
+  margin-left: auto;
+  margin-right: auto;
+}
+.container {
+  max-width: 85rem;
+}
+
+@media(min-width: 55rem) {
+  .header, .content, .sidebar {
+    width: 45rem;
+  }
+  .header, .content, .sidebar, .footer {
+    padding-left: 5rem;
+    padding-right: 5rem;
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+}
+
+/* 5 + 45 + 5 + 5 + 20 + 5 = 85. */
+@media(min-width: 85rem) {
+  .header, .content {
+    clear: left;
+    float: left;
+  }
+  .sidebar {
+    width: 20rem;
+    display: inline-block;
+  }
+  .footer {
+    clear: both;
+  }
+}

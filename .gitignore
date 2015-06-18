@@ -31,4 +31,5 @@ public/cache/*
 !/themes/bootstrap-2
 !/themes/plain
 !/themes/passepartout
+!/themes/skinny-elephant
 gems/
