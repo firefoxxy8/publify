@@ -23,7 +23,7 @@
 
       <div class="sidebar">
         <% if @frontpage -%>
-          <%= render :partial => "articles/frontbar" %>
+          <%= render :partial => "local/frontbar" %>
         <% else -%>
           <p>Toxic Elephant is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
           <%= t(".powered_by", powered_by: link_to('Publify', 'http://publify.co')) %>
