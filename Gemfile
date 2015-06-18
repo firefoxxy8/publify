@@ -27,7 +27,7 @@ gem 'flickraw-cached'
 gem 'fog'
 gem 'htmlentities'
 gem 'kaminari'
-gem 'mini_magick', '~> 4.0.2', require: 'mini_magick'
+gem 'mini_magick', '~> 4.2.7', require: 'mini_magick'
 gem 'non-stupid-digest-assets'
 gem 'rails-observers', '~> 0.1.2'
 gem 'rails-timeago', '~> 2.0'
@@ -51,7 +51,7 @@ group :development, :test do
   gem 'thin'
   gem 'factory_girl', '~> 4.5.0'
   gem 'capybara'
-  gem 'rspec-rails', '~> 3.1.0'
+  gem 'rspec-rails', '~> 3.3.1'
   gem 'simplecov', require: false
   gem 'pry-rails'
   gem 'rubocop', require: false
