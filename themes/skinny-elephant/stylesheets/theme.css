@@ -78,7 +78,8 @@ pre {
   margin-right: auto;
 }
 .container {
-  max-width: 85rem;
+  max-width: 80rem;
+  padding-top: 1rem;
 }
 
 @media(min-width: 55rem) {
@@ -87,14 +88,13 @@ pre {
   }
   .header, .content, .sidebar, .footer {
     padding-left: 5rem;
-    padding-right: 5rem;
     margin-left: 0px;
     margin-right: 0px;
   }
 }
 
-/* 5 + 45 + 5 + 5 + 20 + 5 = 85. */
-@media(min-width: 85rem) {
+/* 5 + 45 + 5 + 20 + 5 = 80. */
+@media(min-width: 80rem) {
   .header, .content {
     clear: left;
     float: left;
