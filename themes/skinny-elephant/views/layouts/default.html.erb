@@ -26,10 +26,8 @@
           <%= render :partial => "local/frontbar" %>
         <% else -%>
           <p><%= this_blog.blog_name %> is <a href="/">Matijs van Zuijlen</a>'s weblog.</p>
-          <%= t(".powered_by", powered_by: link_to('Publify', 'http://publify.co')) %>
-
-          <!-- sidebar components -->
           <%= render_sidebars %>
+          <p><%= t(".powered_by", powered_by: link_to('Publify', 'http://publify.co')) %></p>
         <% end -%>
       </div>
 
