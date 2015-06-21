@@ -1,3 +1,4 @@
+/* Fonts and colors */
 body {
   font-family: sans-serif;
 }
@@ -11,9 +12,15 @@ h1 a:hover, h2 a:hover {
 .header, .footer {
   text-align: center;
 }
+#errors {
+  border: red 1px solid;
+  border-radius: 0.5rem;
+  background-color: #f88;
+  padding: 1rem;
+}
 
 /*
- * Simple layout based on a 20 4 20 4 20 grid
+ * Simple horizontal layout based on a 20 4 20 4 20 grid
  */
 .container {
   max-width: 44rem;
