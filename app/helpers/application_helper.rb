@@ -49,15 +49,15 @@ module ApplicationHelper
   end
 
   def articles?
-    !Article.first.nil?
+    Article.any?
   end
 
   def trackbacks?
-    !Trackback.first.nil?
+    Trackback.any?
   end
 
   def comments?
-    !Comment.first.nil?
+    Comment.any?
   end
 
   def render_to_string(*args, &block)
@@ -137,8 +137,7 @@ module ApplicationHelper
   end
 
   def author_picture(status)
-    return if status.user.twitter_profile_image.nil? || status.user.twitter_profile_image.empty?
-    return if status.twitter_id.nil? || status.twitter_id.empty?
+    return if status.user.twitter_profile_image.blank?
 
     image_tag(status.user.twitter_profile_image, class: 'alignleft', alt: status.user.nickname)
   end

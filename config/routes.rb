@@ -34,7 +34,7 @@ Rails.application.routes.draw do
   # CommentsController
   resources :comments, as: 'admin_comments', only: [:index, :create] do
     collection do
-      match :preview, via: [:get, :post, :put, :delete]
+      post :preview
     end
   end
 
