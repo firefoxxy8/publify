@@ -93,7 +93,7 @@ div.header, div.content, div.sidebar, div.footer, div.container {
 div.container {
   max-width: 80rem;
 }
-div.header, div.content, div.sidebar {
+div.header, div.content, div.sidebar, div.footer {
   max-width: 45rem;
 }
 pre {
