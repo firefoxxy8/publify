@@ -11,7 +11,7 @@
  * parts of the passepartout.
  *
  * DIMENSIONS
- * 
+ *
  * The background images are all 800px wide. Vertical edges occur at 25px,
  * 90px, 560px, 775px. Left border is 65px, central area is 470px, right
  * border is 215px.
@@ -121,7 +121,7 @@ div.places {
   margin-top: 0px;
   margin-bottom: 0px;
   margin-left: 585px; /* edge at 560px, plus padding. Use this instead of
-		       * auto to make IE stop being silly. */
+                       * auto to make IE stop being silly. */
   /* This right margin follows from the settings above. Leaving it in makes
    * IE think it's too wide to display next to the float */
   /* margin-right: 50px; */ /* 25px padding, plus 25px to right edge of image. */
@@ -171,7 +171,7 @@ h1 {
   line-height: 0px;
   padding-top: 70px; /* 95px - 25px */
   padding-bottom: 40px; /* Give text room in IE to grow to the bottom edge
-			 * of the dark rectangle */
+                         * of the dark rectangle */
   margin: 0px;
 }
 
@@ -192,13 +192,13 @@ p.copyright {
   margin: 0px;
   /* We have to use padding, since the background will not show up in the
    * margin */
-  padding-top:	    2em; /* keep main float at bay; this won't work using
-			  * the margin[2]. */ 
+  padding-top:      2em; /* keep main float at bay; this won't work using
+                          * the margin[2]. */
   padding-bottom: 115px; /* 20px to edge of border, plus 95px to lower edge
-			  * of picture */
+                          * of picture */
   padding-left:   110px; /* Edge at 90px, plus 20px padding */
   padding-right:  260px; /* 20px padding, 215px border, 25px to edge of
-			  * picture */
+                          * picture */
 
   /*
    * BROWSER HACKS HERE:
@@ -213,11 +213,11 @@ p.copyright {
   voice-family: "\"}\"";
   voice-family: inherit;
   /* welcome back netscape */
-  width: 430px;	/* Same width as main text */
+  width: 430px; /* Same width as main text */
 }
 /* Be nice to Opera 5[5] */
 html>body p.copyright {
-  width: 430px;	/* Same width as main text */
+  width: 430px; /* Same width as main text */
 }
 
 a {
@@ -407,7 +407,7 @@ a:hover { color: #85ab02; /* TODO: Color */}
  * [1] I'm setting div.contents as the containing block. see
  * <http://www.autisticcuckoo.net/archive.php?id=2004/12/07/relatively-absolute>.
  * [2] This has to do with the exact effect of the clear property. See
- * <http://www.autisticcuckoo.net/archive.php?id=2004/12/10/floating>. 
+ * <http://www.autisticcuckoo.net/archive.php?id=2004/12/10/floating>.
  * [3] http://www.positioniseverything.net/explorer/doubled-margin.html
  * [4] http://w3development.de/css/hide_css_from_browsers/more/
  * [5] http://tantek.com/CSS/Examples/boxmodelhack.html, via
