@@ -74,24 +74,24 @@ div.container {
   padding-top: 1rem;
 }
 
-div.places, p.copyright /* Legacy */
+div.places, p.copyright, /* Legacy */
 div.header, div.sidebar, div.footer {
   padding-top: 2rem;
 }
-div.main, div.places, p.copyright /* Legacy */
+div.main, div.places, p.copyright, /* Legacy */
 div.content, div.sidebar, div.footer {
   padding-bottom: 2rem;
 }
 
 /* Horizontal layout */
 
-div.main, div.places, p.copyright /* Legacy */
+div.main, div.places, p.copyright, /* Legacy */
 div.header, div.content, div.sidebar, div.footer {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   max-width: 45rem;
 }
-div.contents, div.main, div.places, p.copyright /* Legacy */
+div.contents, div.main, div.places, p.copyright, /* Legacy */
 div.header, div.content, div.sidebar, div.footer, div.container {
   margin-left: auto;
   margin-right: auto;
