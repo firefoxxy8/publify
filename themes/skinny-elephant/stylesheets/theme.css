@@ -73,8 +73,10 @@ div.container {
   padding-top: 1rem;
 }
 
-div.content, div.sidebar, div.footer {
+div.header, div.content, div.sidebar, div.footer {
   padding-top: 2rem;
+}
+div.content, div.sidebar, div.footer {
   padding-bottom: 2rem;
 }
 
