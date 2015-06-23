@@ -32,21 +32,9 @@ body {
   font-size: 16px;
   line-height: 2rem;
 }
-
-h1, h2, h3, p, ul {
-  margin-top: 0px;
-  margin-bottom: 0px;
-}
-/*h1, h2, h3, */
-p, ul, pre {
-  margin-bottom: 2rem;
-}
-h2, h3 {
-  margin-top: 2rem;
-}
 h1 {
   font-size: 2rem;
-  line-height: 3rem;
+  line-height: 4rem;
 }
 h2 {
   font-size: 1.5rem;
@@ -57,12 +45,23 @@ h3 {
 p.desc, p.auth, p.meta {
   font-size: 0.75rem;
 }
-p.desc, p.auth {
-  /*margin-top: -1.5rem;*/
+
+h1, h2, h3, p, ul {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+h2, h3, p, ul, pre {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+p.auth, p.desc, div.sidebar-body > ul:first-child {
+  margin-top: -2rem;
 }
 p.meta {
   padding-bottom: 3rem;
 }
+
 pre {
   overflow-x: auto;
   border-top: 1px solid;
@@ -72,53 +71,55 @@ pre {
   margin-bottom: -1px;
 }
 
-.header, .sidebar, .footer {
-  padding-top: 2rem;
-}
-.container {
+div.container {
   padding-top: 1rem;
 }
 
-.content, .sidebar, .footer {
+div.content, div.sidebar, div.footer {
+  padding-top: 2rem;
   padding-bottom: 2rem;
 }
 
 /* Horizontal layout */
 
-.header, .content, .sidebar, .footer {
+div.header, div.content, div.sidebar, div.footer {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
-.header, .content, .sidebar, .footer, .container {
+div.header, div.content, div.sidebar, div.footer, div.container {
   margin-left: auto;
   margin-right: auto;
 }
-.container {
+div.container {
   max-width: 80rem;
+}
+div.header, div.content, div.sidebar {
+  max-width: 45rem;
 }
 
 @media(min-width: 55rem) {
-  .header, .content, .sidebar {
+  div.header, div.content, div.sidebar {
     width: 45rem;
   }
-  .header, .content, .sidebar, .footer {
+  div.header, div.content, div.sidebar, div.footer {
     padding-left: 5rem;
+    padding-right: 0rem;
     margin-left: 0px;
     margin-right: 0px;
   }
 }
 
-/* 5 + 45 + 5 + 20 + 5 = 80. */
-@media(min-width: 80rem) {
-  .header, .content {
+/* 5 + 45 + 5 + 20 (+ 5) = 75 (+ 5). */
+@media(min-width: 75rem) {
+  div.header, div.content {
     clear: left;
     float: left;
   }
-  .sidebar {
+  div.sidebar {
     width: 20rem;
     display: inline-block;
   }
-  .footer {
+  div.footer {
     clear: both;
   }
 }
@@ -132,4 +133,10 @@ pre {
   margin: 0 1px;
   color: #ccc;
   border: 1px solid #ccc;
+}
+
+/* CodeRay overrides */
+.CodeRay {
+  border: none;
+  background-color: inherit;
 }
