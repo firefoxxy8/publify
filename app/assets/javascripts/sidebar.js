@@ -8,7 +8,7 @@ var bind_sortable = function() {
         data: data,
         type: 'POST',
         dataType: 'json',
-        url: '/admin/sidebar/sortable',
+        url: '/blog/admin/sidebar/sortable',
         statusCode: {
           200: function(data, textStatus, jqXHR) {
             $('#sidebar-config').replaceWith(data.html);
