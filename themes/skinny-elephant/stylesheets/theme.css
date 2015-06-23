@@ -69,30 +69,37 @@ pre, #errors {
   margin-bottom: -1px;
 }
 
+div.contents, /* Legacy */
 div.container {
   padding-top: 1rem;
 }
 
+div.places, p.copyright /* Legacy */
 div.header, div.sidebar, div.footer {
   padding-top: 2rem;
 }
+div.main, div.places, p.copyright /* Legacy */
 div.content, div.sidebar, div.footer {
   padding-bottom: 2rem;
 }
 
 /* Horizontal layout */
 
+div.main, div.places, p.copyright /* Legacy */
 div.header, div.content, div.sidebar, div.footer {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
+div.contents, div.main, div.places, p.copyright /* Legacy */
 div.header, div.content, div.sidebar, div.footer, div.container {
   margin-left: auto;
   margin-right: auto;
 }
+div.contents, /* Legacy */
 div.container {
   max-width: 80rem;
 }
+div.main, div.places, p.copyright /* Legacy */
 div.header, div.content, div.sidebar, div.footer {
   max-width: 45rem;
 }
@@ -105,9 +112,11 @@ pre {
 }
 
 @media(min-width: 55rem) {
+  div.main, div.places, /* Legacy */
   div.header, div.content, div.sidebar {
     width: 45rem;
   }
+  div.main, div.places, p.copyright, /* Legacy */
   div.header, div.content, div.sidebar, div.footer {
     padding-left: 5rem;
     padding-right: 0rem;
@@ -118,14 +127,17 @@ pre {
 
 /* 5 + 45 + 5 + 20 (+ 5) = 75 (+ 5). */
 @media(min-width: 75rem) {
+  div.main, /* Legacy */
   div.header, div.content {
     clear: left;
     float: left;
   }
+  div.places, /* Legacy */
   div.sidebar {
     width: 20rem;
     display: inline-block;
   }
+  p.copyright, /* Legacy */
   div.footer {
     clear: both;
   }
