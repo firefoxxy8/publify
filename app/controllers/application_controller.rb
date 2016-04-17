@@ -2,21 +2,28 @@
 # Likewise, all the methods added will be available for all controllers.
 
 class ApplicationController < ActionController::Base
-  include ::LoginSystem
   protect_from_forgery with: :exception, only: [:edit, :update, :delete]
 
-  before_action :reset_local_cache, :fire_triggers, :load_lang, :set_paths
-  after_action :reset_local_cache
+  before_action :fire_triggers, :load_lang, :set_paths
+  before_action :configure_permitted_parameters, if: :devise_controller?
 
   class << self
-    unless self.respond_to? :template_root
+    unless respond_to? :template_root
       def template_root
         ActionController::Base.view_paths.last
       end
     end
   end
 
-  protected
+  private
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.for(:sign_up) << :email
+  end
+
+  def login_required
+    authenticate_user! && authorize!(params[:action], params[:controller])
+  end
 
   def set_paths
     prepend_view_path "#{::Rails.root}/themes/#{this_blog.theme}/views"
@@ -45,22 +52,9 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def reset_local_cache
-    session session: new unless session
-    @current_user = nil
-  end
-
-  # The base URL for this request, calculated by looking up the URL for the main
-  # blog index page.
-  def blog_base_url
-    url_for(controller: '/articles').gsub(%r{/$}, '')
-  end
-
   def add_to_cookies(name, value, path = nil, _expires = nil)
     cookies[name] = { value: value, path: path || "/#{controller_name}", expires: 6.weeks.from_now }
   end
 
-  def this_blog
-    @blog ||= Blog.default
-  end
+  include BlogHelper
 end

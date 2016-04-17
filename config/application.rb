@@ -38,6 +38,10 @@ module Publify
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     config.active_record.raise_in_transactional_callbacks = true
+
+    config.to_prepare do
+      DeviseController.layout 'accounts'
+    end
   end
 
   # Load included libraries.
@@ -63,10 +67,6 @@ module Publify
   # require 'publify_plugins'
   require 'bare_migration'
   require 'publify_version'
-  require 'rails_patch/active_support'
-  require 'rails_patch/active_record'
-
-  require 'publify_login_system'
 
   Date::DATE_FORMATS.merge!(
     :long_weekday => '%a %B %e, %Y %H:%M'

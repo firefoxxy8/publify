@@ -5,9 +5,9 @@ describe Theme, type: :model do
   let(:default_theme) { blog.current_theme }
 
   describe '#layout' do
-    it 'returns "layouts/default.html" by default' do
+    it 'returns "layouts/default" by default' do
       theme = Theme.new('test', 'test')
-      expect(theme.layout('index')).to eq 'layouts/default.html'
+      expect(theme.layout('index')).to eq 'layouts/default'
     end
 
     # FIXME: Test pages layout
@@ -22,7 +22,7 @@ describe Theme, type: :model do
   describe '#description' do
     it 'returns the contents of the corresponding markdown file' do
       expect(default_theme.description).to eq(
-        File.open(::Rails.root.to_s + '/themes/bootstrap-2/about.markdown') { |f| f.read })
+        File.open(::Rails.root.to_s + '/themes/bootstrap-2/about.markdown', &:read))
     end
   end
 

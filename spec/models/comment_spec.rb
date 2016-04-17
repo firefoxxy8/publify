@@ -1,10 +1,10 @@
 require 'rails_helper'
 
 describe Comment, type: :model do
-  let!(:blog) { build_stubbed :blog }
+  let(:blog) { build_stubbed :blog }
 
   def published_article
-    build_stubbed(:article, published_at: Time.now - 1.hour)
+    build_stubbed(:article, published_at: Time.now - 1.hour, blog: blog)
   end
 
   def valid_comment(options = {})
@@ -40,8 +40,7 @@ describe Comment, type: :model do
     end
 
     it 'should not save in invalid article' do
-      c = valid_comment(author: 'Old Spammer', body: 'Old trackback body', article: build(:article, state: 'draft'))
-
+      c = valid_comment(author: 'Old Spammer', body: 'Old trackback body', article: build(:article, state: 'draft', blog: blog))
       assert !c.save
       assert c.errors['article_id'].any?
     end
@@ -128,7 +127,7 @@ describe Comment, type: :model do
       @comment = Comment.new do |c|
         c.body = 'Test foo <script>do_evil();</script>'
         c.author = 'Bob'
-        c.article = build_stubbed(:article)
+        c.article = build_stubbed(:article, blog: blog)
       end
     end
     ['', 'textile', 'markdown', 'smartypants', 'markdown smartypants'].each do |filter|
@@ -138,7 +137,7 @@ describe Comment, type: :model do
         sym = filter.empty? ? :none : filter.to_sym
         build_stubbed sym
 
-        Blog.default.comment_text_filter = filter
+        blog.comment_text_filter = filter
 
         assert @comment.html(:body) !~ /<script>/
       end
@@ -179,7 +178,7 @@ describe Comment, type: :model do
       comment = Comment.new do |c|
         c.body = 'Test foo'
         c.author = 'Bob'
-        c.article = build_stubbed(:article)
+        c.article = build_stubbed(:article, blog: blog)
       end
 
       assert !comment.published?
@@ -191,7 +190,7 @@ describe Comment, type: :model do
       comment = Comment.new do |c|
         c.body = 'Test foo'
         c.author = 'Henri'
-        c.article = build_stubbed(:article)
+        c.article = build_stubbed(:article, blog: blog)
         c.user = build_stubbed(:user)
       end
 
@@ -230,11 +229,11 @@ describe Comment, type: :model do
   describe 'last_published', integration: true do
     let(:date) { DateTime.new(2012, 12, 23, 12, 47) }
     let!(:comment_1) { create(:comment, body: '1', published: true, created_at: date + 1.day) }
-    let!(:comment_4) { create(:comment, body: '4', published: true, created_at: date + 4.day) }
-    let!(:comment_2) { create(:comment, body: '2', published: true, created_at: date + 2.day) }
-    let!(:comment_6) { create(:comment, body: '6', published: true, created_at: date + 6.day) }
-    let!(:comment_3) { create(:comment, body: '3', published: true, created_at: date + 3.day) }
-    let!(:comment_5) { create(:comment, body: '5', published: true, created_at: date + 5.day) }
+    let!(:comment_4) { create(:comment, body: '4', published: true, created_at: date + 4.days) }
+    let!(:comment_2) { create(:comment, body: '2', published: true, created_at: date + 2.days) }
+    let!(:comment_6) { create(:comment, body: '6', published: true, created_at: date + 6.days) }
+    let!(:comment_3) { create(:comment, body: '3', published: true, created_at: date + 3.days) }
+    let!(:comment_5) { create(:comment, body: '5', published: true, created_at: date + 5.days) }
 
     it 'respond only 5 last_published' do
       expect(Comment.last_published).to eq([comment_6, comment_5, comment_4, comment_3, comment_2])

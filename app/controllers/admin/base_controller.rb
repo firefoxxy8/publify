@@ -1,4 +1,8 @@
 class Admin::BaseController < ApplicationController
+  rescue_from CanCan::AccessDenied do |exception|
+    redirect_to admin_dashboard_path, alert: exception.message
+  end
+
   cattr_accessor :look_for_migrations
   @@look_for_migrations = true
   layout 'administration'
@@ -44,8 +48,6 @@ class Admin::BaseController < ApplicationController
   end
 
   def check_and_generate_secret_token
-    return if defined? $TESTING
-
     checker = Admin::TokenChecker.new
     return if checker.safe_token_in_use?
 

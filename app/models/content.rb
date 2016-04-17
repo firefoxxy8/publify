@@ -12,6 +12,9 @@ class Content < ActiveRecord::Base
 
   belongs_to :text_filter
   belongs_to :user
+  belongs_to :blog
+
+  validates :blog, presence: true
 
   has_one :redirect, dependent: :destroy
 
@@ -30,10 +33,7 @@ class Content < ActiveRecord::Base
   }
   scope :already_published, -> { where('published = ? AND published_at < ?', true, Time.now).order(default_order) }
 
-  scope :published_at_like, lambda { |date_at|
-    where(published_at: (PublifyTime.delta_like(date_at))
-         )
-  }
+  scope :published_at_like, ->(date_at) { where(published_at: PublifyTime.delta_like(date_at)) }
 
   serialize :whiteboard
 
@@ -50,12 +50,17 @@ class Content < ActiveRecord::Base
   # NOTE: Due to how Rails injects association methods, this cannot be put in ContentBase
   # TODO: Allowing assignment of a string here is not very clean.
   def text_filter=(filter)
-    filter_object = filter.to_text_filter
-    if filter_object
-      self.text_filter_id = filter_object.id
-    else
-      self.text_filter_id = filter.to_i
-    end
+    filter_object = case filter
+                    when TextFilter
+                      filter
+                    else
+                      TextFilter.find_or_default(filter)
+                    end
+    self.text_filter_id = if filter_object
+                            filter_object.id
+                          else
+                            filter.to_i
+                          end
   end
 
   def shorten_url
@@ -66,7 +71,7 @@ class Content < ActiveRecord::Base
       redirect.to_path = permalink_url
       redirect.save
     else
-      r = Redirect.new
+      r = Redirect.new(blog: blog)
       r.from_path = r.shorten
       r.to_path = permalink_url
       self.redirect = r
@@ -106,7 +111,7 @@ class Content < ActiveRecord::Base
 
   def withdraw!
     withdraw
-    self.save!
+    save!
   end
 
   def link_to_author?
@@ -137,13 +142,7 @@ class Content < ActiveRecord::Base
   def short_url
     # Double check because of crappy data in my own old database
     return unless published && redirect.present?
-    redirect.to_url
-  end
-end
-
-class Object
-  def to_text_filter
-    TextFilter.find_by_name(to_s) || TextFilter.find_by_name('none')
+    redirect.from_url
   end
 end
 

@@ -12,14 +12,19 @@ class Theme
   def layout(action = :default)
     if action.to_s == 'view_page'
       if File.exist? "#{::Rails.root}/themes/#{name}/views/layouts/pages.html.erb"
-        return 'layouts/pages.html'
+        return 'layouts/pages'
       end
     end
-    'layouts/default.html'
+    'layouts/default'
   end
 
   def description
-    File.read("#{path}/about.markdown") rescue "### #{name}"
+    about_file = "#{path}/about.markdown"
+    if File.exist? about_file
+      File.read about_file
+    else
+      "### #{name}"
+    end
   end
 
   # Find a theme, given the theme name

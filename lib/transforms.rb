@@ -1,4 +1,5 @@
 # coding: utf-8
+# FIXME: Replace with helpers and/or methods provided by Rails
 class String
   ACCENTS = { %w(á à â ä ã Ã Ä Â À) => 'a',
               %w(é è ê ë Ë É È Ê) => 'e',
@@ -8,7 +9,7 @@ class String
               ['ß'] => 'ss',
               %w(ú ù û ü U Û Ù) => 'u',
               %w(ç Ç) => 'c'
-  }
+  }.freeze
 
   def to_permalink
     string = self
@@ -22,23 +23,13 @@ class String
   # Returns a-string-with-dashes when passed 'a string with dashes'.
   # All special chars are stripped in the process
   def to_url
-    return if self.nil?
+    return if nil?
 
     s = downcase.tr("\"'", '')
     s = s.gsub(/\P{Word}/, ' ')
     s.strip.tr_s(' ', '-').tr(' ', '-').sub(/^$/, '-')
   end
 
-  # A quick and dirty fix to add 'nofollow' to any urls in a string.
-  # FIXME: Decidedly unsafe, but will have to do for now.
-  def nofollowify
-    return self if Blog.default.dofollowify
-    gsub(/<a(.*?)>/i, '<a\1 rel="nofollow">')
-  end
-
-  # I pass settings as a parametre to avoid calling Blog.default (and another
-  #  database call) everytime I want to use to_title
-  # Not sure on this one though.
   def to_title(item, settings, params)
     s = self
 
@@ -101,6 +92,6 @@ class String
 
   def parse_page(_string, params)
     return '' unless params[:page]
-    "#{I18n.t('.articles.index.page')} #{params[:page]}"
+    "#{I18n.t('articles.index.page')} #{params[:page]}"
   end
 end

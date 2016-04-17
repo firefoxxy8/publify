@@ -25,12 +25,10 @@ class SetupController < ApplicationController
 
     return unless @user.save
 
-    self.current_user = @user
-    session[:user_id] = @user.id
+    sign_in @user
 
-    # FIXME: Crappy hack : by default, the auto generated post is user_id less and it makes Publify crash
     if User.count == 1
-      update_or_create_first_post_with_user @user
+      create_first_post @user
       create_first_page @user
     end
 
@@ -39,27 +37,22 @@ class SetupController < ApplicationController
 
   private
 
-  # FIXME: Move to a setup concern that coordinates first blog, user, and post
-  def update_or_create_first_post_with_user(user)
-    art = Article.first
-    if art
-      art.user = user
-      art.save
-    else
-      Article.create(title: 'Hello World!',
-                     author: user.login,
-                     body: 'Welcome to Publify. This is your first article. Edit or delete it, then start blogging!',
-                     allow_comments: 1,
-                     allow_pings: 1,
-                     published: 1,
-                     permalink: 'hello-world',
-                     tags: [Tag.first],
-                     user: user)
-    end
+  def create_first_post(user)
+    this_blog.articles.create(title: I18n.t('setup.article.title'),
+                              author: user.login,
+                              body: I18n.t('setup.article.body'),
+                              allow_comments: 1,
+                              allow_pings: 1,
+                              published: 1,
+                              user: user)
   end
 
   def create_first_page(user)
-    Page.create(name: 'about', published: true, title: I18n.t('setup.page.about'), user: user, body: I18n.t('setup.page.body'))
+    this_blog.pages.create(name: 'about',
+                           published: true,
+                           title: I18n.t('setup.page.about'),
+                           user: user,
+                           body: I18n.t('setup.page.body'))
   end
 
   def check_config

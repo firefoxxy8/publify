@@ -11,6 +11,7 @@ class Feedback < ActiveRecord::Base
   include States
 
   validate :feedback_not_closed, on: :create
+  validates :article, presence: true
 
   before_create :create_guid, :article_allows_this_feedback
   before_save :correct_url, :before_save_handler
@@ -65,7 +66,7 @@ class Feedback < ActiveRecord::Base
 
   def html_postprocess(_field, html)
     helper = ContentTextHelpers.new
-    helper.sanitize(helper.auto_link(html)).nofollowify
+    helper.sanitize(helper.auto_link(html))
   end
 
   def correct_url
@@ -82,11 +83,11 @@ class Feedback < ActiveRecord::Base
   end
 
   def akismet_options
-    { comment_type: self.class.to_s.downcase,
-      comment_author: originator,
-      comment_author_email: email,
-      comment_author_url: url,
-      comment_content: body }
+    { type: self.class.to_s.downcase,
+      author: originator,
+      author_email: email,
+      author_url: url,
+      text: body }
   end
 
   def spam_fields
@@ -108,7 +109,7 @@ class Feedback < ActiveRecord::Base
 
   def sp_is_spam?(_options = {})
     sp = SpamProtection.new(blog)
-    Timeout.timeout(defined?($TESTING) ? 10 : 30) do
+    Timeout.timeout(30) do
       spam_fields.any? do |field|
         sp.is_spam?(send(field))
       end
@@ -121,7 +122,7 @@ class Feedback < ActiveRecord::Base
     return false if akismet.nil?
 
     begin
-      Timeout.timeout(defined?($TESTING) ? 30 : 60) do
+      Timeout.timeout(60) do
         akismet.comment_check(ip, user_agent, akismet_options)
       end
     rescue Timeout::Error
@@ -153,19 +154,23 @@ class Feedback < ActiveRecord::Base
   end
 
   def report_as_spam
-    report_as('spam')
+    return if akismet.nil?
+    begin
+      Timeout.timeout(5) do
+        akismet.submit_spam(
+          ip, user_agent, akismet_options)
+      end
+    rescue Timeout::Error
+      nil
+    end
   end
 
   def report_as_ham
-    report_as('ham')
-  end
-
-  def report_as(spam_or_ham)
     return if akismet.nil?
     begin
-      Timeout.timeout(defined?($TESTING) ? 5 : 3600) do
-        akismet.send("submit_#{spam_or_ham}",
-                     ip, user_agent, akismet_options)
+      Timeout.timeout(5) do
+        akismet.ham(
+          ip, user_agent, akismet_options)
       end
     rescue Timeout::Error
       nil
@@ -174,7 +179,7 @@ class Feedback < ActiveRecord::Base
 
   def withdraw!
     withdraw
-    self.save!
+    save!
   end
 
   def confirm_classification!
@@ -185,6 +190,8 @@ class Feedback < ActiveRecord::Base
   def feedback_not_closed
     errors.add(:article_id, 'Comment are closed') if article.comments_closed?
   end
+
+  delegate :blog, to: :article
 
   private
 
@@ -204,5 +211,9 @@ class Feedback < ActiveRecord::Base
     rescue
       nil
     end
+  end
+
+  def blog_id
+    article.blog_id if article.present?
   end
 end

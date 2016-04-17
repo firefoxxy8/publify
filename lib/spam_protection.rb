@@ -1,7 +1,7 @@
 class SpamProtection
-  IP_RBLS = ['opm.blitzed.us', 'bsb.empty.us']
-  HOST_RBLS = ['multi.surbl.org', 'bsb.empty.us']
-  SECOND_LEVEL = %w(co com net org gov)
+  IP_RBLS = ['opm.blitzed.us', 'bsb.empty.us'].freeze
+  HOST_RBLS = ['multi.surbl.org', 'bsb.empty.us'].freeze
+  SECOND_LEVEL = %w(co com net org gov).freeze
 
   attr_accessor :this_blog
 
@@ -53,7 +53,11 @@ class SpamProtection
 
   def scan_uris(uris = [])
     uris.each do |uri|
-      host = URI.parse(uri).host rescue next
+      host = begin
+               URI.parse(uri).host
+             rescue URI::InvalidURIError
+               next
+             end
       return scan_ip(host) if host =~ Format::IP_ADDRESS
 
       host_parts = host.split('.').reverse

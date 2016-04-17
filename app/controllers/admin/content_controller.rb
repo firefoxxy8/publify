@@ -9,7 +9,7 @@ class Admin::ContentController < Admin::BaseController
 
   def index
     @search = params[:search] ? params[:search] : {}
-    @articles = Article.search_with(@search).page(params[:page]).per(this_blog.admin_display_elements)
+    @articles = this_blog.articles.search_with(@search).page(params[:page]).per(this_blog.admin_display_elements)
 
     if request.xhr?
       respond_to do |format|
@@ -79,7 +79,7 @@ class Admin::ContentController < Admin::BaseController
 
   def auto_complete_for_article_keywords
     @items = Tag.select(:display_name).order(:display_name).map(&:display_name)
-    render inline: '<%= @items %>'
+    render json: @items
   end
 
   def autosave
@@ -119,7 +119,8 @@ class Admin::ContentController < Admin::BaseController
   def get_fresh_or_existing_draft_for_article
     if @article.published && @article.id
       parent_id = @article.id
-      @article = Article.drafts.child_of(parent_id).first || Article.new
+      @article =
+        this_blog.articles.drafts.child_of(parent_id).first || this_blog.articles.build
       @article.allow_comments = this_blog.default_allow_comments
       @article.allow_pings = this_blog.default_allow_pings
       @article.parent_id = parent_id
@@ -134,7 +135,7 @@ class Admin::ContentController < Admin::BaseController
     @post_types = PostType.all
     @images = Resource.images_by_created_at.page(params[:page]).per(10)
     @resources = Resource.without_images_by_filename
-    @macros = TextFilter.macro_filters
+    @macros = TextFilterPlugin.macro_filters
   end
 
   def access_granted?(article_id)

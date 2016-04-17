@@ -1,9 +1,9 @@
 class Admin::FeedbackController < Admin::BaseController
   cache_sweeper :blog_sweeper
-  ONLY_DOMAIN = %w(unapproved presumed_ham presumed_spam ham spam)
+  ONLY_DOMAIN = %w(unapproved presumed_ham presumed_spam ham spam).freeze
 
   def index
-    scoped_feedback = Feedback
+    scoped_feedback = this_blog.feedback
 
     if params[:only].present?
       @only_param = ONLY_DOMAIN.dup.delete(params[:only])
@@ -80,7 +80,7 @@ class Admin::FeedbackController < Admin::BaseController
   end
 
   def article
-    @article = Article.find(params[:id])
+    @article = this_blog.articles.find(params[:id])
     @feedback = @article.comments.ham if params[:ham] && params[:spam].blank?
     @feedback = @article.comments.spam if params[:spam] && params[:ham].blank?
     @feedback ||= @article.comments
@@ -96,12 +96,10 @@ class Admin::FeedbackController < Admin::BaseController
       if params[:context] != 'listing'
         @comments = Comment.last_published
         page.replace_html('commentList', partial: 'admin/dashboard/comment')
+      elsif template == 'ham'
+        format.js { render 'ham' }
       else
-        if template == 'ham'
-          format.js { render 'ham' }
-        else
-          format.js { render 'spam' }
-        end
+        format.js { render 'spam' }
       end
     end
   end

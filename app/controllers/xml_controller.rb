@@ -5,9 +5,9 @@ class XmlController < ApplicationController
 
   NORMALIZED_FORMAT_FOR = { 'atom' => 'atom', 'rss' => 'rss',
                             'atom10' => 'atom', 'atom03' => 'atom', 'rss20' => 'rss',
-                            'googlesitemap' => 'googlesitemap', 'rsd' => 'rsd' }
+                            'googlesitemap' => 'googlesitemap', 'rsd' => 'rsd' }.freeze
 
-  ACCEPTED_TYPE = %w(feed comments article tag author trackbacks sitemap)
+  ACCEPTED_TYPE = %w(feed comments article tag author trackbacks sitemap).freeze
 
   def feed
     @format = 'rss'
@@ -26,7 +26,7 @@ class XmlController < ApplicationController
     when 'comments'
       redirect_to admin_comments_url(format: @format), status: :moved_permanently
     when 'article'
-      redirect_to Article.find(param_id).feed_url(@format), status: :moved_permanently
+      redirect_to this_blog.articles.find(param_id).feed_url(@format), status: :moved_permanently
     when 'tag', 'author'
       redirect_to send("#{param_type}_url", param_id, format: @format), status: :moved_permanently
     when 'trackbacks'
