@@ -4,7 +4,7 @@ class LocalController < ContentController
   caches_page :frontpage
 
   def frontpage
-    @frontpage = true;
+    @frontpage = true
     @articles = Article.already_published.limit(this_blog.limit_article_display)
     @page_title = 'matijs.net'
   end
