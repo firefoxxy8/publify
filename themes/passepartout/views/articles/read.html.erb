@@ -52,7 +52,7 @@
 <% end -%>
 
 <% unless @article.comments_closed? -%>
-  <%= render 'comment_box' %>
+  <%= render 'comment_form' %>
 <% else -%>
   <p><%= t(".comments_are_disabled")%></p>
 <% end -%>
