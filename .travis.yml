@@ -9,6 +9,8 @@ env:
   - DB=sqlite
   - DB=mysql
   - DB=postgresql
+install:
+  - bundle install --without development
 before_script:
   - bundle exec rake db:create db:migrate
 branches:
@@ -18,3 +20,11 @@ branches:
 addons:
   code_climate:
     repo_token: 8850bccc6911d74965627b1fafe753beb368fab00d33de0c7576c6598fc1220e
+
+notifications:
+  webhooks:
+    urls:
+      - http://publify_hook.ookook.fr/travisci
+    on_success: always
+    on_failure: never
+    on_start: never
