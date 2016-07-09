@@ -1,7 +1,23 @@
 # Changelog
 
+## 8.3.1
 
-## Unreleased
+* Fix live search (mvz)
+* Introduce SidebarRegistry to avoid need to preload all sidebars (mvz)
+* Avoid use of String#html_safe (mvz)
+* Fix several cases of double-escaped HTML (mvz)
+* Avoid ambiguous field reference in feedback scopes (apsheronets)
+* Remove spurious error message when starting a new article (mvz)
+* Replace bundled bootstrap with bootstrap-sass gem (mvz)
+* Link Resource directly to Blog in order to make upload of images to media
+  library work again (mvz)
+* Fix comment order and other feedback scopes (mvz)
+* Fix autosave (mvz)
+* Improve russian translation (apsheronets)
+* Fix note publication date entry (mvz)
+* Ensure settings update flash has the correct language (mvz)
+
+## 8.3.0
 
 ### Breaking/large changes
 
@@ -10,6 +26,8 @@
 * Replace custom Publify authorization system with CanCanCan (mvz)
 * Remove Profile model (mvz)
 * Remove long-deprecated view_root method for sidebars (mvz)
+* Provide registration mechanism for themes, allowing them to be stored
+  anywhere (mvz)
 
 ### Other changes
 
@@ -271,7 +289,7 @@ slainer68 (1):
 * #412: the editor locally saves the content of the edited note, which means it
   reloads it when you edit another note, overwriting the legit content.
 
-## Publify 8.0 
+## Publify 8.0
 
 It's been 5 months since Publify 7.1, and considering the figures, Publify 8.0
 is the biggest release we ever pushed in 9 years: 474 commits, 71 issues
@@ -308,7 +326,7 @@ The editor, it has been completely revamped, following the way opened by both
 Medium and Ghost. We've pushed aside everything that may distract you from
 writing. The post settings are 1 click away from the editor so you won't feel
 lost anyway. We know how much work is left to get a really classy tool, but
-we're working on it. 
+we're working on it.
 
 The notes have got improvement. When replying to a tweet, Publify now displays
 the original tweet so readers can keep the context this was done.
@@ -329,7 +347,7 @@ feature, but only a handful of people, if none was using it, and it made the
 editor more complicated than necessary.
 
 The old [Typographic theme][3] is not part of the core anymore. It has moved to
-its own project and will still be maintained. 
+its own project and will still be maintained.
 
 The old XMLRPC backend has been discontinued. This means Publify does not
 support desktop clients anymore. This choice has been motivated by the fact
@@ -341,13 +359,13 @@ without the need of a desktop application.
 ### Under the hood
 
 Publify has been around for 9 years now. Rails was not 1.0 yet, and some of our
-code was older than you can ever imagine. 
+code was older than you can ever imagine.
 
 Publify 8.0 got rid of most of that legacy code. The old Prototype based
 helpers that made Rails famous back then left the building. Prototype itself
 has finally been replaced by Jquery, and Rails i18n allowed the _Globalize_
 based translation system to enjoy a deserved retirement. Most helpers have been
-removed too, as most of them were only used in one place. 
+removed too, as most of them were only used in one place.
 
 This should not affect you unless you're running custom themes and plugins. If
 so, have a look at the Bootstrap theme to see how we're now working.

@@ -112,20 +112,19 @@ end
 # test standard view and all themes
 def with_each_theme
   yield nil, ''
-  Dir.new(File.join(::Rails.root.to_s, 'themes')).each do |theme|
-    next if theme =~ /\.\.?/
-    theme_dir = "#{::Rails.root}/themes/#{theme}"
+  Theme.find_all.each do |theme|
+    theme_dir = theme.path
     view_path = "#{theme_dir}/views"
     if File.exist?("#{theme_dir}/helpers/theme_helper.rb")
       require "#{theme_dir}/helpers/theme_helper.rb"
     end
-    yield theme, view_path
+    yield theme.name, view_path
   end
 end
 
-def file_upload(filename)
+def file_upload(filename, file = 'testfile.txt')
   ActionDispatch::Http::UploadedFile.new(
-    tempfile: File.new(Rails.root.join('spec', 'fixtures', 'testfile.txt')),
+    tempfile: File.new(Rails.root.join('spec', 'fixtures', file)),
     filename: filename
   )
 end

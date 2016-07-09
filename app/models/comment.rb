@@ -13,8 +13,9 @@ class Comment < Feedback
   scope :presumed_spam, -> { where(state: 'presumed_spam') }
   scope :presumed_ham, -> { where(state: 'presumed_ham') }
   scope :ham, -> { where(state: 'ham') }
-  scope :unconfirmed, -> { where('state in (?, ?)', 'presumed_spam', 'presumed_ham') }
-  scope :last_published, -> { where(published: true).limit(5).order('created_at DESC') }
+  scope :unconfirmed, -> { where(state: %w(presumed_spam presumed_ham)) }
+
+  scope :last_published, -> { published.limit(5).order('created_at DESC') }
 
   def notify_user_via_email(user)
     EmailNotify.send_comment(self, user) if user.notify_via_email?

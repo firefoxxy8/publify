@@ -45,7 +45,6 @@ module Publify
   end
 
   # Load included libraries.
-  require 'sidebar'
   require 'publify_sidebar'
   require 'publify_textfilters'
   require 'publify_avatar_gravatar'
@@ -64,8 +63,11 @@ module Publify
   require 'publify_guid'
   ## Required by the plugins themselves.
   # require 'publify_plugins'
-  require 'bare_migration'
   require 'publify_version'
+
+  require 'theme'
+
+  Theme.register_themes "#{Rails.root}/themes"
 
   Date::DATE_FORMATS.merge!(
     :long_weekday => '%a %B %e, %Y %H:%M'

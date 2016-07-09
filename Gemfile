@@ -43,6 +43,8 @@ gem 'uuidtools', '~> 2.1.1'
 gem 'feedjira', '~> 2.0.0'
 gem 'lograge', '~> 0.3.4'
 
+gem 'bootstrap-sass', '~> 3.3.6'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', '~> 9.0'
@@ -54,7 +56,7 @@ group :development, :test do
   gem 'pry-rails', '~> 0.3.4'
   gem 'pry', '~> 0.10.3'
 
-  gem 'rubocop', '~> 0.40.0', require: false
+  gem 'rubocop', '~> 0.41.0', require: false
   gem 'i18n-tasks', '~> 0.9.1' if RUBY_VERSION >= '2.1'
 end
 

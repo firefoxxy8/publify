@@ -78,7 +78,7 @@ describe Article, type: :model do
 
   it 'test_permalink_with_title' do
     article = create(:article, permalink: 'article-3', published_at: Time.utc(2004, 6, 1))
-    assert_equal(article, Article.find_by_permalink(year: 2004, month: 06, day: 01, title: 'article-3'))
+    assert_equal(article, Article.find_by_permalink(year: 2004, month: 6, day: 1, title: 'article-3'))
     not_found = Article.find_by_permalink year: 2005, month: '06', day: '01', title: 'article-5'
     expect(not_found).to be_nil
   end
@@ -606,19 +606,67 @@ describe Article, type: :model do
   end
 
   describe '#published_comments' do
+    let(:article) { create :article }
+
     it 'should not include withdrawn comments' do
-      a = blog.articles.build(title: 'foo')
-      a.save!
+      comment = create :published_comment, article: article
+      article.reload
+      expect(article.published_comments).to eq [comment]
+      comment.withdraw!
+      article.reload
+      expect(article.published_comments).to eq []
+    end
 
-      assert_equal 0, a.published_comments.size
-      c = a.comments.build(body: 'foo', author: 'bob', published: true, published_at: Time.now)
-      assert c.published?
-      c.save!
-      a.reload
+    it 'sorts comments newest last' do
+      old_comment = create :published_comment, article: article, created_at: 2.days.ago
+      new_comment = create :published_comment, article: article, created_at: 1.day.ago
+      article.reload
+      expect(article.published_comments).to eq [old_comment, new_comment]
+    end
+  end
 
-      assert_equal 1, a.published_comments.size
-      c.withdraw!
-      assert_equal 0, a.published_comments.size
+  describe '#published_trackbacks' do
+    let(:article) { create :article }
+
+    it 'should not include withdrawn trackbacks' do
+      trackback = create :trackback, article: article
+      article.reload
+      expect(article.published_trackbacks).to eq [trackback]
+      trackback.withdraw!
+      article.reload
+      expect(article.published_trackbacks).to eq []
+    end
+
+    it 'sorts trackbacks newest last' do
+      old_trackback = create :trackback, article: article, created_at: 2.days.ago
+      new_trackback = create :trackback, article: article, created_at: 1.day.ago
+      article.reload
+      expect(article.published_trackbacks).to eq [old_trackback, new_trackback]
+    end
+  end
+
+  describe '#published_feedback' do
+    let(:article) { create :article }
+
+    it 'should not include withdrawn comments or trackbacks' do
+      comment = create :published_comment, article: article
+      trackback = create :trackback, article: article
+      article.reload
+      expect(article.published_feedback).to eq [comment, trackback]
+      comment.withdraw!
+      trackback.withdraw!
+      article.reload
+      expect(article.published_feedback).to eq []
+    end
+
+    it 'sorts feedback newest last' do
+      old_comment = create :published_comment, article: article, created_at: 4.days.ago
+      old_trackback = create :trackback, article: article, created_at: 3.days.ago
+      new_comment = create :published_comment, article: article, created_at: 2.days.ago
+      new_trackback = create :trackback, article: article, created_at: 1.day.ago
+      article.reload
+      expect(article.published_feedback).
+        to eq [old_comment, old_trackback, new_comment, new_trackback]
     end
   end
 
@@ -935,6 +983,38 @@ describe Article, type: :model do
     context 'with a specific myletter post_type' do
       let(:article) { build(:article, post_type: 'myletter') }
       it { expect(article.post_type).to eq('myletter') }
+    end
+  end
+
+  describe '#comments_closed?' do
+    let!(:blog) { create(:blog, sp_article_auto_close: auto_close_value, default_allow_comments: true) }
+
+    context 'when auto_close setting is zero' do
+      let(:auto_close_value) { 0 }
+
+      it 'allows comments for a newly published article' do
+        art = build :article, published_at: Time.new, blog: blog
+        assert !art.comments_closed?
+      end
+
+      it 'allows comments for a very old article' do
+        art = build :article, created_at: Time.now - 1000.days, blog: blog
+        assert !art.comments_closed?
+      end
+    end
+
+    context 'when auto_close setting is nonzero' do
+      let(:auto_close_value) { 30 }
+
+      it 'allows comments for a recently published article' do
+        art = build :article, published_at: Time.new - 29.days, blog: blog
+        assert !art.comments_closed?
+      end
+
+      it 'does not allow comments for an old article' do
+        art = build :article, created_at: Time.now - 31.days, blog: blog
+        assert art.comments_closed?
+      end
     end
   end
 end
