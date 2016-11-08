@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+### Breaking/large changes
+
+* Break out Publify functionality into several engines. These engines will
+  become separate gems in the future (mvz)
+* Use Rails' default method of setting secrect_key_base in production: Through
+  an environment variable. This means you will have to update your production
+  environment so this variable is actually set (whithajess)
+
+## 8.3.3
+
+* Fix Devise error during sign-in (mvz)
+* Protect from forgery on all actions (mvz)
+* Have Devise be paranoid by default (mvz)
+* Fix resource upload and properly check mime types (mvz)
+* Store session in the database to prevent session hijacking (mvz)
+* Correctly escape blog name in devise view (mvz)
+
+## 8.3.2
+
+* Replace deprecated count-with-conditions (mvz)
+* Loosen/update dependencies (mvz)
+* Fix google sitemap (mvz)
+* Restore theme helper loading (mvz)
+* Fix password edit form (jetware)
+
 ## 8.3.1
 
 * Fix live search (mvz)
