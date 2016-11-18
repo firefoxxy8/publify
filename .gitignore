@@ -24,6 +24,7 @@ nbproject
 public/cache/*
 .rbenv-version
 .ruby-version
+.env
 .bundle/
 .sass-cache/
 /vendor/bundle
