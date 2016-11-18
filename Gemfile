@@ -55,6 +55,7 @@ group :development do
   gem 'capistrano-rails',   '~> 1.1', require: false
   gem 'capistrano-bundler', '~> 1.1', require: false
   gem 'capistrano-passenger', '0.0.1', require: false
+  gem 'capistrano-dotenv-tasks', '0.1.3', require: false
 end
 
 group :test do
