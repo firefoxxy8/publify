@@ -11,7 +11,7 @@ gem 'publify_textfilter_code', '~> 9.0.0.pre1'
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'
 
-gem 'airbrake', '~> 4.3'
+gem 'airbrake', '~> 5.6.1'
 
 # Needed for the lightbox and flickr text filters
 gem 'flickraw-cached', '20120701'

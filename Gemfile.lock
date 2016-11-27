@@ -47,9 +47,9 @@ GEM
       tzinfo (~> 1.1)
     addressable (2.5.0)
       public_suffix (~> 2.0, >= 2.0.2)
-    airbrake (4.3.8)
-      builder
-      multi_json
+    airbrake (5.6.1)
+      airbrake-ruby (~> 1.6)
+    airbrake-ruby (1.6.0)
     akismet (2.0.0)
     arel (7.1.4)
     ast (2.3.0)
@@ -443,7 +443,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  airbrake (~> 4.3)
+  airbrake (~> 5.6.1)
   better_errors (~> 2.1.1)
   binding_of_caller (~> 0.7.2)
   byebug (~> 9.0)
