@@ -11,7 +11,7 @@ gem 'publify_textfilter_code', '~> 9.0.0.pre1'
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'
 
-gem 'airbrake', '~> 4.3'
+gem 'airbrake', '~> 5.6.1'
 
 # Needed for the lightbox and flickr text filters
 gem 'flickraw-cached', '20120701'
@@ -19,7 +19,7 @@ gem 'flickraw', '~> 0.9.8'
 
 gem 'non-stupid-digest-assets', '~> 1.0'
 gem 'rake', '~> 11.1'
-gem 'lograge', '~> 0.3.4'
+gem 'lograge', '~> 0.4.1'
 gem 'dotenv-rails', '~> 2.1.1'
 
 group :development, :test do
@@ -50,10 +50,10 @@ group :development do
 end
 
 group :development do
-  gem 'capistrano', '~> 3.4.0', require: false
+  gem 'capistrano', '~> 3.6.1', require: false
   gem 'capistrano-rails',   '~> 1.1', require: false
   gem 'capistrano-bundler', '~> 1.1', require: false
-  gem 'capistrano-passenger', '0.0.1', require: false
+  gem 'capistrano-passenger', '0.2.0', require: false
   gem 'capistrano-dotenv-tasks', '0.1.3', require: false
 end
 
