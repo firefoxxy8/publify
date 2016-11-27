@@ -19,7 +19,7 @@ gem 'flickraw', '~> 0.9.8'
 
 gem 'non-stupid-digest-assets', '~> 1.0'
 gem 'rake', '~> 11.1'
-gem 'lograge', '~> 0.3.4'
+gem 'lograge', '~> 0.4.1'
 gem 'dotenv-rails', '~> 2.1.1'
 
 group :development, :test do
