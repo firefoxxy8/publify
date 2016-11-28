@@ -6,6 +6,7 @@ set :repo_url, 'matijs@mist.matijs.net:git/typo.git'
 set :branch, 'toxic-elephant'
 set :linked_files, %w{config/database.yml .env}
 set :linked_dirs, fetch(:linked_dirs, []) + %w{log tmp/pids public/files}
+set :passenger_restart_with_touch, true
 
 namespace :deploy do
   desc 'Restart application'
