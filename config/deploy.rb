@@ -1,5 +1,5 @@
 # config valid only for Capistrano 3.4
-lock '~> 3.4.0'
+lock '~> 3.6.0'
 
 set :application, 'typo'
 set :repo_url, 'matijs@mist.matijs.net:git/typo.git'
@@ -8,7 +8,6 @@ set :linked_files, %w{config/database.yml .env}
 set :linked_dirs, fetch(:linked_dirs, []) + %w{log tmp/pids public/files}
 
 namespace :deploy do
-
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
@@ -25,5 +24,4 @@ namespace :deploy do
       end
     end
   end
-
 end
