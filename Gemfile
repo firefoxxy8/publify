@@ -20,10 +20,10 @@ gem 'airbrake', '~> 5.6.1'
 gem 'flickraw', '~> 0.9.8'
 gem 'flickraw-cached', '20120701'
 
+gem 'dotenv-rails', '~> 2.1.1'
+gem 'lograge', '~> 0.4.1'
 gem 'non-stupid-digest-assets', '~> 1.0'
 gem 'rake', '~> 12.0'
-gem 'lograge', '~> 0.4.1'
-gem 'dotenv-rails', '~> 2.1.1'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
@@ -58,10 +58,10 @@ end
 
 group :development do
   gem 'capistrano', '~> 3.7.1', require: false
-  gem 'capistrano-rails',   '~> 1.1', require: false
   gem 'capistrano-bundler', '~> 1.1', require: false
-  gem 'capistrano-passenger', '0.2.0', require: false
   gem 'capistrano-dotenv-tasks', '0.1.4', require: false
+  gem 'capistrano-passenger', '0.2.0', require: false
+  gem 'capistrano-rails', '~> 1.1', require: false
 end
 
 group :test do
