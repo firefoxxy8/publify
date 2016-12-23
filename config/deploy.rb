@@ -1,5 +1,5 @@
-# config valid only for Capistrano 3.4
-lock '~> 3.6.0'
+# config valid only for Capistrano 3.7.1
+lock '~> 3.7.1'
 
 set :application, 'typo'
 set :repo_url, 'matijs@mist.matijs.net:git/typo.git'
